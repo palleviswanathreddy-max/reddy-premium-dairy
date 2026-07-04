@@ -263,11 +263,11 @@ function ProductsContent() {
                       className="flex flex-col rounded-3xl border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-800 transition-all duration-300 overflow-hidden group text-left no-underline"
                     >
                       {/* Image */}
-                      <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+                      <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
                         <img 
                           src={prod.images[0]} 
                           alt={prod.name} 
-                          className="object-cover h-full w-full rounded-2xl group-hover:scale-105 transition-transform duration-500"
+                          className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500"
                         />
                         
                         {/* Small Brand Logo at Top */}
@@ -441,8 +441,8 @@ function ProductsContent() {
           </div>
           <div className="flex gap-2">
             {compareList.map(prod => (
-              <div key={prod.id} className="relative flex-1 aspect-square bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800 p-1 flex items-center justify-center">
-                <img src={prod.images[0]} alt={prod.name} className="h-full w-full object-cover rounded-lg" />
+              <div key={prod.id} className="relative flex-1 aspect-square bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800 p-2 flex items-center justify-center">
+                <img src={prod.images[0]} alt={prod.name} className="h-full w-full object-contain rounded-lg" />
                 <button 
                   onClick={() => toggleCompare(prod)}
                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:scale-105"
@@ -499,7 +499,7 @@ function ProductsContent() {
                 {compareList.map(prod => (
                   <div key={prod.id} className="space-y-4 col-span-1">
                     <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100 dark:border-slate-900">
-                      <img src={prod.images[0]} alt={prod.name} className="h-28 w-28 object-cover rounded-2xl border bg-white mb-2" />
+                      <img src={prod.images[0]} alt={prod.name} className="h-28 w-28 object-contain rounded-2xl border bg-white mb-2 p-1" />
                       <p className="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">{prod.name}</p>
                       <button 
                         onClick={() => { addToCart(prod, 1); setCompareModalOpen(false); }}
@@ -556,8 +556,8 @@ function ProductsContent() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                 
                 {/* Image */}
-                <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden p-4 flex items-center justify-center border">
-                  <img src={quickViewProduct.images[0]} alt={quickViewProduct.name} className="object-cover h-full w-full rounded-xl" />
+                <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden p-6 flex items-center justify-center border">
+                  <img src={quickViewProduct.images[0]} alt={quickViewProduct.name} className="object-contain h-full w-full" />
                 </div>
 
                 {/* Details */}

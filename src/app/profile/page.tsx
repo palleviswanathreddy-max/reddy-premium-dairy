@@ -566,7 +566,7 @@ function ProfileContent() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                     {wishlistProducts.map(prod => (
                       <div key={prod.id} className="border rounded-2xl p-3 bg-slate-50/50 dark:bg-slate-900/40 relative flex flex-col justify-between">
-                        <img src={prod.images[0]} alt="" className="aspect-square object-cover rounded-xl border bg-white w-full mb-2" />
+                        <img src={prod.images[0]} alt="" className="aspect-square object-contain rounded-xl border bg-white w-full mb-2 p-1" />
                         <Link href={`/products/${prod.id}`}>
                           <p className="text-xs font-bold text-slate-800 dark:text-white truncate hover:underline hover:text-primary">{prod.name}</p>
                         </Link>

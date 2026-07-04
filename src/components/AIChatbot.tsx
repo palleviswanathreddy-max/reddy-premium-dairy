@@ -181,7 +181,7 @@ export default function AIChatbot() {
                             className="flex items-center justify-between gap-3 p-2 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-900"
                           >
                             <div className="flex items-center gap-2 min-w-0">
-                              <img src={prod.images[0]} alt={prod.name} className="h-10 w-10 object-cover rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white" />
+                              <img src={prod.images[0]} alt={prod.name} className="h-10 w-10 object-contain rounded-lg border border-slate-200/50 dark:border-slate-800 bg-white p-0.5" />
                               <div className="text-left min-w-0">
                                 <p className="text-[10px] font-bold truncate text-slate-800 dark:text-white">{prod.name}</p>
                                 <p className="text-[9px] font-semibold text-slate-400 mt-0.5">Rs. {prod.price}</p>

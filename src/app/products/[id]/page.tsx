@@ -201,7 +201,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                     activeImage === img ? 'border-accent shadow-md' : 'border-slate-200 dark:border-slate-800'
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-cover rounded-lg" />
+                  <img src={img} alt="" className="h-full w-full object-contain rounded-lg" />
                 </button>
               ))}
             </div>
@@ -471,7 +471,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 
                 {/* Main Product */}
                 <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border max-w-xs flex-grow">
-                  <img src={product.images[0]} alt="" className="h-12 w-12 object-cover rounded-xl" />
+                  <img src={product.images[0]} alt="" className="h-12 w-12 object-contain rounded-xl" />
                   <div className="text-left text-xs font-semibold min-w-0">
                     <p className="text-slate-800 dark:text-white truncate">{product.name}</p>
                     <p className="text-slate-400">Rs. {product.price}</p>
@@ -484,7 +484,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 {frequentlyBought.map(prod => (
                   <React.Fragment key={prod.id}>
                     <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border max-w-xs flex-grow">
-                      <img src={prod.images[0]} alt="" className="h-12 w-12 object-cover rounded-xl" />
+                      <img src={prod.images[0]} alt="" className="h-12 w-12 object-contain rounded-xl" />
                       <div className="text-left text-xs font-semibold min-w-0">
                         <p className="text-slate-800 dark:text-white truncate">{prod.name}</p>
                         <p className="text-slate-400">Rs. {prod.price}</p>
@@ -614,7 +614,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map(prod => (
                 <div key={prod.id} className="border rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm hover:shadow-md transition-shadow">
-                  <img src={prod.images[0]} alt="" className="aspect-square object-cover rounded-xl border bg-slate-50 w-full mb-3" />
+                  <img src={prod.images[0]} alt="" className="aspect-square object-contain rounded-xl border bg-slate-50 w-full mb-3 p-2" />
                   <Link href={`/products/${prod.id}`}>
                     <p className="text-xs font-bold text-slate-800 dark:text-white hover:text-primary truncate">{prod.name}</p>
                   </Link>

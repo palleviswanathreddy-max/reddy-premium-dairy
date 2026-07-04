@@ -191,11 +191,11 @@ export default function Home() {
                   className="flex flex-col rounded-3xl border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-800 transition-all duration-300 overflow-hidden group"
                 >
                   {/* Image container */}
-                  <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+                  <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
                     <img 
                       src={prod.images[0]} 
                       alt={prod.name} 
-                      className="object-cover h-full w-full rounded-2xl group-hover:scale-105 transition-transform duration-500"
+                      className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500"
                     />
                     
                     {/* Brand Logo overlay */}

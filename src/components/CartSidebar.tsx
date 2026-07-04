@@ -136,7 +136,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                   <img 
                     src={item.product.images[0] || '/images/interface image.png'} 
                     alt={item.product.name} 
-                    className="h-16 w-16 object-cover rounded-xl border border-slate-200/50 dark:border-slate-800 bg-white"
+                    className="h-16 w-16 object-contain rounded-xl border border-slate-200/50 dark:border-slate-800 bg-white p-0.5"
                   />
                   
                   {/* Details */}
