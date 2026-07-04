@@ -1,0 +1,1346 @@
+{
+  "products": [
+    {
+      "id": "prod-fresh-milk",
+      "sku": "REDDY-FRSH-500",
+      "name": "REDDY PREMIUM Fresh Milk \u2013 Pasteurised & Homogenised (500ml)",
+      "category": "Fresh Milk",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure farm-fresh milk, pasteurised and homogenised for consistent creamy texture. 100% natural with no preservatives. Rich source of calcium and protein for daily health.",
+      "ingredients": "100% Pasteurised Homogenised Whole Milk",
+      "storage": "Refrigerate between 1\u00b0C\u20134\u00b0C. Consume within 3 days of opening.",
+      "nutrition": {
+        "calories": "61 kcal",
+        "fat": "3.3g",
+        "saturatedFat": "2.1g",
+        "protein": "3.2g",
+        "carbohydrates": "4.6g",
+        "calcium": "115mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 35,
+      "price": 32,
+      "discount": 8,
+      "gst": 0,
+      "stock": 250,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "rating": 4.8,
+      "images": [
+        "/images/products/1_fresh_milk.png"
+      ],
+      "tags": [
+        "Fresh Milk",
+        "Homogenised",
+        "Daily Fresh"
+      ],
+      "reviews": [
+        {
+          "username": "Anil P.",
+          "rating": 5,
+          "date": "2026-07-01",
+          "comment": "Tastes very fresh. Great for daily use.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Do I need to boil this milk?",
+          "a": "Yes, we recommend boiling before consumption for safety."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd",
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-cow-milk",
+        "prod-buffalo-milk"
+      ]
+    },
+    {
+      "id": "prod-cow-milk",
+      "sku": "REDDY-COW-500",
+      "name": "REDDY PREMIUM Pure Cow Milk \u2013 100% Pure & Natural (500ml)",
+      "category": "Fresh Milk",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "100% pure and natural cow milk sourced from pasture-fed cows. Easy to digest and packed with natural sweetness and nutrition. Excellent for daily cooking, tea, and coffee.",
+      "ingredients": "100% Pure Cow Milk",
+      "storage": "Refrigerate under 4\u00b0C.",
+      "nutrition": {
+        "calories": "59 kcal",
+        "fat": "3.2g",
+        "saturatedFat": "2.0g",
+        "protein": "3.2g",
+        "carbohydrates": "4.5g",
+        "calcium": "118mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 40,
+      "price": 36,
+      "discount": 10,
+      "gst": 0,
+      "stock": 200,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "rating": 4.9,
+      "images": [
+        "/images/products/2_cow_milk.png"
+      ],
+      "tags": [
+        "Cow Milk",
+        "Natural",
+        "Farm Fresh"
+      ],
+      "reviews": [
+        {
+          "username": "Sujatha Reddy",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Perfect cow milk, my kids love the taste.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is this milk organic?",
+          "a": "100% natural from grass-fed cows, free of hormones and preservatives."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-butter",
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-fresh-milk",
+        "prod-a2-milk"
+      ]
+    },
+    {
+      "id": "prod-buffalo-milk",
+      "sku": "REDDY-BUFF-500",
+      "name": "REDDY PREMIUM Rich Buffalo Milk \u2013 Rich & Nutritious (500ml)",
+      "category": "Fresh Milk",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich, creamy, high-fat buffalo milk sourced directly from our farm. Ideal for preparing traditional curd, ghee, sweets, and rich tea. Pasteurised for guaranteed purity.",
+      "ingredients": "100% Raw Buffalo Milk",
+      "storage": "Refrigerate 1\u00b0C\u20134\u00b0C. Boil before consumption.",
+      "nutrition": {
+        "calories": "97 kcal",
+        "fat": "6.5g",
+        "saturatedFat": "4.2g",
+        "protein": "3.8g",
+        "carbohydrates": "5.1g",
+        "calcium": "180mg",
+        "vitaminD": "35 IU"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 45,
+      "price": 41,
+      "discount": 9,
+      "gst": 0,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "rating": 4.8,
+      "images": [
+        "/images/products/3_buffalo_milk.png"
+      ],
+      "tags": [
+        "Buffalo Milk",
+        "High Fat",
+        "Creamy"
+      ],
+      "reviews": [
+        {
+          "username": "Venkatesh A.",
+          "rating": 5,
+          "date": "2026-06-28",
+          "comment": "The thickness is unmatched. Perfect for making homemade Ghee and Curd.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does this have preservatives?",
+          "a": "No, 100% pure raw milk without any preservatives."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-ghee",
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-cow-milk",
+        "prod-a2-milk"
+      ]
+    },
+    {
+      "id": "prod-a2-milk",
+      "sku": "REDDY-A2-500",
+      "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+      "category": "Fresh Milk",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure A2 Cow Milk from indigenous grass-fed cows. Rich in A2 beta-casein protein which is highly digestible. Chilled within 1 hour of milking. Great immunity booster for the whole family.",
+      "ingredients": "100% Pure A2 Cow Milk",
+      "storage": "Refrigerate 1\u00b0C\u20134\u00b0C. Consume within 3 days of opening.",
+      "nutrition": {
+        "calories": "62 kcal",
+        "fat": "3.8g",
+        "saturatedFat": "2.4g",
+        "protein": "3.4g",
+        "carbohydrates": "4.7g",
+        "calcium": "120mg",
+        "vitaminD": "40 IU"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 55,
+      "price": 48,
+      "discount": 12,
+      "gst": 0,
+      "stock": 149,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "rating": 4.9,
+      "images": [
+        "/images/products/4_a2_milk.png"
+      ],
+      "tags": [
+        "A2 Milk",
+        "Healthy Protein",
+        "Immunity"
+      ],
+      "reviews": [
+        {
+          "username": "Ramesh K.",
+          "rating": 5,
+          "date": "2026-07-01",
+          "comment": "Absolutely pure. Tastes like village home milk. Highly recommended!",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is this milk homogenized?",
+          "a": "No, our A2 cow milk is non-homogenized. Cream rises naturally to the top."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer",
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-buffalo-milk",
+        "prod-cow-milk"
+      ]
+    },
+    {
+      "id": "prod-curd",
+      "sku": "REDDY-CURD-500",
+      "name": "REDDY PREMIUM Curd \u2013 Thick & Tasty (500g)",
+      "category": "Curd",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Thick, creamy, naturally set curd from pasteurised milk. Rich in active lactic cultures for gut health and digestion. No added preservatives or thickeners. Perfect alongside meals.",
+      "ingredients": "Pasteurized Milk, Active Lactic Cultures",
+      "storage": "Refrigerate below 4\u00b0C. Do not freeze.",
+      "nutrition": {
+        "calories": "60 kcal",
+        "fat": "3.1g",
+        "protein": "3.3g",
+        "carbohydrates": "4.4g",
+        "calcium": "110mg"
+      },
+      "weight": "500g",
+      "volume": "500g",
+      "mrp": 45,
+      "price": 40,
+      "discount": 11,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Curd",
+        "Dahi",
+        "Probiotic",
+        "Thick"
+      ],
+      "reviews": [
+        {
+          "username": "Mohan K.",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Extremely thick and creamy. Taste is perfect.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is it sour?",
+          "a": "Fresh mild taste. Will turn sour only if left outside refrigeration."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer",
+        "prod-butter"
+      ],
+      "relatedProducts": [
+        "prod-fresh-milk",
+        "prod-buttermilk"
+      ]
+    },
+    {
+      "id": "prod-butter",
+      "sku": "REDDY-BUTTER-500",
+      "name": "REDDY PREMIUM Butter \u2013 Pasteurised (500g)",
+      "category": "Butter",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich, creamy, pasteurised butter made from fresh milk fat. Adds a delicious taste and aroma to toast, paranthas, biscuits, and saut\u00e9ed vegetables. 100% free of artificial colors.",
+      "ingredients": "Pasteurised Milk Fat, Salt, Annatto Color",
+      "storage": "Refrigerate under 4\u00b0C.",
+      "nutrition": {
+        "calories": "720 kcal",
+        "fat": "81.0g",
+        "saturatedFat": "51.2g",
+        "protein": "0.6g",
+        "carbohydrates": "0.8g"
+      },
+      "weight": "500g",
+      "volume": "500g",
+      "mrp": 280,
+      "price": 250,
+      "discount": 10,
+      "gst": 12,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/6_butter.png"
+      ],
+      "tags": [
+        "Butter",
+        "Salted Butter",
+        "Premium"
+      ],
+      "reviews": [
+        {
+          "username": "Sunitha S.",
+          "rating": 5,
+          "date": "2026-07-03",
+          "comment": "Delicious salty flavor. Matches best brand standards.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is it salted?",
+          "a": "Yes, this is pasteurised salted butter."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cheese",
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-ghee",
+        "prod-cheese"
+      ]
+    },
+    {
+      "id": "prod-paneer",
+      "sku": "REDDY-PANEER-200",
+      "name": "REDDY PREMIUM Paneer \u2013 Fresh & Soft (200g)",
+      "category": "Paneer",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Incredibly soft, fresh, melt-in-the-mouth malai paneer. Made from pure cow milk under hygienic conditions. Vacuum sealed to retain freshness. Free from starch or binders.",
+      "ingredients": "Pasteurized Cow Milk, Citric Acid",
+      "storage": "Refrigerate below 4\u00b0C. Soak in warm water for 10 mins before cooking.",
+      "nutrition": {
+        "calories": "265 kcal",
+        "fat": "20.8g",
+        "protein": "18.3g",
+        "carbohydrates": "1.2g",
+        "calcium": "208mg"
+      },
+      "weight": "200g",
+      "volume": "200g",
+      "mrp": 95,
+      "price": 85,
+      "discount": 11,
+      "gst": 5,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/7_paneer.png"
+      ],
+      "tags": [
+        "Paneer",
+        "Fresh",
+        "High Protein",
+        "Malai"
+      ],
+      "reviews": [
+        {
+          "username": "Nirupama L.",
+          "rating": 5,
+          "date": "2026-06-30",
+          "comment": "So soft! Unlike the rubbery paneer from other brands. Truly premium.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is this paneer soft?",
+          "a": "Yes, it is soft malai paneer. Keep refrigerated until use."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd",
+        "prod-ghee"
+      ],
+      "relatedProducts": [
+        "prod-cheese",
+        "prod-butter"
+      ]
+    },
+    {
+      "id": "prod-cheese",
+      "sku": "REDDY-CHEESE-200",
+      "name": "REDDY PREMIUM Cheese \u2013 Processed Cheese (200g)",
+      "category": "Cheese",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Creamy, delicious processed cheese. Easy to slice, grate, or melt. Rich in dairy protein and calcium. Perfect for sandwiches, pizza, burgers, and pasta dishes.",
+      "ingredients": "Cheese, Milk Solids, Emulsifiers, Common Salt",
+      "storage": "Refrigerate below 4\u00b0C. Do not freeze.",
+      "nutrition": {
+        "calories": "310 kcal",
+        "fat": "25.0g",
+        "protein": "20.0g",
+        "carbohydrates": "1.5g",
+        "calcium": "650mg"
+      },
+      "weight": "200g",
+      "volume": "200g",
+      "mrp": 140,
+      "price": 120,
+      "discount": 14,
+      "gst": 12,
+      "stock": 70,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Cheese Block",
+        "Processed Cheese",
+        "Melty"
+      ],
+      "reviews": [
+        {
+          "username": "Praveen V.",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Very delicious, melts beautifully. Good quality block.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can I shred this cheese?",
+          "a": "Yes, grate easily after cooling in fridge for a bit."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-butter",
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-paneer",
+        "prod-butter"
+      ]
+    },
+    {
+      "id": "prod-ghee",
+      "sku": "REDDY-GHEE-500",
+      "name": "REDDY PREMIUM Ghee \u2013 Pure & Aromatic (500ml)",
+      "category": "Ghee",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional Danedar cow ghee, crafted from fresh butter. Slowly cooked in small batches to preserve nutrition and yield rich golden aroma. Rich in antioxidants and healthy fats.",
+      "ingredients": "100% Pure Milk Fat (from Cow Milk)",
+      "storage": "Store in cool dry place away from sunlight. Do not refrigerate.",
+      "nutrition": {
+        "calories": "897 kcal",
+        "fat": "99.7g",
+        "saturatedFat": "65.2g",
+        "protein": "0g",
+        "carbohydrates": "0g"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 380,
+      "price": 349,
+      "discount": 8,
+      "gst": 12,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 365,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 5.0,
+      "images": [
+        "/images/products/9_ghee.png"
+      ],
+      "tags": [
+        "Ghee",
+        "Pure Ghee",
+        "Vedic",
+        "Aromatic"
+      ],
+      "reviews": [
+        {
+          "username": "Viswanath Reddy",
+          "rating": 5,
+          "date": "2026-06-25",
+          "comment": "The aroma fills the entire house when added to hot rice. Best Ghee ever!",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is this made from cow milk?",
+          "a": "Yes, traditional Danedar cow ghee made from fresh butter."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer",
+        "prod-butter"
+      ],
+      "relatedProducts": [
+        "prod-butter",
+        "prod-khova"
+      ]
+    },
+    {
+      "id": "prod-cream",
+      "sku": "REDDY-CREAM-200",
+      "name": "REDDY PREMIUM Cream \u2013 Rich & Fresh (200ml)",
+      "category": "Fresh Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Velvety smooth fresh dairy cream. Enhances the richness of curries, gravies, soups, and desserts. Perfect for whipping and garnishing. 100% pure with no artificial thickeners.",
+      "ingredients": "Milk Fat, Milk Solids",
+      "storage": "Refrigerate under 4\u00b0C. Do not freeze.",
+      "nutrition": {
+        "calories": "246 kcal",
+        "fat": "25.0g",
+        "saturatedFat": "16.0g",
+        "protein": "2.0g",
+        "carbohydrates": "3.2g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 60,
+      "price": 52,
+      "discount": 13,
+      "gst": 5,
+      "stock": 90,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Fresh Cream",
+        "Cooking Cream",
+        "Velvety"
+      ],
+      "reviews": [
+        {
+          "username": "Sireesha K.",
+          "rating": 5,
+          "date": "2026-07-03",
+          "comment": "Perfect for butter chicken and paneer butter masala. Super thick.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "What is the fat content?",
+          "a": "25% milk fat content, standard for cooking and whipping cream."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer",
+        "prod-butter"
+      ],
+      "relatedProducts": [
+        "prod-curd",
+        "prod-ghee"
+      ]
+    },
+    {
+      "id": "prod-buttermilk",
+      "sku": "REDDY-BMLK-500",
+      "name": "REDDY PREMIUM Buttermilk \u2013 Refreshing & Healthy (500ml)",
+      "category": "Buttermilk",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Refreshing spiced buttermilk churned from fresh curd. Spiced with ginger, curry leaves, green chilli, and black salt. Aids digestion and keeps you hydrated in hot weather.",
+      "ingredients": "Water, Curd, Ginger, Green Chilli, Salt, Spices, Curry Leaves",
+      "storage": "Refrigerate below 4\u00b0C. Shake well before drinking.",
+      "nutrition": {
+        "calories": "18 kcal",
+        "fat": "0.8g",
+        "protein": "0.9g",
+        "carbohydrates": "1.8g",
+        "sodium": "240mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 35,
+      "price": 30,
+      "discount": 14,
+      "gst": 0,
+      "stock": 200,
+      "status": "Available",
+      "expiryDays": 5,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/11_buttermilk.png"
+      ],
+      "tags": [
+        "Buttermilk",
+        "Spiced",
+        "Refreshing",
+        "Chaas"
+      ],
+      "reviews": [
+        {
+          "username": "Harish T.",
+          "rating": 5,
+          "date": "2026-06-29",
+          "comment": "Very refreshing! Nicely spiced with perfect sourness.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is it spicy?",
+          "a": "Mild and refreshing, spiced with natural ginger and green chilli."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-lassi",
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-lassi",
+        "prod-curd"
+      ]
+    },
+    {
+      "id": "prod-lassi",
+      "sku": "REDDY-LASSI-500",
+      "name": "REDDY PREMIUM Lassi \u2013 Sweet & Delicious (500ml)",
+      "category": "Lassi",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional sweet Punjabi-style lassi made from thick high-fat curd. Flavoured with cardamom and saffron. Creamy, rich, and delicious \u2013 the perfect meal companion.",
+      "ingredients": "Pasteurized Milk Solids, Sugar, Active Culture, Cardamom, Saffron Extract",
+      "storage": "Refrigerate below 4\u00b0C.",
+      "nutrition": {
+        "calories": "112 kcal",
+        "fat": "3.5g",
+        "protein": "3.0g",
+        "carbohydrates": "17.0g",
+        "calcium": "115mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 50,
+      "price": 42,
+      "discount": 16,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 7,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/12_lassi.png"
+      ],
+      "tags": [
+        "Lassi",
+        "Sweet Lassi",
+        "Saffron",
+        "Creamy"
+      ],
+      "reviews": [
+        {
+          "username": "Laxmi M.",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Extremely creamy and the saffron taste is authentic.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is it very sweet?",
+          "a": "Balanced sweetness, mimicking traditional homemade lassi."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-buttermilk"
+      ],
+      "relatedProducts": [
+        "prod-milkshake",
+        "prod-flavoured-milk"
+      ]
+    },
+    {
+      "id": "prod-ice-cream",
+      "sku": "REDDY-ICE-500",
+      "name": "REDDY PREMIUM Ice Cream \u2013 Rich & Creamy (500ml)",
+      "category": "Ice Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Luxurious, multi-flavour ice cream tub made from rich dairy cream. Smooth, indulgent, and meltingly delicious. Perfect family dessert for any occasion.",
+      "ingredients": "Milk Solids, Cream, Sugar, Cocoa Powder, Vanilla Extract, Stabilizers",
+      "storage": "Store in freezer under -18\u00b0C.",
+      "nutrition": {
+        "calories": "190 kcal",
+        "fat": "11.0g",
+        "protein": "3.5g",
+        "carbohydrates": "21.0g"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 160,
+      "price": 140,
+      "discount": 12,
+      "gst": 18,
+      "stock": 50,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 2 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/13_ice_cream.png"
+      ],
+      "tags": [
+        "Ice Cream",
+        "Dessert",
+        "Family Pack",
+        "Creamy"
+      ],
+      "reviews": [
+        {
+          "username": "Karthik R.",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Extremely creamy and rich. Loved it with chocolate sauce.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "How is it delivered?",
+          "a": "Delivered in dry-ice insulated bags to prevent melting."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-milkshake",
+        "prod-flavoured-milk"
+      ],
+      "relatedProducts": [
+        "prod-milkshake",
+        "prod-cream"
+      ]
+    },
+    {
+      "id": "prod-milkshake",
+      "sku": "REDDY-MSHK-200",
+      "name": "REDDY PREMIUM Milkshake \u2013 Thick & Tasty (200ml)",
+      "category": "Milkshake",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich chocolate milkshake made from whole milk and premium Belgian cocoa. Thick, creamy, and satisfying energy booster in a convenient bottle.",
+      "ingredients": "Whole Milk, Sugar, Belgian Cocoa Powder, Stabilizers",
+      "storage": "Keep refrigerated. Shake well before drinking.",
+      "nutrition": {
+        "calories": "86 kcal",
+        "fat": "2.2g",
+        "protein": "3.1g",
+        "carbohydrates": "13.4g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 40,
+      "price": 35,
+      "discount": 12,
+      "gst": 12,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Milkshake",
+        "Chocolate",
+        "Beverage"
+      ],
+      "reviews": [
+        {
+          "username": "Arun V.",
+          "rating": 5,
+          "date": "2026-07-01",
+          "comment": "Very thick and satisfying chocolate shake.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does it need refrigeration?",
+          "a": "Room temperature is fine, but best enjoyed chilled."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-flavoured-milk",
+        "prod-ice-cream"
+      ],
+      "relatedProducts": [
+        "prod-flavoured-milk",
+        "prod-lassi"
+      ]
+    },
+    {
+      "id": "prod-flavoured-milk",
+      "sku": "REDDY-FLMK-200",
+      "name": "REDDY PREMIUM Flavoured Milk \u2013 Strawberry (200ml)",
+      "category": "Milkshake",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Refreshing strawberry flavoured milk combining pure dairy goodness with the juicy taste of ripe strawberries. Light, sweet, and delicious \u2013 loved by kids and adults alike.",
+      "ingredients": "Double Toned Milk, Sugar, Strawberry Fruit Concentrate, Permitted Flavors",
+      "storage": "Store in cool dry place. Shake well before use.",
+      "nutrition": {
+        "calories": "80 kcal",
+        "fat": "2.0g",
+        "protein": "3.0g",
+        "carbohydrates": "12.5g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 35,
+      "price": 30,
+      "discount": 14,
+      "gst": 12,
+      "stock": 140,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.6,
+      "images": [
+        "/images/products/15_flavoured_milk.png"
+      ],
+      "tags": [
+        "Flavoured Milk",
+        "Strawberry",
+        "Kids Favourite"
+      ],
+      "reviews": [
+        {
+          "username": "Divya G.",
+          "rating": 5,
+          "date": "2026-07-01",
+          "comment": "Sweet and fruity flavor, loved it!",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Does this contain real fruit?",
+          "a": "Yes, contains strawberry concentrate blended with premium whole milk."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-milkshake"
+      ],
+      "relatedProducts": [
+        "prod-milkshake",
+        "prod-lassi"
+      ]
+    },
+    {
+      "id": "prod-milk-powder",
+      "sku": "REDDY-MLKPOW-500",
+      "name": "REDDY PREMIUM Milk Powder \u2013 Spray Dried (500g)",
+      "category": "Milk Powder",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "High-quality spray-dried whole milk powder. Retains natural dairy flavor and full nutrition. Dissolves easily to prepare milk, tea, coffee, and traditional sweets.",
+      "ingredients": "Pasteurized Cow and Buffalo Milk Solids",
+      "storage": "Store in cool dry place. Keep in airtight container after opening.",
+      "nutrition": {
+        "calories": "496 kcal",
+        "fat": "26.5g",
+        "protein": "26.0g",
+        "carbohydrates": "38.0g",
+        "calcium": "950mg"
+      },
+      "weight": "500g",
+      "volume": "500g",
+      "mrp": 220,
+      "price": 195,
+      "discount": 11,
+      "gst": 5,
+      "stock": 60,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Milk Powder",
+        "Whole Milk Powder",
+        "Baking"
+      ],
+      "reviews": [
+        {
+          "username": "Naveen S.",
+          "rating": 5,
+          "date": "2026-06-28",
+          "comment": "Dissolves easily without lumps. Makes thick tea.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Can I use this for baking?",
+          "a": "Yes, it is ideal for baking, kheer, sweets, and daily milk preparation."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-khova",
+        "prod-ghee"
+      ],
+      "relatedProducts": [
+        "prod-ghee",
+        "prod-khova"
+      ]
+    },
+    {
+      "id": "prod-khova",
+      "sku": "REDDY-KHOVA-200",
+      "name": "REDDY PREMIUM Khova \u2013 Pure & Traditional (200g)",
+      "category": "Khova",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure solid milk concentrate (Mawa), slow-cooked in traditional open pans from high-quality buffalo milk. Rich texture and sweet milk aroma. Essential for Gulab Jamun, Halwa, and Pedas.",
+      "ingredients": "100% Pure Buffalo Milk Solids",
+      "storage": "Refrigerate below 4\u00b0C. Consume within 7 days or freeze for up to 30 days.",
+      "nutrition": {
+        "calories": "320 kcal",
+        "fat": "22.5g",
+        "protein": "14.8g",
+        "carbohydrates": "15.0g",
+        "calcium": "650mg"
+      },
+      "weight": "200g",
+      "volume": "200g",
+      "mrp": 110,
+      "price": 95,
+      "discount": 13,
+      "gst": 5,
+      "stock": 50,
+      "status": "Available",
+      "expiryDays": 7,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Khova",
+        "Mawa",
+        "Traditional",
+        "Sweet Material"
+      ],
+      "reviews": [
+        {
+          "username": "Rajasekhar K.",
+          "rating": 5,
+          "date": "2026-07-02",
+          "comment": "Tastes pure and homemade. Used for delicious Gulab Jamuns.",
+          "photo": null
+        }
+      ],
+      "faq": [
+        {
+          "q": "Is sugar added?",
+          "a": "No, this is unsweetened pure khova."
+        }
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-ghee",
+        "prod-milk-powder"
+      ],
+      "relatedProducts": [
+        "prod-paneer",
+        "prod-ghee"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "user-admin",
+      "email": "admin@reddy.com",
+      "password": "admin123",
+      "name": "Palle Viswanath Reddy",
+      "role": "admin",
+      "phone": "+91 6300928511",
+      "avatar": "/images/owner pic.png",
+      "addresses": [
+        {
+          "id": "addr-1",
+          "name": "Palle Viswanath Reddy",
+          "phone": "+91 6300928511",
+          "street": "Chiyyedu Village, Anantapur District",
+          "village": "Chiyyedu",
+          "district": "Anantapur",
+          "state": "Andhra Pradesh",
+          "pincode": "515721",
+          "isDefault": true
+        }
+      ],
+      "rewardPoints": 1500,
+      "walletBalance": 1000
+    },
+    {
+      "id": "user-customer",
+      "email": "customer@gmail.com",
+      "password": "user123",
+      "name": "Kiran Kumar",
+      "role": "customer",
+      "phone": "+91 9876543210",
+      "avatar": null,
+      "addresses": [
+        {
+          "id": "addr-2",
+          "name": "Kiran Kumar",
+          "phone": "+91 9876543210",
+          "street": "Sai Nagar 3rd Cross",
+          "village": "Anantapur Town",
+          "district": "Anantapur",
+          "state": "Andhra Pradesh",
+          "pincode": "515001",
+          "isDefault": true
+        }
+      ],
+      "rewardPoints": 250,
+      "walletBalance": 200
+    },
+    {
+      "id": "user-1783108915631",
+      "email": "palleviswanathreddy1111@gmail.com",
+      "password": "Viswa@123",
+      "passwordHash": "$2b$10$9A87uZ/K7TYUnKPcd9sH9e5X/u8FWtMh/D9igiO9LuyiKyC4C9w22",
+      "name": "viswa",
+      "phone": "6300928512",
+      "role": "customer",
+      "avatar": null,
+      "addresses": [],
+      "rewardPoints": 104,
+      "walletBalance": 0
+    }
+  ],
+  "orders": [
+    {
+      "items": [
+        {
+          "productId": "prod-a2-milk",
+          "sku": "REDDY-A2-500",
+          "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+          "price": 48,
+          "quantity": 1,
+          "gst": 0
+        }
+      ],
+      "subtotal": 48,
+      "gstTotal": 0,
+      "deliveryCharges": 20,
+      "discount": 0,
+      "grandTotal": 68,
+      "paymentMethod": "COD",
+      "deliveryAddress": {
+        "name": "viswa",
+        "phone": "6300928512",
+        "street": "3-57, VILLAGE:CHIYYEDU,STREET:BC COLONY",
+        "village": "anantapur",
+        "district": "anantapur",
+        "state": "Andhra Pradesh",
+        "pincode": "515721"
+      },
+      "giftMessage": "",
+      "deliveryInstructions": "3-57",
+      "userId": "user-1783108915631",
+      "id": "ORD-20260703-9458",
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "createdAt": "2026-07-03T20:03:40.900Z",
+      "timeline": [
+        {
+          "status": "Pending",
+          "time": "2026-07-03T20:03:40.900Z",
+          "done": true
+        },
+        {
+          "status": "Confirmed",
+          "time": "2026-07-03T20:18:40.900Z",
+          "done": true
+        },
+        {
+          "status": "Packed",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Shipped",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Out for Delivery",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Delivered",
+          "time": "",
+          "done": false
+        }
+      ]
+    },
+    {
+      "id": "ORD-20260703-01",
+      "userId": "user-customer",
+      "items": [
+        {
+          "productId": "prod-a2-milk",
+          "sku": "REDDY-A2-500",
+          "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+          "price": 48,
+          "quantity": 2,
+          "gst": 0
+        },
+        {
+          "productId": "prod-paneer",
+          "sku": "REDDY-PANEER-200",
+          "name": "REDDY PREMIUM Paneer \u2013 Fresh & Soft (200g)",
+          "price": 85,
+          "quantity": 1,
+          "gst": 5
+        }
+      ],
+      "subtotal": 181,
+      "gstTotal": 4.25,
+      "deliveryCharges": 20,
+      "discount": 0,
+      "grandTotal": 205.25,
+      "status": "Delivered",
+      "paymentMethod": "UPI",
+      "paymentStatus": "Paid",
+      "deliveryAddress": {
+        "name": "Kiran Kumar",
+        "phone": "+91 9876543210",
+        "street": "Sai Nagar 3rd Cross",
+        "village": "Anantapur Town",
+        "district": "Anantapur",
+        "state": "Andhra Pradesh",
+        "pincode": "515001"
+      },
+      "createdAt": "2026-07-02T08:30:00.000Z",
+      "timeline": [
+        {
+          "status": "Pending",
+          "time": "2026-07-02T08:30:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Confirmed",
+          "time": "2026-07-02T08:45:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Packed",
+          "time": "2026-07-02T10:00:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Shipped",
+          "time": "2026-07-02T11:30:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Out for Delivery",
+          "time": "2026-07-02T13:00:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Delivered",
+          "time": "2026-07-02T13:45:00.000Z",
+          "done": true
+        }
+      ]
+    },
+    {
+      "id": "ORD-20260703-02",
+      "userId": "user-customer",
+      "items": [
+        {
+          "productId": "prod-ghee",
+          "sku": "REDDY-GHEE-500",
+          "name": "REDDY PREMIUM Ghee \u2013 Pure & Aromatic (500ml)",
+          "price": 349,
+          "quantity": 1,
+          "gst": 12
+        }
+      ],
+      "subtotal": 349,
+      "gstTotal": 41.88,
+      "deliveryCharges": 0,
+      "discount": 30,
+      "grandTotal": 360.88,
+      "status": "Shipped",
+      "paymentMethod": "COD",
+      "paymentStatus": "Pending",
+      "deliveryAddress": {
+        "name": "Kiran Kumar",
+        "phone": "+91 9876543210",
+        "street": "Sai Nagar 3rd Cross",
+        "village": "Anantapur Town",
+        "district": "Anantapur",
+        "state": "Andhra Pradesh",
+        "pincode": "515001"
+      },
+      "createdAt": "2026-07-03T14:10:00.000Z",
+      "timeline": [
+        {
+          "status": "Pending",
+          "time": "2026-07-03T14:10:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Confirmed",
+          "time": "2026-07-03T14:30:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Packed",
+          "time": "2026-07-03T17:00:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Shipped",
+          "time": "2026-07-03T18:15:00.000Z",
+          "done": true
+        },
+        {
+          "status": "Out for Delivery",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Delivered",
+          "time": "",
+          "done": false
+        }
+      ]
+    }
+  ],
+  "coupons": [
+    {
+      "code": "REDDY50",
+      "description": "Rs. 50 discount on minimum purchase of Rs. 300",
+      "type": "flat",
+      "value": 50,
+      "minPurchase": 300
+    },
+    {
+      "code": "PURE10",
+      "description": "10% discount on order value",
+      "type": "percentage",
+      "value": 10,
+      "minPurchase": 100
+    },
+    {
+      "code": "FRESHSTART",
+      "description": "Free delivery on orders above Rs. 150",
+      "type": "free_shipping",
+      "value": 20,
+      "minPurchase": 150
+    }
+  ],
+  "blogs": [
+    {
+      "id": "blog-1",
+      "title": "Why A2 Cow Milk is Better for Your Digestive System",
+      "summary": "Discover the health differences between A1 and A2 proteins and how switching to A2 milk can alleviate bloating and discomfort.",
+      "content": "A2 Cow Milk is milk that contains only the A2 type of beta-casein protein, rather than the more common A1 protein found in regular store-bought milk. For decades, traditional Indian breeds of cows (like Gir, Sahiwal, and Ongole) have naturally produced 100% A2 milk. Recent research demonstrates that A2 beta-casein is processed differently by our digestive enzymes, preventing the release of BCM-7 (Beta-casomorphin-7), which has been linked to bloating, stomach cramps, and inflammatory reactions. Swapping your daily milk for Reddy Premium A2 Cow Milk ensures not only pure farm-fresh flavor but also comfortable digestion and superior calcium absorption.",
+      "category": "Health Articles",
+      "image": "/images/cow_milk.png",
+      "readTime": "4 min read",
+      "date": "2026-07-01"
+    },
+    {
+      "id": "blog-2",
+      "title": "Perfect Soft Paneer Tikka Recipe for Family Evenings",
+      "summary": "An easy step-by-step recipe to get restaurant-style soft Paneer Tikka using Reddy Fresh Malai Paneer at home.",
+      "content": "To prepare perfect soft Paneer Tikka, the secret lies in the moisture of the Paneer and the consistency of the marinade. Step 1: Take 200g of Reddy Fresh Malai Paneer and cut into thick cubes. Step 2: Soak the cubes in lukewarm water for 10 minutes, then pat dry. Step 3: Mix hung curd with mustard oil, Kashmiri red chilli powder, ginger-garlic paste, garam masala, and kasuri methi. Step 4: Gently fold the paneer cubes, diced onions, and bell peppers into the paste. Step 5: Roast in a hot oven or grill pan for 12-15 minutes until charred at the edges. Garnish with lemon juice and serve with mint chutney!",
+      "category": "Recipes",
+      "image": "/images/paneer.png",
+      "readTime": "5 min read",
+      "date": "2026-06-28"
+    }
+  ],
+  "tickets": [
+    {
+      "id": "TCK-101",
+      "name": "Krishna Prasad",
+      "email": "krishna@gmail.com",
+      "phone": "+91 9440123456",
+      "subject": "Franchise Inquiry",
+      "message": "I am interested in opening a Reddy Premium Dairy franchise outlet in Anantapur town. Please share the details and investment structure.",
+      "status": "Pending",
+      "createdAt": "2026-07-03T10:15:00.000Z"
+    }
+  ],
+  "tempOtps": [
+    {
+      "phone": "6300928511",
+      "otpCode": "419248",
+      "expiresAt": "2026-07-03T19:42:48.750Z"
+    }
+  ]
+}
