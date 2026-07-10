@@ -23,6 +23,14 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [ordersList, setOrdersList] = useState<Order[]>([]);
   const [customersList, setCustomersList] = useState<any[]>([]);
+
+  // Insights state
+  const [insightsSummary, setInsightsSummary] = useState<any>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [selectedCustomerActivity, setSelectedCustomerActivity] = useState<any | null>(null);
+  const [customerActivity, setCustomerActivity] = useState<any[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [insightsFilter, setInsightsFilter] = useState('');
   
   // Product CRUD states
   const [isAddingProduct, setIsAddingProduct] = useState(false);
@@ -48,7 +56,6 @@ export default function AdminDashboard() {
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
   useEffect(() => {
-    // Role protection
     if (!user || user.role !== 'admin') {
       router.push('/');
       showToast("Access Denied: Admin role required", "error");
@@ -58,6 +65,60 @@ export default function AdminDashboard() {
       fetchAdminCustomers();
     }
   }, [user, router]);
+
+  // Fetch insights when tab is activated
+  useEffect(() => {
+    if (activeTab === 'insights' && !insightsSummary) {
+      fetchInsights();
+    }
+  }, [activeTab]);
+
+  const fetchInsights = async () => {
+    setInsightsLoading(true);
+    try {
+      const res = await fetch('/api/admin/insights/summary');
+      const data = await res.json();
+      if (data.success) setInsightsSummary(data);
+    } catch (err) {
+      console.error('[fetchInsights]', err);
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  const fetchCustomerActivity = async (userId: string) => {
+    setActivityLoading(true);
+    setCustomerActivity([]);
+    try {
+      const res = await fetch(`/api/admin/customers/${userId}/activity?limit=50`);
+      const data = await res.json();
+      if (data.success) setCustomerActivity(data.activity);
+    } catch (err) {
+      console.error('[fetchCustomerActivity]', err);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  const exportInsightsCSV = () => {
+    if (!insightsSummary?.perCustomer?.length) return;
+    const rows = insightsSummary.perCustomer.map((c: any) => ({
+      userId: c.userId,
+      name: customersList.find((cu: any) => cu.id === c.userId)?.name || c.userId,
+      email: customersList.find((cu: any) => cu.id === c.userId)?.email || '',
+      views: c.views,
+      cartAdds: c.cartAdds || 0,
+      purchases: c.purchases,
+      totalSpent: (c.spent || 0).toFixed(2),
+      lastActive: c.lastActive ? new Date(c.lastActive).toLocaleDateString() : 'N/A'
+    }));
+    const headers = ['userId', 'name', 'email', 'views', 'cartAdds', 'purchases', 'totalSpent', 'lastActive'];
+    const csv = [headers.join(','), ...rows.map((r: any) => headers.map(h => JSON.stringify(r[h] ?? '')).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'customer_insights.csv'; a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const fetchAdminStats = async () => {
     try {
@@ -353,6 +414,7 @@ export default function AdminDashboard() {
             { id: 'payments', label: 'Payment Details', icon: <CreditCard className="h-4.5 w-4.5" /> },
             { id: 'delivery', label: 'Delivery Status', icon: <Truck className="h-4.5 w-4.5" /> },
             { id: 'reports', label: 'Reports', icon: <FileBarChart className="h-4.5 w-4.5" /> },
+            { id: 'insights', label: 'Customer Insights', icon: <Activity className="h-4.5 w-4.5" /> },
           ].map(tab => (
             <button
               key={tab.id}
@@ -387,6 +449,7 @@ export default function AdminDashboard() {
           { id: 'payments', icon: <CreditCard className="h-4 w-4" />, label: 'Payments' },
           { id: 'delivery', icon: <Truck className="h-4 w-4" />, label: 'Delivery' },
           { id: 'reports', icon: <FileBarChart className="h-4 w-4" />, label: 'Reports' },
+          { id: 'insights', icon: <Activity className="h-4 w-4" />, label: 'Insights' },
         ].map(tab => (
           <button
             key={tab.id}
@@ -415,6 +478,7 @@ export default function AdminDashboard() {
               {activeTab === 'payments' && 'Payment Details & Collection'}
               {activeTab === 'delivery' && 'Delivery Status Tracker'}
               {activeTab === 'reports' && 'Business Reports & Analytics'}
+              {activeTab === 'insights' && 'Customer Behaviour Insights'}
             </h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">
               Reddy Premium Dairy Control Desk • Chiyyedu Farm
@@ -1350,6 +1414,235 @@ export default function AdminDashboard() {
               </button>
             </div>
 
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 8. CUSTOMER INSIGHTS TAB PANEL */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'insights' && (
+          <div className="space-y-8 animate-splash">
+
+            {/* Activity Timeline Modal */}
+            {selectedCustomerActivity && (
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedCustomerActivity(null)}>
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-800 dark:text-white">{selectedCustomerActivity.name || selectedCustomerActivity.userId}</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Activity Timeline</p>
+                    </div>
+                    <button onClick={() => setSelectedCustomerActivity(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="overflow-y-auto flex-1 p-6 space-y-3">
+                    {activityLoading ? (
+                      <div className="flex items-center justify-center h-32">
+                        <div className="animate-spin h-6 w-6 border-2 border-accent border-t-transparent rounded-full" />
+                      </div>
+                    ) : customerActivity.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400">
+                        <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p className="text-xs font-semibold">No activity recorded yet</p>
+                        <p className="text-[10px] mt-1">Requires MongoDB to be connected</p>
+                      </div>
+                    ) : (
+                      customerActivity.map((event: any, i: number) => {
+                        const icons: Record<string, string> = { view: '👁️', cart_add: '🛒', wishlist_add: '❤️', purchase: '✅', login: '🔑' };
+                        const colors: Record<string, string> = {
+                          view: 'border-blue-400 bg-blue-50 dark:bg-blue-900/20',
+                          cart_add: 'border-amber-400 bg-amber-50 dark:bg-amber-900/20',
+                          wishlist_add: 'border-pink-400 bg-pink-50 dark:bg-pink-900/20',
+                          purchase: 'border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20',
+                          login: 'border-slate-400 bg-slate-50 dark:bg-slate-800/50'
+                        };
+                        return (
+                          <div key={i} className={`flex items-start gap-3 p-3 rounded-xl border-l-4 ${colors[event.type] || 'border-slate-300'}`}>
+                            <span className="text-base mt-0.5">{icons[event.type] || '●'}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-slate-700 dark:text-white capitalize">{event.type.replace('_', ' ')}</p>
+                              {event.productName && <p className="text-[10px] text-slate-500 font-semibold truncate">{event.productName}</p>}
+                              {event.orderId && <p className="text-[10px] text-emerald-600 font-semibold">Order #{event.orderId.slice(-8)}</p>}
+                              {event.amount && <p className="text-[10px] text-slate-500 font-semibold">₹{event.amount.toFixed(2)}</p>}
+                            </div>
+                            <p className="text-[9px] text-slate-400 font-semibold whitespace-nowrap">{new Date(event.createdAt).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}</p>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {insightsLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin h-8 w-8 border-2 border-accent border-t-transparent rounded-full" />
+              </div>
+            ) : insightsSummary ? (
+              <>
+                {/* KPI Widgets Row */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Conversion Rate', value: `${insightsSummary.conversionRate ?? 0}%`, sub: 'Viewers → Buyers', icon: <TrendingUp className="h-5 w-5 text-emerald-500" />, color: 'text-emerald-600' },
+                    { label: 'Unique Viewers', value: insightsSummary.uniqueViewers ?? insightsSummary.perCustomer?.length ?? 0, sub: 'Product page views', icon: <Activity className="h-5 w-5 text-blue-500" />, color: 'text-blue-600' },
+                    { label: 'Unique Buyers', value: insightsSummary.uniquePurchasers ?? 0, sub: 'Made at least 1 order', icon: <ShoppingBag className="h-5 w-5 text-amber-500" />, color: 'text-amber-600' },
+                    { label: 'Total Events', value: Object.values(insightsSummary.eventTotals || {}).reduce((a: any, b: any) => a + b, 0), sub: 'Tracked interactions', icon: <PieChart className="h-5 w-5 text-purple-500" />, color: 'text-purple-600' },
+                  ].map((card, i) => (
+                    <div key={i} className="bg-white dark:bg-slate-900 border rounded-3xl p-5 shadow-sm space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{card.label}</span>
+                        <div className="p-2 bg-slate-50 dark:bg-slate-950 rounded-xl">{card.icon}</div>
+                      </div>
+                      <h2 className={`text-2xl font-bold font-display ${card.color}`}>{card.value}</h2>
+                      <p className="text-[10px] text-slate-400 font-semibold">{card.sub}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Event Breakdown */}
+                {insightsSummary.eventTotals && (
+                  <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Event Breakdown</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                      {Object.entries(insightsSummary.eventTotals).map(([type, count]: [string, any]) => {
+                        const icons: Record<string, string> = { view: '👁️', cart_add: '🛒', wishlist_add: '❤️', purchase: '✅', login: '🔑' };
+                        const colors: Record<string, string> = { view: 'bg-blue-500/10 text-blue-600', cart_add: 'bg-amber-500/10 text-amber-600', wishlist_add: 'bg-pink-500/10 text-pink-600', purchase: 'bg-emerald-500/10 text-emerald-600', login: 'bg-slate-500/10 text-slate-600' };
+                        return (
+                          <div key={type} className={`rounded-2xl p-4 text-center ${colors[type] || 'bg-slate-100'}`}>
+                            <p className="text-xl">{icons[type] || '●'}</p>
+                            <p className="text-lg font-bold font-display mt-1">{count}</p>
+                            <p className="text-[9px] font-bold uppercase tracking-wider mt-0.5 opacity-70 capitalize">{type.replace('_', ' ')}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Top Viewed — Not Purchased */}
+                {insightsSummary.topViewedNotPurchased?.length > 0 && (
+                  <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">⚠️ Viewed But Not Purchased (Drop-off Risk)</h3>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 dark:border-slate-800">
+                            {['Product', 'Views', 'Purchases', 'Conversion %'].map(h => (
+                              <th key={h} className="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider">{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {insightsSummary.topViewedNotPurchased.map((p: any, i: number) => (
+                            <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                              <td className="py-3 px-3 font-semibold text-slate-700 dark:text-slate-200">{p.productName || p._id}</td>
+                              <td className="py-3 px-3 text-blue-600 font-bold">{p.views}</td>
+                              <td className="py-3 px-3 text-emerald-600 font-bold">{p.purchases}</td>
+                              <td className="py-3 px-3">
+                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${p.conversionRate < 10 ? 'bg-red-100 text-red-600' : p.conversionRate < 30 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                                  {(p.conversionRate || 0).toFixed(1)}%
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Per-Customer Activity Table */}
+                <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Per-Customer Activity Log</h3>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Filter by user ID or name..."
+                        value={insightsFilter}
+                        onChange={e => setInsightsFilter(e.target.value)}
+                        className="text-[11px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent outline-none focus:border-accent w-48"
+                      />
+                      <button onClick={exportInsightsCSV} className="flex items-center gap-1.5 px-3 py-1.5 bg-accent text-slate-900 rounded-xl text-[11px] font-bold">
+                        <Download className="h-3.5 w-3.5" /> CSV
+                      </button>
+                      <button onClick={fetchInsights} className="flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-[11px] font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                        ↻ Refresh
+                      </button>
+                    </div>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800">
+                          {['Customer', 'Views', 'Cart Adds', 'Purchases', 'Total Spent', 'Last Active', 'Action'].map(h => (
+                            <th key={h} className="text-left py-2.5 px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                        {insightsSummary.perCustomer
+                          ?.filter((c: any) => {
+                            if (!insightsFilter) return true;
+                            const match = insightsFilter.toLowerCase();
+                            const customer = customersList.find((cu: any) => cu.id === c.userId);
+                            return c.userId.includes(match) || customer?.name?.toLowerCase().includes(match) || customer?.email?.toLowerCase().includes(match);
+                          })
+                          .map((c: any, i: number) => {
+                            const customer = customersList.find((cu: any) => cu.id === c.userId);
+                            return (
+                              <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td className="py-3 px-3">
+                                  <p className="font-bold text-slate-700 dark:text-white">{customer?.name || 'Unknown'}</p>
+                                  <p className="text-[10px] text-slate-400">{customer?.email || c.userId}</p>
+                                </td>
+                                <td className="py-3 px-3 text-blue-600 font-bold">{c.views || 0}</td>
+                                <td className="py-3 px-3 text-amber-600 font-bold">{c.cartAdds || 0}</td>
+                                <td className="py-3 px-3 text-emerald-600 font-bold">{c.purchases || 0}</td>
+                                <td className="py-3 px-3 font-bold">₹{(c.spent || 0).toFixed(2)}</td>
+                                <td className="py-3 px-3 text-slate-400 text-[10px] font-semibold whitespace-nowrap">
+                                  {c.lastActive ? new Date(c.lastActive).toLocaleDateString('en-IN') : '—'}
+                                </td>
+                                <td className="py-3 px-3">
+                                  <button
+                                    onClick={() => {
+                                      setSelectedCustomerActivity({ ...c, name: customer?.name, email: customer?.email });
+                                      fetchCustomerActivity(c.userId);
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-xl text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                                  >
+                                    View Timeline
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                        })}
+                      </tbody>
+                    </table>
+                    {insightsSummary.perCustomer?.length === 0 && (
+                      <div className="text-center py-12 text-slate-400">
+                        <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p className="text-xs font-semibold">No activity data yet</p>
+                        <p className="text-[10px] mt-1">Activity is recorded as customers browse and purchase.</p>
+                        {insightsSummary.source === 'localdb' && (
+                          <p className="text-[10px] mt-1 text-amber-500">{insightsSummary.note}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-16 text-slate-400">
+                <Activity className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                <p className="text-sm font-semibold">Failed to load insights</p>
+                <button onClick={fetchInsights} className="mt-4 px-4 py-2 bg-accent text-slate-900 rounded-xl text-xs font-bold">Retry</button>
+              </div>
+            )}
           </div>
         )}
 

@@ -44,6 +44,22 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
       setActiveImage(found.images[0]);
       setCustomReviews(found.reviews);
 
+      // Track product view — fire-and-forget, never blocks render
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('reddy-user') : null;
+      const userId = storedUser ? JSON.parse(storedUser).id : `guest_${id}_${Date.now()}`;
+      const fire = () => {
+        fetch('/api/track/view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, productId: found.id, productName: found.name })
+        }).catch(() => {});
+      };
+      if ('requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(fire);
+      } else {
+        setTimeout(fire, 0);
+      }
+
       // Related products (same category, excluding self)
       const rel = products.filter(p => p.category === found.category && p.id !== found.id).slice(0, 4);
       setRelated(rel);

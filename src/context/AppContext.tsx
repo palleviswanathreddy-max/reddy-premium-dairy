@@ -185,6 +185,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }, 3000);
   };
 
+  // ── Activity Tracking ────────────────────────────────────────────────────
+  // Fire-and-forget: never await, never throw, never block the UI.
+  const trackEvent = (endpoint: string, payload: Record<string, any>) => {
+    // Use requestIdleCallback if available so tracking never blocks the main thread
+    const fire = () => {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => { /* silently ignore tracking failures */ });
+    };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(fire);
+    } else {
+      setTimeout(fire, 0);
+    }
+  };
+
   // Add Notification System (Logs simulation as well)
   const addNotification = (type: NotificationMsg['type'], title: string, message: string) => {
     const newNotif: NotificationMsg = {
@@ -262,6 +280,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         addNotification('inapp', 'Login Successful', `Welcome back, ${data.user.name}!`);
         addNotification('email', 'Login Notification', `Hello ${data.user.name}, you have successfully signed into REDDY PREMIUM DAIRY.`);
         showToast(`Logged in as ${data.user.name}`, 'success');
+        // Track login activity
+        trackEvent('/api/track/cart', { userId: data.user.id, type: 'login' });
         return { success: true };
       } else {
         showToast(data.message || 'Login failed', 'error');
@@ -399,6 +419,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { product, quantity: qty }];
     });
     showToast(`${product.name} added to cart`, 'success');
+    // Track cart_add activity
+    const userId = user?.id || `guest_${Date.now()}`;
+    trackEvent('/api/track/cart', { userId, type: 'cart_add', productId: product.id, productName: product.name, quantity: qty });
   };
 
   const removeFromCart = (productId: string) => {
@@ -458,6 +481,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return prev.filter(id => id !== productId);
       } else {
         showToast('Added to wishlist', 'success');
+        // Track wishlist_add activity
+        const userId = user?.id || `guest_${Date.now()}`;
+        const product = products.find(p => p.id === productId);
+        trackEvent('/api/track/cart', { userId, type: 'wishlist_add', productId, productName: product?.name || null });
         return [...prev, productId];
       }
     });
@@ -541,6 +568,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         }
         
         showToast('Order placed successfully!', 'success');
+        // Track purchase activity
+        trackEvent('/api/track/purchase', {
+          userId: finalUserId,
+          orderId: data.order.id,
+          items: orderData.items.map(i => ({ productId: i.productId, productName: i.name, quantity: i.quantity, price: i.price })),
+          grandTotal: orderData.grandTotal
+        });
         return { success: true, orderId: data.order.id };
       }
       return { success: false };

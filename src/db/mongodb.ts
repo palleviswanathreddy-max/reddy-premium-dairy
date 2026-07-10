@@ -72,3 +72,40 @@ const OtpSchema = new mongoose.Schema({
 
 export const MongooseUser = mongoose.models.User || mongoose.model('User', UserSchema);
 export const MongooseOTP = mongoose.models.OTP || mongoose.model('OTP', OtpSchema);
+
+// ── UserActivity Schema ──────────────────────────────────────────────────────
+// Tracks per-user behavior: views, cart, wishlist, purchases, logins.
+// NOTE: Activity logging is MongoDB-only. The local JSON DB fallback does NOT
+// store activity records — at scale, activity logs must use a real database.
+const UserActivitySchema = new mongoose.Schema(
+  {
+    userId: { type: String, required: true, index: true },      // user id or "guest_<sessionId>"
+    type: {
+      type: String,
+      enum: ['view', 'cart_add', 'wishlist_add', 'purchase', 'login'],
+      required: true,
+      index: true
+    },
+    productId: { type: String, default: null, index: true },
+    productName: { type: String, default: null },
+    orderId: { type: String, default: null },
+    quantity: { type: Number, default: null },
+    amount: { type: Number, default: null },
+    meta: {
+      device: { type: String, default: null },
+      source: { type: String, default: null }
+    }
+  },
+  {
+    timestamps: true,          // adds createdAt, updatedAt automatically
+    versionKey: false
+  }
+);
+
+// TTL index: auto-delete activity records older than 1 year
+UserActivitySchema.index({ createdAt: 1 }, { expireAfterSeconds: 365 * 24 * 60 * 60 });
+
+export const MongooseUserActivity =
+  mongoose.models.UserActivity ||
+  mongoose.model('UserActivity', UserActivitySchema);
+
