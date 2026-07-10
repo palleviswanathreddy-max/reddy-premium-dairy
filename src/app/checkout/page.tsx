@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
-import { Address } from '@/db/db';
 import { 
-  Sparkles, CheckCircle2, CreditCard, Landmark, Truck, Ticket, 
-  MapPin, Gift, ShieldCheck, ArrowRight, ArrowLeft 
+  CheckCircle2, CreditCard, Ticket, 
+  MapPin, ShieldCheck, ArrowRight, ArrowLeft 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -20,23 +19,21 @@ export default function Checkout() {
     applyCouponCode, 
     removeCoupon, 
     createOrder,
-    showToast,
-    t 
+    showToast
   } = useApp();
+
+  const [activeStep, setActiveStep] = useState(1); // 1: Address, 2: Payment, 3: Success
 
   // Redirect if cart is empty
   useEffect(() => {
     if (cart.length === 0 && activeStep < 3) {
       router.push('/products');
     }
-  }, [cart, router]);
-
-  const [activeStep, setActiveStep] = useState(1); // 1: Address, 2: Payment, 3: Success
+  }, [cart, router, activeStep]);
 
   // Address form fields
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
   const [street, setStreet] = useState('');
   const [village, setVillage] = useState('');
   const [district, setDistrict] = useState('');
@@ -64,9 +61,9 @@ export default function Checkout() {
   // Load default address if logged in
   useEffect(() => {
     if (user) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setName(user.name);
       setPhone(user.phone);
-      setEmail(user.email);
       const defAddr = user.addresses.find(a => a.isDefault);
       if (defAddr) {
         setStreet(defAddr.street);
@@ -75,6 +72,7 @@ export default function Checkout() {
         setState(defAddr.state);
         setPincode(defAddr.pincode);
       }
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [user]);
 

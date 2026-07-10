@@ -6,7 +6,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { logger } from '@/utils/logger';
 
 export function useAppInitialization() {
   useEffect(() => {

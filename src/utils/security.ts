@@ -191,7 +191,7 @@ export function encodeData(data: any): string {
 export function decodeData(encoded: string): any {
   try {
     return JSON.parse(Buffer.from(encoded, 'base64').toString('utf-8'));
-  } catch (error) {
+  } catch {
     return null;
   }
 }

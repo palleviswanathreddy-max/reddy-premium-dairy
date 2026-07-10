@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+/* eslint-disable @next/next/no-img-element */
+import React from 'react';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
-import { Calendar, Clock, BookOpen, ArrowRight } from 'lucide-react';
-import Link from 'next/link';
+import { Calendar, Clock, ArrowRight } from 'lucide-react';
 
 export default function Blog() {
-  const { t } = useApp();
-  const [blogs, setBlogs] = useState<any[]>([]);
+  useApp(); // context may be needed for future dynamic features
 
-  useEffect(() => {
-    // Load initial blogs
-    const initialBlogs = [
+  // Static blog posts — no server fetch needed for this content
+  const blogs = [
       {
         id: "blog-1",
         title: "Why A2 Cow Milk is Better for Your Digestive System",
@@ -40,9 +38,7 @@ export default function Blog() {
         readTime: "3 min read",
         date: "2026-06-25"
       }
-    ];
-    setBlogs(initialBlogs);
-  }, []);
+  ];
 
   return (
     <PageWrapper>

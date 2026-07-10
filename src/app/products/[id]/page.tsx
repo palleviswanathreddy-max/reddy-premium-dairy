@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect, useMemo, use } from 'react';
+import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import { Product } from '@/db/db';
 import { 
   Star, Heart, ShieldCheck, ShoppingCart, RefreshCw, 
-  Share2, ArrowLeft, Truck, Package, Clock, Calendar 
+  Share2, ArrowLeft, Truck, Clock, Calendar 
 } from 'lucide-react';
 import Link from 'next/link';
+
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -23,52 +25,59 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     t 
   } = useApp();
 
-  const [product, setProduct] = useState<Product | null>(null);
-  const [activeImage, setActiveImage] = useState('');
+  // Derived state — avoids calling setState inside useEffect
+  const product = useMemo(
+    () => products.find(p => p.id === id) ?? null,
+    [products, id]
+  );
+
+  const related = useMemo(
+    () => product ? products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4) : [],
+    [products, product]
+  );
+
+  const frequentlyBought = useMemo(
+    () => product ? products.filter(p => p.id !== product.id).slice(0, 2) : [],
+    [products, product]
+  );
+
+  // customReviews: derived from product but also allows user-added reviews
+  const [localReviews, setLocalReviews] = useState<Product['reviews']>([]);
+  const customReviews = localReviews.length > 0 ? localReviews : (product?.reviews ?? []);
+  const setCustomReviews = setLocalReviews;
+
+  // UI state
+  // selectedImage = user's thumbnail click; falls back to first product image when empty
+  const [selectedImage, setSelectedImage] = useState<string>('');
+  const activeImage = selectedImage || product?.images[0] || '';
+  const setActiveImage = setSelectedImage; // alias for readability in JSX
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
   const [quantity, setQuantity] = useState(1);
-  const [frequentlyBought, setFrequentlyBought] = useState<Product[]>([]);
-  const [related, setRelated] = useState<Product[]>([]);
 
-  // Review states
+
+  // Track product view — fire-and-forget, never blocks render
+  useEffect(() => {
+    if (!product) return;
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('reddy-user') : null;
+    const userId = storedUser ? JSON.parse(storedUser).id : `guest_${id}_${Date.now()}`;
+    const fire = () => {
+      fetch('/api/track/view', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, productId: product.id, productName: product.name })
+      }).catch(() => {});
+    };
+    if ('requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(fire);
+    } else {
+      setTimeout(fire, 0);
+    }
+  }, [product, id]);
+
+  // Review form state
   const [reviewName, setReviewName] = useState('');
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
-  const [customReviews, setCustomReviews] = useState<any[]>([]);
-
-  useEffect(() => {
-    // Find product
-    const found = products.find(p => p.id === id);
-    if (found) {
-      setProduct(found);
-      setActiveImage(found.images[0]);
-      setCustomReviews(found.reviews);
-
-      // Track product view — fire-and-forget, never blocks render
-      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('reddy-user') : null;
-      const userId = storedUser ? JSON.parse(storedUser).id : `guest_${id}_${Date.now()}`;
-      const fire = () => {
-        fetch('/api/track/view', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, productId: found.id, productName: found.name })
-        }).catch(() => {});
-      };
-      if ('requestIdleCallback' in window) {
-        (window as any).requestIdleCallback(fire);
-      } else {
-        setTimeout(fire, 0);
-      }
-
-      // Related products (same category, excluding self)
-      const rel = products.filter(p => p.category === found.category && p.id !== found.id).slice(0, 4);
-      setRelated(rel);
-
-      // Frequently bought together (find by SKU/ID or random 2 products)
-      const freq = products.filter(p => p.id !== found.id).slice(0, 2);
-      setFrequentlyBought(freq);
-    }
-  }, [id, products]);
 
   if (!product) {
     return (
@@ -173,18 +182,23 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               onMouseLeave={handleMouseLeave}
               className="relative aspect-square bg-slate-50 dark:bg-slate-900 rounded-3xl border overflow-hidden p-6 flex items-center justify-center cursor-zoom-in"
             >
-              <img 
+              <Image 
                 src={activeImage} 
                 alt={product.name} 
-                className="object-contain h-full w-full rounded-2xl"
+                fill
+                className="object-contain rounded-2xl"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
               />
 
               {/* Brand Logo overlay */}
               <div className="absolute top-4 left-4 flex items-center gap-1.5 pointer-events-none z-10 bg-white/95 dark:bg-slate-950/95 backdrop-blur border border-accent/40 pl-1 pr-2 py-1 rounded-full shadow-md">
-                <img 
+                <Image 
                   src="/images/logo.png" 
                   alt="" 
-                  className="h-6 w-6 rounded-full object-cover border border-accent/20 bg-white"
+                  width={24}
+                  height={24}
+                  className="rounded-full object-cover border border-accent/20 bg-white"
                 />
                 <span className="text-[8px] font-extrabold text-slate-800 dark:text-accent font-display tracking-tight leading-none">
                   REDDY PREMIUM DAIRY
@@ -217,7 +231,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                     activeImage === img ? 'border-accent shadow-md' : 'border-slate-200 dark:border-slate-800'
                   }`}
                 >
-                  <img src={img} alt="" className="h-full w-full object-contain rounded-lg" />
+                  <Image src={img} alt="" width={64} height={64} className="h-full w-full object-contain rounded-lg" />
                 </button>
               ))}
             </div>
@@ -326,7 +340,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 {/* Quantity box */}
                 <div className="flex items-center border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-xl overflow-hidden shadow-sm h-12 w-32 shrink-0">
                   <button 
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                    onClick={() => setQuantity((q: number) => Math.max(1, q - 1))}
                     className="p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 font-extrabold transition-colors flex-1"
                   >
                     -
@@ -335,7 +349,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                     {quantity}
                   </span>
                   <button 
-                    onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                    onClick={() => setQuantity((q: number) => Math.min(product.stock, q + 1))}
                     className="p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 font-extrabold transition-colors flex-1"
                   >
                     +
@@ -487,7 +501,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 
                 {/* Main Product */}
                 <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border max-w-xs flex-grow">
-                  <img src={product.images[0]} alt="" className="h-12 w-12 object-contain rounded-xl" />
+                  <Image src={product.images[0]} alt="" width={48} height={48} className="h-12 w-12 object-contain rounded-xl" />
                   <div className="text-left text-xs font-semibold min-w-0">
                     <p className="text-slate-800 dark:text-white truncate">{product.name}</p>
                     <p className="text-slate-400">Rs. {product.price}</p>
@@ -500,7 +514,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 {frequentlyBought.map(prod => (
                   <React.Fragment key={prod.id}>
                     <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border max-w-xs flex-grow">
-                      <img src={prod.images[0]} alt="" className="h-12 w-12 object-contain rounded-xl" />
+                      <Image src={prod.images[0]} alt="" width={48} height={48} className="h-12 w-12 object-contain rounded-xl" />
                       <div className="text-left text-xs font-semibold min-w-0">
                         <p className="text-slate-800 dark:text-white truncate">{prod.name}</p>
                         <p className="text-slate-400">Rs. {prod.price}</p>
@@ -630,7 +644,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
               {related.map(prod => (
                 <div key={prod.id} className="border rounded-2xl bg-white dark:bg-slate-900 p-4 shadow-sm hover:shadow-md transition-shadow">
-                  <img src={prod.images[0]} alt="" className="aspect-square object-contain rounded-xl border bg-slate-50 w-full mb-3 p-2" />
+                  <Image src={prod.images[0]} alt="" width={200} height={200} className="aspect-square object-contain rounded-xl border bg-slate-50 w-full mb-3 p-2" />
                   <Link href={`/products/${prod.id}`}>
                     <p className="text-xs font-bold text-slate-800 dark:text-white hover:text-primary truncate">{prod.name}</p>
                   </Link>

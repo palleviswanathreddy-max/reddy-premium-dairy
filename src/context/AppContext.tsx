@@ -87,17 +87,65 @@ interface AppContextProps {
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  const [language, setLanguageState] = useState<LanguageType>('en');
+  // Lazy initializer — reads localStorage once on mount, no setState-in-effect needed
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window === 'undefined') return 'light';
+    const stored = localStorage.getItem('reddy-theme') as 'light' | 'dark' | null;
+    if (stored) return stored;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+  const [language, setLanguageState] = useState<LanguageType>(() => {
+    if (typeof window === 'undefined') return 'en';
+    return (localStorage.getItem('reddy-lang') as LanguageType) || 'en';
+  });
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('reddy-cart');
+    return stored ? JSON.parse(stored) : [];
+  });
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [wishlist, setWishlist] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    const stored = localStorage.getItem('reddy-wishlist');
+    return stored ? JSON.parse(stored) : [];
+  });
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMsg[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | null }>({ message: '', type: null });
+
+  // Apply theme class to document whenever theme changes (side-effect only, no setState)
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+  }, [theme]);
+
+  // Fetch Products from Database API — declared BEFORE the mount useEffect that calls it
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch('/api/products');
+      const data = await res.json();
+      if (data.success) {
+        setProducts(data.products);
+      }
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+    }
+  };
+
+  // Fetch Orders from Database API — declared BEFORE the mount useEffect that calls it
+  const fetchOrders = async (userId: string, role: string) => {
+    try {
+      const res = await fetch(`/api/orders?userId=${userId}&role=${role}`);
+      const data = await res.json();
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (err) {
+      console.error('Failed to fetch orders:', err);
+    }
+  };
 
   // Load state on mount
   useEffect(() => {
@@ -111,33 +159,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
     initApp();
 
-    // Theme
-    const storedTheme = localStorage.getItem('reddy-theme') as 'light' | 'dark';
-    if (storedTheme) {
-      setTheme(storedTheme);
-      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
-    } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      setTheme(prefersDark ? 'dark' : 'light');
-      document.documentElement.classList.toggle('dark', prefersDark);
-    }
-
-    // Language
-    const storedLang = localStorage.getItem('reddy-lang') as LanguageType;
-    if (storedLang) setLanguageState(storedLang);
-
-    // Cart
-    const storedCart = localStorage.getItem('reddy-cart');
-    if (storedCart) setCart(JSON.parse(storedCart));
-
-    // Wishlist
-    const storedWishlist = localStorage.getItem('reddy-wishlist');
-    if (storedWishlist) setWishlist(JSON.parse(storedWishlist));
-
     // Load initial products
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
-    
-    // Check if user is logged in
+
+    // Restore user session
     const storedUser = localStorage.getItem('reddy-user');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
@@ -145,6 +171,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       fetchOrders(parsedUser.id, parsedUser.role);
     }
   }, []);
+
 
   // Sync Cart
   useEffect(() => {
@@ -187,7 +214,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   // ── Activity Tracking ────────────────────────────────────────────────────
   // Fire-and-forget: never await, never throw, never block the UI.
-  const trackEvent = (endpoint: string, payload: Record<string, any>) => {
+  const trackEvent = (endpoint: string, payload: Record<string, unknown>) => {
     // Use requestIdleCallback if available so tracking never blocks the main thread
     const fire = () => {
       fetch(endpoint, {
@@ -197,7 +224,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }).catch(() => { /* silently ignore tracking failures */ });
     };
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as any).requestIdleCallback(fire);
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(fire);
     } else {
       setTimeout(fire, 0);
     }
@@ -228,35 +255,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  // Fetch Products from Database API
-  const fetchProducts = async () => {
-    try {
-      const res = await fetch('/api/products');
-      const data = await res.json();
-      if (data.success) {
-        setProducts(data.products);
-      }
-    } catch (err) {
-      console.error('Failed to fetch products:', err);
-    }
-  };
-
   const refreshProducts = async () => {
     await fetchProducts();
   };
 
+
   // Fetch Orders from Database API
-  const fetchOrders = async (userId: string, role: string) => {
-    try {
-      const res = await fetch(`/api/orders?userId=${userId}&role=${role}`);
-      const data = await res.json();
-      if (data.success) {
-        setOrders(data.orders);
-      }
-    } catch (err) {
-      console.error('Failed to fetch orders:', err);
-    }
-  };
 
   const refreshOrders = async () => {
     if (user) {

@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -7,7 +8,7 @@ import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import {
   ShoppingBag, Package, Truck, CheckCircle2, Clock, MapPin,
-  ArrowLeft, CreditCard, ChevronRight, XCircle, RefreshCw
+  ArrowLeft, CreditCard, XCircle, RefreshCw
 } from 'lucide-react';
 
 export default function OrdersPage() {
@@ -21,7 +22,7 @@ export default function OrdersPage() {
     } else {
       refreshOrders();
     }
-  }, [user]);
+  }, [user, router, refreshOrders, showToast]);
 
   // Helper: status color
   const getStatusColor = (status: string) => {

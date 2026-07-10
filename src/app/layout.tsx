@@ -22,7 +22,6 @@ export const viewport: Viewport = {
 
 export default function RootLayout({
   children,
-  ...props
 }: Readonly<{
   children: React.ReactNode;
 }>) {

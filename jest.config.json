@@ -6,6 +6,11 @@
   "moduleNameMapper": {
     "^@/(.*)$": "<rootDir>/src/$1"
   },
+  "globals": {
+    "ts-jest": {
+      "tsconfig": "./tsconfig.test.json"
+    }
+  },
   "collectCoverageFrom": [
     "src/**/*.{ts,tsx}",
     "!src/**/*.d.ts",
@@ -22,3 +27,4 @@
   "setupFilesAfterEnv": ["<rootDir>/src/__tests__/setup.ts"],
   "testTimeout": 10000
 }
+

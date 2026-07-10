@@ -5,11 +5,11 @@ import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import { 
   Phone, Mail, MapPin, Clock, MessageSquare, 
-  Send, ShieldCheck, ChevronDown, CheckCircle2 
+  Send, ChevronDown
 } from 'lucide-react';
 
 export default function Contact() {
-  const { t, showToast } = useApp();
+  const { showToast } = useApp();
 
   const [activeTab, setActiveTab] = useState('form'); // 'form' | 'franchise' | 'dealer'
   

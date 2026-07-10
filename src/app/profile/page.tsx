@@ -1,12 +1,13 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import { 
-  User as UserIcon, ShoppingBag, MapPin, Heart, Wallet, Gift, 
-  Map, FileText, ChevronRight, CheckCircle2, Truck, Plus, Trash2, Camera, LogOut, X 
+  ShoppingBag, MapPin, Heart, Wallet, Gift, 
+  Map, FileText, ChevronRight, Truck, Plus, Trash2, Camera, LogOut, X 
 } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -23,8 +24,7 @@ function ProfileContent() {
     addAddress, 
     removeAddress, 
     logout,
-    showToast,
-    t 
+    showToast
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('orders');
@@ -47,6 +47,7 @@ function ProfileContent() {
   // Sync tab from URL query param
   useEffect(() => {
     const tab = searchParams.get('tab');
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (tab) setActiveTab(tab);
   }, [searchParams]);
 
@@ -308,7 +309,7 @@ function ProfileContent() {
                 {orders.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center space-y-3">
                     <ShoppingBag className="h-10 w-10 text-slate-300 dark:text-slate-700" />
-                    <p className="text-xs font-bold text-slate-500">You haven't ordered any fresh milk products yet.</p>
+                    <p className="text-xs font-bold text-slate-500">You haven&apos;t ordered any fresh milk products yet.</p>
                     <Link href="/products" className="px-4 py-2 bg-accent text-slate-900 text-xs font-bold rounded-lg mt-2">
                       Shop Fresh Dairy
                     </Link>

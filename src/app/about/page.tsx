@@ -2,8 +2,7 @@
 
 import React from 'react';
 import PageWrapper from '@/components/PageWrapper';
-import { Award, Compass, Heart, ShieldAlert, Sparkles, Building, Milk } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Award, Compass, Heart, Sparkles, Building, Milk } from 'lucide-react';
 
 export default function About() {
   return (
@@ -97,7 +96,7 @@ export default function About() {
               </div>
               <h3 className="text-sm font-bold text-slate-800 dark:text-white font-display">Our Vision</h3>
               <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400 font-medium">
-                To become India's most trusted luxury organic dairy brand, representing sustainable farming practices, animal welfare, and pure farm-to-table integrity.
+                To become India&apos;s most trusted luxury organic dairy brand, representing sustainable farming practices, animal welfare, and pure farm-to-table integrity.
               </p>
             </div>
 

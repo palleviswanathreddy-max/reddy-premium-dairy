@@ -30,7 +30,7 @@ export function generateRefreshToken(payload: any): string {
 export function verifyAccessToken(token: string): any {
   try {
     return jwt.verify(token, JWT_SECRET);
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -38,7 +38,7 @@ export function verifyAccessToken(token: string): any {
 export function verifyRefreshToken(token: string): any {
   try {
     return jwt.verify(token, JWT_REFRESH_SECRET);
-  } catch (err) {
+  } catch {
     return null;
   }
 }
@@ -77,7 +77,7 @@ export function verifyRegistrationToken(token: string): { identifier: string; id
     const decoded = jwt.verify(token, REGISTRATION_TOKEN_SECRET) as any;
     if (decoded.purpose !== 'registration') return null;
     return { identifier: decoded.identifier, identifierType: decoded.identifierType, purpose: decoded.purpose };
-  } catch (err) {
+  } catch {
     return null;
   }
 }

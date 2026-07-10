@@ -9,11 +9,6 @@ interface CacheEntry<T> {
   hits: number;
 }
 
-interface CacheOptions {
-  ttl?: number; // Time to live in milliseconds
-  key: string;
-}
-
 class CacheManager {
   private store: Map<string, CacheEntry<any>> = new Map();
   private defaultTTL = 5 * 60 * 1000; // 5 minutes

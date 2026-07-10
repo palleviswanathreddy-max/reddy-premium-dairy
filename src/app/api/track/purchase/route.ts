@@ -4,12 +4,12 @@ import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
 /**
  * POST /api/track/purchase
  * Logs a completed purchase event.
- * Body: { userId, orderId, items: [{productId, productName, quantity, price}], grandTotal }
+ * Body: { userId, orderId, items: [{productId, productName, quantity, price}] }
  */
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, orderId, items, grandTotal } = body;
+    const { userId, orderId, items } = body;
 
     if (!userId || !orderId || !items?.length) {
       return NextResponse.json({ success: false }, { status: 400 });

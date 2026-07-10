@@ -9,7 +9,7 @@ import { logger } from '@/utils/logger';
 
 let isInitialized = false;
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: Request) {
   try {
     // Prevent multiple initializations
     if (isInitialized) {
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 /**
  * POST: Force re-initialization (admin only)
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: Request) {
   try {
     // In production, verify admin token here
     logger.info('🔄 Re-initialization requested');

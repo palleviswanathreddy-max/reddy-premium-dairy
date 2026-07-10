@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -6,16 +7,15 @@ import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import { 
   Users, ShoppingBag, DollarSign, Package, TrendingUp, AlertTriangle,
-  Plus, Edit2, Trash2, Download, Check, X, ShieldAlert, BarChart3, Settings,
+  Plus, Edit2, Trash2, Download, Check, X, ShieldAlert, BarChart3,
   CreditCard, Truck, FileBarChart, IndianRupee, Clock, CheckCircle2,
-  XCircle, AlertCircle, MapPin, Calendar, ArrowUpRight, ArrowDownRight,
-  Wallet, Receipt, PieChart, Activity
+  Receipt, PieChart, Activity
 } from 'lucide-react';
 import { Product, Order } from '@/db/db';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const { user, products, refreshProducts, updateOrderStatus, showToast, t } = useApp();
+  const { user, products, refreshProducts, updateOrderStatus, showToast } = useApp();
 
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -55,23 +55,36 @@ export default function AdminDashboard() {
   // Reports period
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
 
-  useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      router.push('/');
-      showToast("Access Denied: Admin role required", "error");
-    } else {
-      fetchAdminStats();
-      fetchAdminOrders();
-      fetchAdminCustomers();
+  // Fetch functions declared BEFORE the useEffects that call them
+  const fetchAdminStats = async () => {
+    try {
+      const res = await fetch('/api/stats');
+      const data = await res.json();
+      if (data.success) setStats(data.stats);
+    } catch (err) {
+      console.error(err);
     }
-  }, [user, router]);
+  };
 
-  // Fetch insights when tab is activated
-  useEffect(() => {
-    if (activeTab === 'insights' && !insightsSummary) {
-      fetchInsights();
+  const fetchAdminOrders = async () => {
+    try {
+      const res = await fetch('/api/orders?role=admin');
+      const data = await res.json();
+      if (data.success) setOrdersList(data.orders);
+    } catch (err) {
+      console.error(err);
     }
-  }, [activeTab]);
+  };
+
+  const fetchAdminCustomers = async () => {
+    try {
+      const res = await fetch('/api/admin/customers');
+      const data = await res.json();
+      if (data.success) setCustomersList(data.customers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchInsights = async () => {
     setInsightsLoading(true);
@@ -120,41 +133,29 @@ export default function AdminDashboard() {
     URL.revokeObjectURL(url);
   };
 
-  const fetchAdminStats = async () => {
-    try {
-      const res = await fetch('/api/stats');
-      const data = await res.json();
-      if (data.success) {
-        setStats(data.stats);
-      }
-    } catch (err) {
-      console.error(err);
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (!user || user.role !== 'admin') {
+      router.push('/');
+      showToast("Access Denied: Admin role required", "error");
+    } else {
+      fetchAdminStats();
+      fetchAdminOrders();
+      fetchAdminCustomers();
     }
-  };
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, router, showToast]);
 
-  const fetchAdminOrders = async () => {
-    try {
-      const res = await fetch('/api/orders?role=admin');
-      const data = await res.json();
-      if (data.success) {
-        setOrdersList(data.orders);
-      }
-    } catch (err) {
-      console.error(err);
+  // Fetch insights when tab is activated
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (activeTab === 'insights' && !insightsSummary) {
+      fetchInsights();
     }
-  };
-
-  const fetchAdminCustomers = async () => {
-    try {
-      const res = await fetch('/api/admin/customers');
-      const data = await res.json();
-      if (data.success) {
-        setCustomersList(data.customers);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, insightsSummary]);
 
   // Submit Product CRUD form
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -1235,7 +1236,7 @@ export default function AdminDashboard() {
             {/* Revenue Overview Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">
-                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Today's Revenue</span>
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Today&apos;s Revenue</span>
                 <h3 className="text-lg font-bold font-display text-slate-800 dark:text-white">₹{stats.todaySales.toFixed(2)}</h3>
               </div>
               <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">

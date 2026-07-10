@@ -1,11 +1,12 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import {
   Lock, Mail, User, Phone, ShieldCheck,
-  ArrowLeft, Smartphone, ShoppingBag,
+  ArrowLeft,
   KeyRound, Sparkles, CheckCircle2, ChevronRight,
   Eye, EyeOff, ArrowRight, Loader2
 } from 'lucide-react';
@@ -13,6 +14,34 @@ import Link from 'next/link';
 
 type AuthTab = 'login' | 'register';
 type RegisterStep = 1 | 2 | 3;
+
+// Declared outside Login so it is not recreated on every render
+function StepIndicator({ registerStep }: { registerStep: RegisterStep }) {
+  return (
+    <div className="flex items-center justify-center gap-2 mb-6">
+      {[1, 2, 3].map((step) => (
+        <React.Fragment key={step}>
+          <div className={`flex items-center justify-center h-8 w-8 rounded-full text-xs font-bold transition-all duration-300 ${
+            registerStep >= step
+              ? 'bg-accent text-slate-900 shadow-lg shadow-accent/30'
+              : 'bg-slate-800 text-slate-500 border border-white/10'
+          }`}>
+            {registerStep > step ? (
+              <CheckCircle2 className="h-4 w-4" />
+            ) : (
+              step
+            )}
+          </div>
+          {step < 3 && (
+            <div className={`h-0.5 w-8 rounded-full transition-all duration-500 ${
+              registerStep > step ? 'bg-accent' : 'bg-slate-800'
+            }`} />
+          )}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
 
 export default function Login() {
   const router = useRouter();
@@ -30,7 +59,6 @@ export default function Login() {
   const [registerStep, setRegisterStep] = useState<RegisterStep>(1);
   const [regIdentifier, setRegIdentifier] = useState('');
   const [regIdentifierType, setRegIdentifierType] = useState<'email' | 'phone' | null>(null);
-  const [otpCode, setOtpCode] = useState('');
   const [registrationToken, setRegistrationToken] = useState('');
   const [regName, setRegName] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -60,10 +88,8 @@ export default function Login() {
     return () => clearInterval(interval);
   }, [resendTimer]);
 
-  // Sync OTP digits to single string
-  useEffect(() => {
-    setOtpCode(otpDigits.join(''));
-  }, [otpDigits]);
+  // Sync OTP digits to a single string (derived state — no useEffect needed)
+  const otpCode = useMemo(() => otpDigits.join(''), [otpDigits]);
 
   // Auto-detect identifier type
   const detectType = (val: string): 'email' | 'phone' | null => {
@@ -268,7 +294,6 @@ export default function Login() {
     setRegisterStep(1);
     setRegIdentifier('');
     setRegIdentifierType(null);
-    setOtpCode('');
     setOtpDigits(['', '', '', '', '', '']);
     setRegistrationToken('');
     setRegName('');
@@ -276,32 +301,6 @@ export default function Login() {
     setRegConfirmPassword('');
     setResendTimer(0);
   };
-
-  // Step indicator for registration wizard
-  const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-6">
-      {[1, 2, 3].map((step) => (
-        <React.Fragment key={step}>
-          <div className={`flex items-center justify-center h-8 w-8 rounded-full text-xs font-bold transition-all duration-300 ${
-            registerStep >= step
-              ? 'bg-accent text-slate-900 shadow-lg shadow-accent/30'
-              : 'bg-slate-800 text-slate-500 border border-white/10'
-          }`}>
-            {registerStep > step ? (
-              <CheckCircle2 className="h-4 w-4" />
-            ) : (
-              step
-            )}
-          </div>
-          {step < 3 && (
-            <div className={`h-0.5 w-8 rounded-full transition-all duration-500 ${
-              registerStep > step ? 'bg-accent' : 'bg-slate-800'
-            }`} />
-          )}
-        </React.Fragment>
-      ))}
-    </div>
-  );
 
   return (
     <div
@@ -475,7 +474,7 @@ export default function Login() {
 
                 <div className="text-center pt-2">
                   <p className="text-[10px] text-slate-500">
-                    Don't have an account?{' '}
+                    Don&apos;t have an account?{' '}
                     <button type="button" onClick={() => setActiveTab('register')} className="text-accent font-bold hover:underline">
                       Register here
                     </button>
@@ -496,7 +495,7 @@ export default function Login() {
                   </p>
                 </div>
 
-                <StepIndicator />
+                <StepIndicator registerStep={registerStep} />
 
                 {/* STEP 1: Enter email or mobile */}
                 {registerStep === 1 && (

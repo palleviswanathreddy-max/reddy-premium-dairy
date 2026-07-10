@@ -13,7 +13,7 @@ import { withAuth } from '@/middleware/auth';
 import { validateInput, sanitizeInput, orderSchema } from '@/middleware/validation';
 import { authRateLimiter, getRateLimitHeaders } from '@/middleware/rateLimiter';
 import { logger } from '@/utils/logger';
-import { cache, CacheKeys } from '@/utils/cache';
+import { getCache, setCache } from '@/utils/cache';
 import { connectMongo } from '@/db/mongodb';
 
 async function handler(request: NextRequest, { auth }: any) {
@@ -55,7 +55,7 @@ async function handler(request: NextRequest, { auth }: any) {
     }
 
     // Process checkout - try MongoDB first, then fallback to localdb
-    let orderId = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const orderId = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
     const orderData = {
       orderId,
       userId,

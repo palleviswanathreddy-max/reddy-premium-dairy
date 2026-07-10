@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useApp } from '@/context/AppContext';
-import { X, Mail, MessageSquare, Phone, Bell, CheckCheck, Sparkles } from 'lucide-react';
+import { X, Mail, MessageSquare, Phone, Bell, CheckCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface NotificationsSidebarProps {

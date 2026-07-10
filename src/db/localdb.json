@@ -1402,6 +1402,21 @@
       "createdAt": "2026-07-03T10:15:00.000Z"
     }
   ],
+  "users": [
+    {
+      "id": "admin-001",
+      "email": "admin@reddydairy.com",
+      "name": "Palle Viswanath Reddy",
+      "role": "admin",
+      "phone": "6300928511",
+      "passwordHash": "$2b$10$.ngxFcnPJVhDfbDlWLA3WOvUZxBbwmmtRdTLoJcrg8O8GFbQjzUx6",
+      "avatar": null,
+      "addresses": [],
+      "rewardPoints": 0,
+      "walletBalance": 0,
+      "isVerified": true
+    }
+  ],
   "tempOtps": [
     {
       "phone": "6300928511",

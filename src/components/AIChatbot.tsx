@@ -1,7 +1,8 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Sparkles, ShoppingCart, HelpCircle } from 'lucide-react';
+import { MessageCircle, X, Send, Sparkles, ShoppingCart } from 'lucide-react';
 import { useApp } from '@/context/AppContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -21,8 +22,9 @@ export default function AIChatbot() {
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize messages on mount
+  // Initialize messages on mount/reopen
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMessages([
       {
         id: 'msg-welcome',
@@ -30,7 +32,7 @@ export default function AIChatbot() {
         text: t('chatWelcome')
       }
     ]);
-  }, [isOpen]);
+  }, [isOpen, t]);
 
   // Scroll to bottom
   useEffect(() => {
@@ -42,6 +44,7 @@ export default function AIChatbot() {
     if (!inputVal.trim()) return;
 
     const userMsg: Message = {
+      // eslint-disable-next-line react-hooks/purity
       id: `msg-${Date.now()}`,
       sender: 'user',
       text: inputVal

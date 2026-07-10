@@ -5,7 +5,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAccessToken, verifyRefreshToken, generateAccessToken } from '@/db/auth-helper';
 import { logger } from '@/utils/logger';
-import { APIError } from '@/utils/logger';
 
 interface SessionPayload {
   userId: string;

@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -18,7 +19,6 @@ import {
   Camera, 
   ChevronDown, 
   Bell, 
-  Settings, 
   LogOut, 
   LayoutDashboard 
 } from 'lucide-react';

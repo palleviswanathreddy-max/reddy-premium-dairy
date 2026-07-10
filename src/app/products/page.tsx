@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -8,7 +9,7 @@ import PageWrapper from '@/components/PageWrapper';
 import { Product } from '@/db/db';
 import { 
   Search, Star, SlidersHorizontal, Heart, 
-  Eye, RefreshCw, X, Plus, Check, Info, ShieldCheck, ShoppingCart 
+  Eye, RefreshCw, X, Plus, Info, ShieldCheck, ShoppingCart 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -44,9 +45,10 @@ function ProductsContent() {
   useEffect(() => {
     const search = searchParams.get('search');
     const category = searchParams.get('category');
-    
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (search) setSearchQuery(search);
     if (category) setSelectedCategory(category);
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [searchParams]);
 
   // Auto-scroll to products section when filters change

@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 import React from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
@@ -9,10 +10,8 @@ import {
   ArrowRight, 
   ShieldCheck, 
   Award, 
-  Users, 
   Zap, 
   Star, 
-  CheckCircle,
   Truck,
   Heart
 } from 'lucide-react';

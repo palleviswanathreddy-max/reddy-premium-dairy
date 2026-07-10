@@ -98,7 +98,7 @@ export async function getDatabaseStats() {
         const count = await col.countDocuments();
         const indexes = await col.getIndexes();
         stats[collection] = { count, indexCount: Object.keys(indexes).length };
-      } catch (e) {
+      } catch {
         stats[collection] = { error: 'Collection not found' };
       }
     }
