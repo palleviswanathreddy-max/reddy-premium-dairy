@@ -54,31 +54,61 @@ async function handler(request: NextRequest, { auth }: any) {
       );
     }
 
-    // Process checkout
-    const connection = await connectMongo();
-    const db = connection.connection.db;
-
-    // Get user data
-    const user = await db.collection('users').findOne({ id: userId });
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-
-    // Create order
-    const orderId = `ORD-${Date.now()}`;
-    const order = {
+    // Process checkout - try MongoDB first, then fallback to localdb
+    let orderId = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const orderData = {
       orderId,
       userId,
       items: sanitized.items,
       totalPrice: sanitized.totalPrice,
       deliveryAddress: sanitized.deliveryAddress,
-      status: 'pending',
-      paymentStatus: 'pending',
-      createdAt: new Date(),
-      updatedAt: new Date()
+      status: 'Pending',
+      paymentStatus: 'Pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
 
-    await db.collection('orders').insertOne(order);
+    // Try MongoDB
+    if (process.env.MONGODB_URI) {
+      try {
+        const connection = await connectMongo();
+        const mongoDb = connection.connection.db;
+        await mongoDb.collection('orders').insertOne(orderData);
+      } catch (mongoErr) {
+        logger.warn('MongoDB order insert failed, using localdb fallback', { error: (mongoErr as Error).message });
+      }
+    }
+
+    // Always also save to localdb.json for admin portal consistency
+    try {
+      const { db: localDb } = await import('@/db/db');
+      const timeline = [
+        { status: 'Pending', time: new Date().toISOString(), done: true },
+        { status: 'Confirmed', time: new Date(Date.now() + 15 * 60 * 1000).toISOString(), done: true },
+        { status: 'Packed', time: '', done: false },
+        { status: 'Shipped', time: '', done: false },
+        { status: 'Out for Delivery', time: '', done: false },
+        { status: 'Delivered', time: '', done: false }
+      ];
+      localDb.orders.create({
+        id: orderId,
+        userId,
+        items: sanitized.items || [],
+        subtotal: sanitized.totalPrice || 0,
+        gstTotal: 0,
+        deliveryCharges: 0,
+        discount: 0,
+        grandTotal: sanitized.totalPrice || 0,
+        status: 'Pending',
+        paymentMethod: sanitized.paymentMethod || 'COD',
+        paymentStatus: 'Pending',
+        deliveryAddress: sanitized.deliveryAddress || {},
+        createdAt: new Date().toISOString(),
+        timeline
+      });
+    } catch (localErr) {
+      logger.warn('LocalDB order save failed', { error: (localErr as Error).message });
+    }
 
     // Invalidate user's order cache
     cache.invalidatePattern(`orders:${userId}`);

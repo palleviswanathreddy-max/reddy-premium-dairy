@@ -21,7 +21,7 @@ export async function initializeApplication() {
     
     // 2. Verify database connection
     const dbStats = await getDatabaseStats();
-    logger.info('✅ Database connected', dbStats);
+    logger.info('✅ Database connected', dbStats ?? undefined);
 
     // 3. Clear cache on startup (optional)
     cache.clear();

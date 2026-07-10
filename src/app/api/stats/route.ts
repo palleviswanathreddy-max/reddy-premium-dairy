@@ -103,10 +103,90 @@ export async function GET() {
           sales += o.grandTotal;
         }
       });
-      // Convert to friendly name, e.g. "Jul 2026"
       const dateObj = new Date(m + '-02');
       const label = dateObj.toLocaleString('en-US', { month: 'short', year: 'numeric' });
       return { label, revenue: sales };
+    });
+
+    // Payment method distribution
+    const paymentMethodCounts: { [key: string]: { count: number; amount: number } } = {};
+    orders.forEach(order => {
+      const method = order.paymentMethod || 'Unknown';
+      if (!paymentMethodCounts[method]) {
+        paymentMethodCounts[method] = { count: 0, amount: 0 };
+      }
+      paymentMethodCounts[method].count += 1;
+      paymentMethodCounts[method].amount += order.grandTotal;
+    });
+    const paymentMethodDistribution = Object.keys(paymentMethodCounts).map(method => ({
+      method,
+      count: paymentMethodCounts[method].count,
+      amount: paymentMethodCounts[method].amount
+    }));
+
+    // Payment status breakdown
+    const paymentStatusCounts: { [key: string]: number } = {};
+    orders.forEach(order => {
+      const status = order.paymentStatus || 'Unknown';
+      paymentStatusCounts[status] = (paymentStatusCounts[status] || 0) + 1;
+    });
+    const paymentStatusBreakdown = Object.keys(paymentStatusCounts).map(status => ({
+      status,
+      count: paymentStatusCounts[status]
+    }));
+
+    // Delivery status breakdown
+    const deliveryStatusCounts: { [key: string]: number } = {};
+    orders.forEach(order => {
+      const status = order.status || 'Unknown';
+      deliveryStatusCounts[status] = (deliveryStatusCounts[status] || 0) + 1;
+    });
+    const deliveryStatusBreakdown = Object.keys(deliveryStatusCounts).map(status => ({
+      status,
+      count: deliveryStatusCounts[status]
+    }));
+
+    // Daily revenue for last 7 days
+    const dailyRevenue = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toISOString().slice(0, 10);
+      let daySales = 0;
+      let dayOrders = 0;
+      orders.forEach(o => {
+        if (o.createdAt.slice(0, 10) === dateStr) {
+          daySales += o.grandTotal;
+          dayOrders += 1;
+        }
+      });
+      const label = d.toLocaleString('en-US', { weekday: 'short', day: 'numeric', month: 'short' });
+      dailyRevenue.push({ date: dateStr, label, revenue: daySales, orders: dayOrders });
+    }
+
+    // Customer acquisition trend (last 6 months)
+    const customerAcquisition = months.map(m => {
+      let count = 0;
+      users.forEach((u: any) => {
+        const createdAt = u.createdAt || '';
+        if (typeof createdAt === 'string' && createdAt.slice(0, 7) === m) {
+          count += 1;
+        }
+      });
+      const dateObj = new Date(m + '-02');
+      const label = dateObj.toLocaleString('en-US', { month: 'short', year: 'numeric' });
+      return { label, count };
+    });
+
+    // Total collected vs pending amounts
+    let totalCollected = 0;
+    let totalPending = 0;
+    orders.forEach(order => {
+      if (order.paymentStatus === 'Paid') {
+        totalCollected += order.grandTotal;
+      } else {
+        totalPending += order.grandTotal;
+      }
     });
 
     return NextResponse.json({
@@ -125,7 +205,14 @@ export async function GET() {
         lowStockProducts,
         bestSellers,
         salesByCategoryData,
-        revenueHistory
+        revenueHistory,
+        paymentMethodDistribution,
+        paymentStatusBreakdown,
+        deliveryStatusBreakdown,
+        dailyRevenue,
+        customerAcquisition,
+        totalCollected,
+        totalPending
       }
     });
   } catch (err: any) {

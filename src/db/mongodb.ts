@@ -57,12 +57,15 @@ const UserSchema = new mongoose.Schema({
   addresses: [AddressSchema],
   verifiedEmail: { type: Boolean, default: false },
   verifiedPhone: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
 
 // OTP Schema
 const OtpSchema = new mongoose.Schema({
-  phone: { type: String, required: true, index: true },
+  identifier: { type: String, required: true, index: true }, // email or phone number
+  identifierType: { type: String, enum: ['email', 'phone'], required: true },
+  purpose: { type: String, enum: ['registration', 'login'], default: 'registration' },
   otpCode: { type: String, required: true },
   expiresAt: { type: Date, required: true }
 });

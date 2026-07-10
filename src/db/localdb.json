@@ -3,12 +3,12 @@
     {
       "id": "prod-fresh-milk",
       "sku": "REDDY-FRSH-500",
-      "name": "REDDY PREMIUM Fresh Milk \u2013 Pasteurised & Homogenised (500ml)",
+      "name": "REDDY PREMIUM Fresh Milk – Pasteurised & Homogenised (500ml)",
       "category": "Fresh Milk",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure farm-fresh milk, pasteurised and homogenised for consistent creamy texture. 100% natural with no preservatives. Rich source of calcium and protein for daily health.",
       "ingredients": "100% Pasteurised Homogenised Whole Milk",
-      "storage": "Refrigerate between 1\u00b0C\u20134\u00b0C. Consume within 3 days of opening.",
+      "storage": "Refrigerate between 1°C–4°C. Consume within 3 days of opening.",
       "nutrition": {
         "calories": "61 kcal",
         "fat": "3.3g",
@@ -23,10 +23,10 @@
       "price": 32,
       "discount": 8,
       "gst": 0,
-      "stock": 250,
+      "stock": 249,
       "status": "Available",
       "expiryDays": 3,
-      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
       "rating": 4.8,
       "images": [
         "/images/products/1_fresh_milk.png"
@@ -63,12 +63,12 @@
     {
       "id": "prod-cow-milk",
       "sku": "REDDY-COW-500",
-      "name": "REDDY PREMIUM Pure Cow Milk \u2013 100% Pure & Natural (500ml)",
+      "name": "REDDY PREMIUM Pure Cow Milk – 100% Pure & Natural (500ml)",
       "category": "Fresh Milk",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "100% pure and natural cow milk sourced from pasture-fed cows. Easy to digest and packed with natural sweetness and nutrition. Excellent for daily cooking, tea, and coffee.",
       "ingredients": "100% Pure Cow Milk",
-      "storage": "Refrigerate under 4\u00b0C.",
+      "storage": "Refrigerate under 4°C.",
       "nutrition": {
         "calories": "59 kcal",
         "fat": "3.2g",
@@ -86,7 +86,7 @@
       "stock": 200,
       "status": "Available",
       "expiryDays": 3,
-      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
       "rating": 4.9,
       "images": [
         "/images/products/2_cow_milk.png"
@@ -123,12 +123,12 @@
     {
       "id": "prod-buffalo-milk",
       "sku": "REDDY-BUFF-500",
-      "name": "REDDY PREMIUM Rich Buffalo Milk \u2013 Rich & Nutritious (500ml)",
+      "name": "REDDY PREMIUM Rich Buffalo Milk – Rich & Nutritious (500ml)",
       "category": "Fresh Milk",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Rich, creamy, high-fat buffalo milk sourced directly from our farm. Ideal for preparing traditional curd, ghee, sweets, and rich tea. Pasteurised for guaranteed purity.",
       "ingredients": "100% Raw Buffalo Milk",
-      "storage": "Refrigerate 1\u00b0C\u20134\u00b0C. Boil before consumption.",
+      "storage": "Refrigerate 1°C–4°C. Boil before consumption.",
       "nutrition": {
         "calories": "97 kcal",
         "fat": "6.5g",
@@ -147,7 +147,7 @@
       "stock": 180,
       "status": "Available",
       "expiryDays": 3,
-      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
       "rating": 4.8,
       "images": [
         "/images/products/3_buffalo_milk.png"
@@ -184,12 +184,12 @@
     {
       "id": "prod-a2-milk",
       "sku": "REDDY-A2-500",
-      "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+      "name": "REDDY PREMIUM A2 Milk – Pure A2 Protein (500ml)",
       "category": "Fresh Milk",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure A2 Cow Milk from indigenous grass-fed cows. Rich in A2 beta-casein protein which is highly digestible. Chilled within 1 hour of milking. Great immunity booster for the whole family.",
       "ingredients": "100% Pure A2 Cow Milk",
-      "storage": "Refrigerate 1\u00b0C\u20134\u00b0C. Consume within 3 days of opening.",
+      "storage": "Refrigerate 1°C–4°C. Consume within 3 days of opening.",
       "nutrition": {
         "calories": "62 kcal",
         "fat": "3.8g",
@@ -208,7 +208,7 @@
       "stock": 149,
       "status": "Available",
       "expiryDays": 3,
-      "deliveryTime": "6:00 AM \u2013 9:00 AM Tomorrow",
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
       "rating": 4.9,
       "images": [
         "/images/products/4_a2_milk.png"
@@ -245,12 +245,12 @@
     {
       "id": "prod-curd",
       "sku": "REDDY-CURD-500",
-      "name": "REDDY PREMIUM Curd \u2013 Thick & Tasty (500g)",
+      "name": "REDDY PREMIUM Curd – Thick & Tasty (500g)",
       "category": "Curd",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Thick, creamy, naturally set curd from pasteurised milk. Rich in active lactic cultures for gut health and digestion. No added preservatives or thickeners. Perfect alongside meals.",
       "ingredients": "Pasteurized Milk, Active Lactic Cultures",
-      "storage": "Refrigerate below 4\u00b0C. Do not freeze.",
+      "storage": "Refrigerate below 4°C. Do not freeze.",
       "nutrition": {
         "calories": "60 kcal",
         "fat": "3.1g",
@@ -305,12 +305,12 @@
     {
       "id": "prod-butter",
       "sku": "REDDY-BUTTER-500",
-      "name": "REDDY PREMIUM Butter \u2013 Pasteurised (500g)",
+      "name": "REDDY PREMIUM Butter – Pasteurised (500g)",
       "category": "Butter",
       "brand": "REDDY PREMIUM DAIRY",
-      "description": "Rich, creamy, pasteurised butter made from fresh milk fat. Adds a delicious taste and aroma to toast, paranthas, biscuits, and saut\u00e9ed vegetables. 100% free of artificial colors.",
+      "description": "Rich, creamy, pasteurised butter made from fresh milk fat. Adds a delicious taste and aroma to toast, paranthas, biscuits, and sautéed vegetables. 100% free of artificial colors.",
       "ingredients": "Pasteurised Milk Fat, Salt, Annatto Color",
-      "storage": "Refrigerate under 4\u00b0C.",
+      "storage": "Refrigerate under 4°C.",
       "nutrition": {
         "calories": "720 kcal",
         "fat": "81.0g",
@@ -364,12 +364,12 @@
     {
       "id": "prod-paneer",
       "sku": "REDDY-PANEER-200",
-      "name": "REDDY PREMIUM Paneer \u2013 Fresh & Soft (200g)",
+      "name": "REDDY PREMIUM Paneer – Fresh & Soft (200g)",
       "category": "Paneer",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Incredibly soft, fresh, melt-in-the-mouth malai paneer. Made from pure cow milk under hygienic conditions. Vacuum sealed to retain freshness. Free from starch or binders.",
       "ingredients": "Pasteurized Cow Milk, Citric Acid",
-      "storage": "Refrigerate below 4\u00b0C. Soak in warm water for 10 mins before cooking.",
+      "storage": "Refrigerate below 4°C. Soak in warm water for 10 mins before cooking.",
       "nutrition": {
         "calories": "265 kcal",
         "fat": "20.8g",
@@ -424,12 +424,12 @@
     {
       "id": "prod-cheese",
       "sku": "REDDY-CHEESE-200",
-      "name": "REDDY PREMIUM Cheese \u2013 Processed Cheese (200g)",
+      "name": "REDDY PREMIUM Cheese – Processed Cheese (200g)",
       "category": "Cheese",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Creamy, delicious processed cheese. Easy to slice, grate, or melt. Rich in dairy protein and calcium. Perfect for sandwiches, pizza, burgers, and pasta dishes.",
       "ingredients": "Cheese, Milk Solids, Emulsifiers, Common Salt",
-      "storage": "Refrigerate below 4\u00b0C. Do not freeze.",
+      "storage": "Refrigerate below 4°C. Do not freeze.",
       "nutrition": {
         "calories": "310 kcal",
         "fat": "25.0g",
@@ -483,7 +483,7 @@
     {
       "id": "prod-ghee",
       "sku": "REDDY-GHEE-500",
-      "name": "REDDY PREMIUM Ghee \u2013 Pure & Aromatic (500ml)",
+      "name": "REDDY PREMIUM Ghee – Pure & Aromatic (500ml)",
       "category": "Ghee",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Traditional Danedar cow ghee, crafted from fresh butter. Slowly cooked in small batches to preserve nutrition and yield rich golden aroma. Rich in antioxidants and healthy fats.",
@@ -506,7 +506,7 @@
       "status": "Available",
       "expiryDays": 365,
       "deliveryTime": "Same Day (Within 3 Hours)",
-      "rating": 5.0,
+      "rating": 5,
       "images": [
         "/images/products/9_ghee.png"
       ],
@@ -543,12 +543,12 @@
     {
       "id": "prod-cream",
       "sku": "REDDY-CREAM-200",
-      "name": "REDDY PREMIUM Cream \u2013 Rich & Fresh (200ml)",
+      "name": "REDDY PREMIUM Cream – Rich & Fresh (200ml)",
       "category": "Fresh Cream",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Velvety smooth fresh dairy cream. Enhances the richness of curries, gravies, soups, and desserts. Perfect for whipping and garnishing. 100% pure with no artificial thickeners.",
       "ingredients": "Milk Fat, Milk Solids",
-      "storage": "Refrigerate under 4\u00b0C. Do not freeze.",
+      "storage": "Refrigerate under 4°C. Do not freeze.",
       "nutrition": {
         "calories": "246 kcal",
         "fat": "25.0g",
@@ -602,12 +602,12 @@
     {
       "id": "prod-buttermilk",
       "sku": "REDDY-BMLK-500",
-      "name": "REDDY PREMIUM Buttermilk \u2013 Refreshing & Healthy (500ml)",
+      "name": "REDDY PREMIUM Buttermilk – Refreshing & Healthy (500ml)",
       "category": "Buttermilk",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Refreshing spiced buttermilk churned from fresh curd. Spiced with ginger, curry leaves, green chilli, and black salt. Aids digestion and keeps you hydrated in hot weather.",
       "ingredients": "Water, Curd, Ginger, Green Chilli, Salt, Spices, Curry Leaves",
-      "storage": "Refrigerate below 4\u00b0C. Shake well before drinking.",
+      "storage": "Refrigerate below 4°C. Shake well before drinking.",
       "nutrition": {
         "calories": "18 kcal",
         "fat": "0.8g",
@@ -662,12 +662,12 @@
     {
       "id": "prod-lassi",
       "sku": "REDDY-LASSI-500",
-      "name": "REDDY PREMIUM Lassi \u2013 Sweet & Delicious (500ml)",
+      "name": "REDDY PREMIUM Lassi – Sweet & Delicious (500ml)",
       "category": "Lassi",
       "brand": "REDDY PREMIUM DAIRY",
-      "description": "Traditional sweet Punjabi-style lassi made from thick high-fat curd. Flavoured with cardamom and saffron. Creamy, rich, and delicious \u2013 the perfect meal companion.",
+      "description": "Traditional sweet Punjabi-style lassi made from thick high-fat curd. Flavoured with cardamom and saffron. Creamy, rich, and delicious – the perfect meal companion.",
       "ingredients": "Pasteurized Milk Solids, Sugar, Active Culture, Cardamom, Saffron Extract",
-      "storage": "Refrigerate below 4\u00b0C.",
+      "storage": "Refrigerate below 4°C.",
       "nutrition": {
         "calories": "112 kcal",
         "fat": "3.5g",
@@ -721,12 +721,12 @@
     {
       "id": "prod-ice-cream",
       "sku": "REDDY-ICE-500",
-      "name": "REDDY PREMIUM Ice Cream \u2013 Rich & Creamy (500ml)",
+      "name": "REDDY PREMIUM Ice Cream – Rich & Creamy (500ml)",
       "category": "Ice Cream",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Luxurious, multi-flavour ice cream tub made from rich dairy cream. Smooth, indulgent, and meltingly delicious. Perfect family dessert for any occasion.",
       "ingredients": "Milk Solids, Cream, Sugar, Cocoa Powder, Vanilla Extract, Stabilizers",
-      "storage": "Store in freezer under -18\u00b0C.",
+      "storage": "Store in freezer under -18°C.",
       "nutrition": {
         "calories": "190 kcal",
         "fat": "11.0g",
@@ -780,7 +780,7 @@
     {
       "id": "prod-milkshake",
       "sku": "REDDY-MSHK-200",
-      "name": "REDDY PREMIUM Milkshake \u2013 Thick & Tasty (200ml)",
+      "name": "REDDY PREMIUM Milkshake – Thick & Tasty (200ml)",
       "category": "Milkshake",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Rich chocolate milkshake made from whole milk and premium Belgian cocoa. Thick, creamy, and satisfying energy booster in a convenient bottle.",
@@ -838,10 +838,10 @@
     {
       "id": "prod-flavoured-milk",
       "sku": "REDDY-FLMK-200",
-      "name": "REDDY PREMIUM Flavoured Milk \u2013 Strawberry (200ml)",
+      "name": "REDDY PREMIUM Flavoured Milk – Strawberry (200ml)",
       "category": "Milkshake",
       "brand": "REDDY PREMIUM DAIRY",
-      "description": "Refreshing strawberry flavoured milk combining pure dairy goodness with the juicy taste of ripe strawberries. Light, sweet, and delicious \u2013 loved by kids and adults alike.",
+      "description": "Refreshing strawberry flavoured milk combining pure dairy goodness with the juicy taste of ripe strawberries. Light, sweet, and delicious – loved by kids and adults alike.",
       "ingredients": "Double Toned Milk, Sugar, Strawberry Fruit Concentrate, Permitted Flavors",
       "storage": "Store in cool dry place. Shake well before use.",
       "nutrition": {
@@ -895,7 +895,7 @@
     {
       "id": "prod-milk-powder",
       "sku": "REDDY-MLKPOW-500",
-      "name": "REDDY PREMIUM Milk Powder \u2013 Spray Dried (500g)",
+      "name": "REDDY PREMIUM Milk Powder – Spray Dried (500g)",
       "category": "Milk Powder",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "High-quality spray-dried whole milk powder. Retains natural dairy flavor and full nutrition. Dissolves easily to prepare milk, tea, coffee, and traditional sweets.",
@@ -954,12 +954,12 @@
     {
       "id": "prod-khova",
       "sku": "REDDY-KHOVA-200",
-      "name": "REDDY PREMIUM Khova \u2013 Pure & Traditional (200g)",
+      "name": "REDDY PREMIUM Khova – Pure & Traditional (200g)",
       "category": "Khova",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure solid milk concentrate (Mawa), slow-cooked in traditional open pans from high-quality buffalo milk. Rich texture and sweet milk aroma. Essential for Gulab Jamun, Halwa, and Pedas.",
       "ingredients": "100% Pure Buffalo Milk Solids",
-      "storage": "Refrigerate below 4\u00b0C. Consume within 7 days or freeze for up to 30 days.",
+      "storage": "Refrigerate below 4°C. Consume within 7 days or freeze for up to 30 days.",
       "nutrition": {
         "calories": "320 kcal",
         "fat": "22.5g",
@@ -1071,7 +1071,7 @@
       "role": "customer",
       "avatar": null,
       "addresses": [],
-      "rewardPoints": 104,
+      "rewardPoints": 107,
       "walletBalance": 0
     }
   ],
@@ -1079,9 +1079,75 @@
     {
       "items": [
         {
+          "productId": "prod-fresh-milk",
+          "sku": "REDDY-FRSH-500",
+          "name": "REDDY PREMIUM Fresh Milk – Pasteurised & Homogenised (500ml)",
+          "price": 32,
+          "quantity": 1,
+          "gst": 0
+        }
+      ],
+      "subtotal": 32,
+      "gstTotal": 0,
+      "deliveryCharges": 20,
+      "discount": 0,
+      "grandTotal": 52,
+      "paymentMethod": "COD",
+      "deliveryAddress": {
+        "name": "viswa",
+        "phone": "6300928512",
+        "street": "phahe2",
+        "village": "hydrebad",
+        "district": "telangana",
+        "state": "Andhra Pradesh",
+        "pincode": "556262"
+      },
+      "giftMessage": "",
+      "deliveryInstructions": "kphp",
+      "userId": "user-1783108915631",
+      "id": "ORD-20260704-9535",
+      "status": "Pending",
+      "paymentStatus": "Pending",
+      "createdAt": "2026-07-04T12:43:31.429Z",
+      "timeline": [
+        {
+          "status": "Pending",
+          "time": "2026-07-04T12:43:31.429Z",
+          "done": true
+        },
+        {
+          "status": "Confirmed",
+          "time": "2026-07-04T12:58:31.429Z",
+          "done": true
+        },
+        {
+          "status": "Packed",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Shipped",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Out for Delivery",
+          "time": "",
+          "done": false
+        },
+        {
+          "status": "Delivered",
+          "time": "",
+          "done": false
+        }
+      ]
+    },
+    {
+      "items": [
+        {
           "productId": "prod-a2-milk",
           "sku": "REDDY-A2-500",
-          "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+          "name": "REDDY PREMIUM A2 Milk – Pure A2 Protein (500ml)",
           "price": 48,
           "quantity": 1,
           "gst": 0
@@ -1149,7 +1215,7 @@
         {
           "productId": "prod-a2-milk",
           "sku": "REDDY-A2-500",
-          "name": "REDDY PREMIUM A2 Milk \u2013 Pure A2 Protein (500ml)",
+          "name": "REDDY PREMIUM A2 Milk – Pure A2 Protein (500ml)",
           "price": 48,
           "quantity": 2,
           "gst": 0
@@ -1157,7 +1223,7 @@
         {
           "productId": "prod-paneer",
           "sku": "REDDY-PANEER-200",
-          "name": "REDDY PREMIUM Paneer \u2013 Fresh & Soft (200g)",
+          "name": "REDDY PREMIUM Paneer – Fresh & Soft (200g)",
           "price": 85,
           "quantity": 1,
           "gst": 5
@@ -1221,7 +1287,7 @@
         {
           "productId": "prod-ghee",
           "sku": "REDDY-GHEE-500",
-          "name": "REDDY PREMIUM Ghee \u2013 Pure & Aromatic (500ml)",
+          "name": "REDDY PREMIUM Ghee – Pure & Aromatic (500ml)",
           "price": 349,
           "quantity": 1,
           "gst": 12
@@ -1341,6 +1407,20 @@
       "phone": "6300928511",
       "otpCode": "419248",
       "expiresAt": "2026-07-03T19:42:48.750Z"
+    },
+    {
+      "identifier": "ram@gmail.com",
+      "identifierType": "email",
+      "purpose": "registration",
+      "otpCode": "309453",
+      "expiresAt": "2026-07-07T17:15:38.207Z"
+    },
+    {
+      "identifier": "palleviswanathreddy@gmail.com",
+      "identifierType": "email",
+      "purpose": "registration",
+      "otpCode": "732815",
+      "expiresAt": "2026-07-07T17:16:24.574Z"
     }
   ]
 }

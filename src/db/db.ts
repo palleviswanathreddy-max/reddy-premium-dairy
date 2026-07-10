@@ -65,6 +65,7 @@ export interface User {
   id: string;
   email: string;
   password?: string;
+  passwordHash?: string;
   name: string;
   role: 'admin' | 'customer';
   phone: string;
@@ -72,6 +73,7 @@ export interface User {
   addresses: Address[];
   rewardPoints: number;
   walletBalance: number;
+  isVerified?: boolean;
 }
 
 export interface OrderItem {

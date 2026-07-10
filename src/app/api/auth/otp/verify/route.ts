@@ -1,15 +1,26 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseOTP, MongooseUser } from '@/db/mongodb';
-import { generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
+import { connectMongo, MongooseOTP } from '@/db/mongodb';
+import { generateRegistrationToken } from '@/db/auth-helper';
 import { getDb, saveDb } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
-    const { phone, otpCode } = await request.json();
-    
-    const cleanPhone = phone ? phone.replace(/\D/g, '').slice(-10) : '';
-    if (!cleanPhone || !otpCode) {
-      return NextResponse.json({ success: false, message: 'Phone number and OTP code are required' }, { status: 400 });
+    const { identifier, otpCode } = await request.json();
+
+    if (!identifier || !otpCode) {
+      return NextResponse.json({ success: false, message: 'Identifier and OTP code are required' }, { status: 400 });
+    }
+
+    // Normalize identifier
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const isEmail = emailRegex.test(identifier.trim());
+    const normalizedIdentifier = isEmail
+      ? identifier.trim().toLowerCase()
+      : identifier.replace(/\D/g, '').slice(-10);
+    const identifierType: 'email' | 'phone' = isEmail ? 'email' : 'phone';
+
+    if (!isEmail && normalizedIdentifier.length !== 10) {
+      return NextResponse.json({ success: false, message: 'Invalid identifier' }, { status: 400 });
     }
 
     let isValid = false;
@@ -18,11 +29,11 @@ export async function POST(request: Request) {
     if (process.env.MONGODB_URI) {
       try {
         await connectMongo();
-        const record = await MongooseOTP.findOne({ phone: cleanPhone }).sort({ _id: -1 });
+        const record = await MongooseOTP.findOne({ identifier: normalizedIdentifier }).sort({ _id: -1 });
         if (record && record.otpCode === otpCode && new Date() < record.expiresAt) {
           isValid = true;
           // Delete OTP after successful verification
-          await MongooseOTP.deleteOne({ _id: record._id });
+          await MongooseOTP.deleteMany({ identifier: normalizedIdentifier });
         }
       } catch (err) {
         console.warn('[MongoDB OTP Verification Error] Falling back to LocalDB:', err);
@@ -33,97 +44,37 @@ export async function POST(request: Request) {
     if (!isValid) {
       const localData = getDb();
       const tempOtps = (localData as any).tempOtps || [];
-      const match = tempOtps.find((o: any) => o.phone === cleanPhone && o.otpCode === otpCode && new Date() < new Date(o.expiresAt));
+      const match = tempOtps.find(
+        (o: any) => o.identifier === normalizedIdentifier && o.otpCode === otpCode && new Date() < new Date(o.expiresAt)
+      );
       if (match) {
         isValid = true;
-        // Clean up
-        (localData as any).tempOtps = tempOtps.filter((o: any) => o.phone !== cleanPhone);
+        // Clean up used OTP
+        (localData as any).tempOtps = tempOtps.filter((o: any) => o.identifier !== normalizedIdentifier);
         saveDb(localData);
       }
     }
 
     if (!isValid) {
-      return NextResponse.json({ success: false, message: 'Invalid or expired OTP code' }, { status: 400 });
+      return NextResponse.json({ success: false, message: 'Invalid or expired OTP. Please try again.' }, { status: 400 });
     }
 
-    // OTP Verified! Now login or register the user
-    let userPayload: any = null;
-
-    if (process.env.MONGODB_URI) {
-      // MongoDB lookup/registration
-      await connectMongo();
-      let mUser = await MongooseUser.findOne({ phone: cleanPhone });
-      if (!mUser) {
-        // Auto-Register new user
-        mUser = new MongooseUser({
-          name: `Customer-${cleanPhone.slice(-4)}`,
-          email: `${cleanPhone}@reddy-temp.com`, // temp placeholder email
-          phone: cleanPhone,
-          passwordHash: 'otp-registered-account',
-          role: 'customer',
-          walletBalance: 100, // starting gift
-          rewardPoints: 250,
-          addresses: [],
-          verifiedPhone: true
-        });
-        await mUser.save();
-      }
-      userPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-    } else {
-      // LocalDB lookup/registration
-      const localData = getDb();
-      let lUser = localData.users.find(u => u.phone === cleanPhone || u.phone === `+91 ${cleanPhone}`);
-      if (!lUser) {
-        // Auto-Register new user
-        lUser = {
-          id: `user-${cleanPhone}`,
-          name: `Customer-${cleanPhone.slice(-4)}`,
-          email: `${cleanPhone}@reddy-temp.com`,
-          phone: cleanPhone,
-          role: 'customer',
-          avatar: null,
-          walletBalance: 100,
-          rewardPoints: 250,
-          addresses: []
-        };
-        localData.users.push(lUser);
-        saveDb(localData);
-      }
-      userPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
-    }
-
-    // Generate real JWT tokens
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
-
-    // Return success and set secure cookie headers
-    const response = NextResponse.json({ 
-      success: true, 
-      user: {
-        id: userPayload.id,
-        email: userPayload.email,
-        role: userPayload.role,
-        name: userPayload.name,
-        phone: cleanPhone
-      }
+    // ──────────────────────────────────────────────
+    // OTP Verified! Issue a short-lived registration token
+    // This proves OTP was verified — used in the next step to set password
+    // ──────────────────────────────────────────────
+    const registrationToken = generateRegistrationToken({
+      identifier: normalizedIdentifier,
+      identifierType
     });
 
-    // Set HTTP Only Cookie for JWT Session
-    response.cookies.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60, // 15 mins
-      path: '/'
+    return NextResponse.json({
+      success: true,
+      verified: true,
+      registrationToken,
+      identifierType,
+      message: 'OTP verified successfully. Please set your password to complete registration.'
     });
-    
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: '/'
-    });
-
-    return response;
 
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

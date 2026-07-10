@@ -64,3 +64,20 @@ export async function sendRealSMS(toPhone: string, messageBody: string): Promise
     return { success: false, error: err.message };
   }
 }
+
+// Registration Token — short-lived JWT to prove OTP was verified
+const REGISTRATION_TOKEN_SECRET = process.env.JWT_SECRET ? `${process.env.JWT_SECRET}-reg` : 'reddy-premium-dairy-reg-token-2026';
+
+export function generateRegistrationToken(payload: { identifier: string; identifierType: 'email' | 'phone' }): string {
+  return jwt.sign({ ...payload, purpose: 'registration' }, REGISTRATION_TOKEN_SECRET, { expiresIn: '10m' });
+}
+
+export function verifyRegistrationToken(token: string): { identifier: string; identifierType: 'email' | 'phone'; purpose: string } | null {
+  try {
+    const decoded = jwt.verify(token, REGISTRATION_TOKEN_SECRET) as any;
+    if (decoded.purpose !== 'registration') return null;
+    return { identifier: decoded.identifier, identifierType: decoded.identifierType, purpose: decoded.purpose };
+  } catch (err) {
+    return null;
+  }
+}

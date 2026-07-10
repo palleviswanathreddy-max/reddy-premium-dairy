@@ -1,67 +1,166 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseOTP } from '@/db/mongodb';
+import { connectMongo, MongooseOTP, MongooseUser } from '@/db/mongodb';
 import { sendRealSMS } from '@/db/auth-helper';
+import { sendEmailOTP } from '@/db/email-helper';
 import { getDb, saveDb } from '@/db/db';
+
+// Detect whether identifier is an email or a 10-digit phone number
+function detectIdentifierType(identifier: string): 'email' | 'phone' | null {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneDigits = identifier.replace(/\D/g, '');
+  if (emailRegex.test(identifier)) return 'email';
+  if (phoneDigits.length === 10) return 'phone';
+  return null;
+}
 
 export async function POST(request: Request) {
   try {
-    const { phone } = await request.json();
-    
-    // Normalize phone (remove non-digits, keep last 10 digits)
-    const cleanPhone = phone ? phone.replace(/\D/g, '').slice(-10) : '';
-    if (cleanPhone.length !== 10) {
-      return NextResponse.json({ success: false, message: 'Invalid 10-digit mobile number' }, { status: 400 });
+    const { identifier } = await request.json();
+
+    if (!identifier || !identifier.trim()) {
+      return NextResponse.json({ success: false, message: 'Please enter your email or mobile number' }, { status: 400 });
     }
 
-    // Strictly enforce Twilio configuration variables
-    if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'SMS Gateway not configured. Please define TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_PHONE_NUMBER in your .env.local file to enable real OTP delivery.' 
-      }, { status: 503 });
+    const trimmed = identifier.trim();
+    const identifierType = detectIdentifierType(trimmed);
+
+    if (!identifierType) {
+      return NextResponse.json({ success: false, message: 'Please enter a valid email address or 10-digit mobile number' }, { status: 400 });
     }
 
-    // Generate random 6-digit OTP
-    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes expiration
+    // Normalize
+    const normalizedIdentifier = identifierType === 'phone'
+      ? trimmed.replace(/\D/g, '').slice(-10)
+      : trimmed.toLowerCase();
 
-    let dbSaved = false;
+    // ──────────────────────────────────────────────
+    // DUPLICATE CHECK: Is this email/mobile already registered?
+    // ──────────────────────────────────────────────
+    let alreadyRegistered = false;
 
-    // 1. Save to MongoDB Atlas
     if (process.env.MONGODB_URI) {
       try {
         await connectMongo();
-        await MongooseOTP.deleteMany({ phone: cleanPhone });
-        const otpRecord = new MongooseOTP({ phone: cleanPhone, otpCode, expiresAt });
-        await otpRecord.save();
-        dbSaved = true;
+        const query = identifierType === 'email'
+          ? { email: normalizedIdentifier }
+          : { phone: normalizedIdentifier };
+        const existing = await MongooseUser.findOne(query);
+        if (existing) alreadyRegistered = true;
       } catch (err) {
-        console.warn('[MongoDB OTP Error] Failed to write OTP, falling back to LocalDB:', err);
+        console.warn('[MongoDB Duplicate Check Error] Falling back to LocalDB:', err);
       }
     }
 
-    // 2. Fallback to Local JSON DB if MongoDB not connected
+    if (!alreadyRegistered) {
+      const localData = getDb();
+      const existing = localData.users.find(u => {
+        if (identifierType === 'email') {
+          return u.email.toLowerCase() === normalizedIdentifier;
+        } else {
+          return u.phone.replace(/\D/g, '').slice(-10) === normalizedIdentifier;
+        }
+      });
+      if (existing) alreadyRegistered = true;
+    }
+
+    if (alreadyRegistered) {
+      return NextResponse.json({
+        success: false,
+        message: 'This email or mobile number is already registered. Please log in instead.',
+        alreadyRegistered: true
+      }, { status: 409 });
+    }
+
+    // ──────────────────────────────────────────────
+    // CHECK SERVICE AVAILABILITY
+    // ──────────────────────────────────────────────
+    if (identifierType === 'phone') {
+      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
+        return NextResponse.json({
+          success: false,
+          message: 'SMS service is not configured. Please use email registration instead, or configure Twilio in .env.local.'
+        }, { status: 503 });
+      }
+    } else {
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        return NextResponse.json({
+          success: false,
+          message: 'Email service is not configured. Please configure SMTP settings in .env.local.'
+        }, { status: 503 });
+      }
+    }
+
+    // ──────────────────────────────────────────────
+    // GENERATE OTP & SAVE
+    // ──────────────────────────────────────────────
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    let dbSaved = false;
+
+    // Save to MongoDB Atlas
+    if (process.env.MONGODB_URI) {
+      try {
+        await connectMongo();
+        await MongooseOTP.deleteMany({ identifier: normalizedIdentifier });
+        const otpRecord = new MongooseOTP({
+          identifier: normalizedIdentifier,
+          identifierType,
+          purpose: 'registration',
+          otpCode,
+          expiresAt
+        });
+        await otpRecord.save();
+        dbSaved = true;
+      } catch (err) {
+        console.warn('[MongoDB OTP Save Error] Falling back to LocalDB:', err);
+      }
+    }
+
+    // Fallback to Local JSON DB
     if (!dbSaved) {
       const localData = getDb();
-      (localData as any).tempOtps = ((localData as any).tempOtps || []).filter((o: any) => o.phone !== cleanPhone);
-      (localData as any).tempOtps.push({ phone: cleanPhone, otpCode, expiresAt: expiresAt.toISOString() });
+      (localData as any).tempOtps = ((localData as any).tempOtps || []).filter(
+        (o: any) => o.identifier !== normalizedIdentifier
+      );
+      (localData as any).tempOtps.push({
+        identifier: normalizedIdentifier,
+        identifierType,
+        purpose: 'registration',
+        otpCode,
+        expiresAt: expiresAt.toISOString()
+      });
       saveDb(localData);
     }
 
-    // Send real SMS via Twilio
-    const smsMessage = `Your REDDY PREMIUM DAIRY security verification code is ${otpCode}. Valid for 5 minutes.`;
-    const smsResult = await sendRealSMS(cleanPhone, smsMessage);
-
-    if (!smsResult.success) {
-      return NextResponse.json({ 
-        success: false, 
-        message: `Failed to deliver SMS via Twilio: ${smsResult.error}. Please check your Twilio credentials in .env.local.` 
-      }, { status: 502 });
+    // ──────────────────────────────────────────────
+    // SEND OTP via email or SMS
+    // ──────────────────────────────────────────────
+    if (identifierType === 'email') {
+      const result = await sendEmailOTP(normalizedIdentifier, otpCode);
+      if (!result.success) {
+        return NextResponse.json({
+          success: false,
+          message: `Failed to send verification email: ${result.error}`
+        }, { status: 502 });
+      }
+    } else {
+      const smsMessage = `Your REDDY PREMIUM DAIRY verification code is ${otpCode}. Valid for 5 minutes. Do not share this code.`;
+      const result = await sendRealSMS(normalizedIdentifier, smsMessage);
+      if (!result.success) {
+        return NextResponse.json({
+          success: false,
+          message: `Failed to send SMS: ${result.error}. Please check Twilio credentials.`
+        }, { status: 502 });
+      }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: 'OTP verification code sent successfully to your mobile device'
+    return NextResponse.json({
+      success: true,
+      identifierType,
+      message: identifierType === 'email'
+        ? 'Verification code sent to your email address'
+        : 'Verification code sent to your mobile number'
     });
 
   } catch (err: any) {

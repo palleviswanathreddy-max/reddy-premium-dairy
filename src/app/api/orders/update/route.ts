@@ -3,9 +3,15 @@ import { db } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
-    const { orderId, status } = await request.json();
-    if (!orderId || !status) {
-      return NextResponse.json({ success: false, message: 'Order ID and status are required' }, { status: 400 });
+    const body = await request.json();
+    const { orderId, status, paymentStatus } = body;
+
+    if (!orderId) {
+      return NextResponse.json({ success: false, message: 'Order ID is required' }, { status: 400 });
+    }
+
+    if (!status && !paymentStatus) {
+      return NextResponse.json({ success: false, message: 'At least status or paymentStatus is required' }, { status: 400 });
     }
 
     const order = db.orders.getById(orderId);
@@ -13,29 +19,38 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
 
-    // Update timeline based on new status
-    const updatedTimeline = order.timeline.map(step => {
-      if (step.status === status) {
-        return { ...step, done: true, time: new Date().toISOString() };
-      }
-      // If we mark something ahead, make sure previous steps are marked done too
-      const statusOrder = ['Pending', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
-      const currentIdx = statusOrder.indexOf(status);
-      const stepIdx = statusOrder.indexOf(step.status);
-      
-      if (stepIdx < currentIdx && !step.done) {
-        return { ...step, done: true, time: new Date().toISOString() };
-      }
-      return step;
-    });
+    const updates: any = {};
 
-    const updates: any = {
-      status,
-      timeline: updatedTimeline
-    };
+    // Handle delivery status update
+    if (status) {
+      // Update timeline based on new status
+      const updatedTimeline = order.timeline.map(step => {
+        if (step.status === status) {
+          return { ...step, done: true, time: new Date().toISOString() };
+        }
+        // If we mark something ahead, make sure previous steps are marked done too
+        const statusOrder = ['Pending', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
+        const currentIdx = statusOrder.indexOf(status);
+        const stepIdx = statusOrder.indexOf(step.status);
+        
+        if (stepIdx < currentIdx && !step.done) {
+          return { ...step, done: true, time: new Date().toISOString() };
+        }
+        return step;
+      });
 
-    if (status === 'Delivered') {
-      updates.paymentStatus = 'Paid';
+      updates.status = status;
+      updates.timeline = updatedTimeline;
+
+      // Auto-mark as paid when delivered
+      if (status === 'Delivered') {
+        updates.paymentStatus = 'Paid';
+      }
+    }
+
+    // Handle payment status update (can be independent of delivery status)
+    if (paymentStatus) {
+      updates.paymentStatus = paymentStatus;
     }
 
     const updatedOrder = db.orders.update(orderId, updates);

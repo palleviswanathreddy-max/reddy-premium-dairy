@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
+        ...result,
         success: true,
-        message: 'Application initialized successfully',
-        ...result
+        message: 'Application initialized successfully'
       },
       { status: 200 }
     );
@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        ...result,
         success: true,
-        message: 'Application re-initialized',
-        ...result
+        message: 'Application re-initialized'
       },
       { status: 200 }
     );

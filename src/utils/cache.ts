@@ -23,7 +23,7 @@ class CacheManager {
     // Simple LRU: remove oldest entry if cache is full
     if (this.store.size >= this.maxEntries) {
       const firstKey = this.store.keys().next().value;
-      this.store.delete(firstKey);
+      if (firstKey !== undefined) this.store.delete(firstKey);
     }
 
     this.store.set(key, {
