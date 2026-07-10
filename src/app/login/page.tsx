@@ -46,6 +46,7 @@ export default function Login() {
   // OTP input refs for individual digit boxes
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [demoOtp, setDemoOtp] = useState<string | null>(null);
 
   // Resend timer interval
   useEffect(() => {
@@ -132,7 +133,16 @@ export default function Login() {
       if (data.success) {
         setRegisterStep(2);
         setResendTimer(30);
-        showToast(data.message || 'Verification code sent!', 'success');
+        // Demo mode: OTP returned directly in response
+        if (data.demoOtp) {
+          setDemoOtp(data.demoOtp);
+          const digits = data.demoOtp.split('');
+          setOtpDigits(digits);
+          showToast(`Demo OTP: ${data.demoOtp} — auto-filled for you!`, 'success');
+        } else {
+          setDemoOtp(null);
+          showToast(data.message || 'Verification code sent!', 'success');
+        }
       } else {
         if (data.alreadyRegistered) {
           showToast(data.message, 'error');
@@ -523,14 +533,23 @@ export default function Login() {
                 {/* STEP 2: Enter OTP */}
                 {registerStep === 2 && (
                   <form onSubmit={handleVerifyOTP} className="space-y-4">
-                    <div className="bg-slate-900/60 border border-white/5 rounded-xl p-3 text-center">
-                      <p className="text-[11px] text-slate-300">
-                        We sent a 6-digit code to{' '}
-                        <strong className="text-white">
-                          {regIdentifierType === 'phone' ? `+91 ${regIdentifier}` : regIdentifier}
-                        </strong>
-                      </p>
-                    </div>
+                    {/* Demo OTP Banner — shown when email/SMS not configured */}
+                    {demoOtp ? (
+                      <div className="bg-amber-400/15 border border-amber-400/40 rounded-xl p-3 text-center space-y-1">
+                        <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">⚡ Demo Mode — Your Verification Code</p>
+                        <p className="text-2xl font-bold font-mono text-amber-300 tracking-[0.3em]">{demoOtp}</p>
+                        <p className="text-[9px] text-amber-400/70">Code auto-filled below. Just click Verify Code.</p>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-900/60 border border-white/5 rounded-xl p-3 text-center">
+                        <p className="text-[11px] text-slate-300">
+                          We sent a 6-digit code to{' '}
+                          <strong className="text-white">
+                            {regIdentifierType === 'phone' ? `+91 ${regIdentifier}` : regIdentifier}
+                          </strong>
+                        </p>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>

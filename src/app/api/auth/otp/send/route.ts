@@ -72,23 +72,11 @@ export async function POST(request: Request) {
     }
 
     // ──────────────────────────────────────────────
-    // CHECK SERVICE AVAILABILITY
+    // CHECK SERVICE AVAILABILITY (Demo mode if not configured)
     // ──────────────────────────────────────────────
-    if (identifierType === 'phone') {
-      if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN || !process.env.TWILIO_PHONE_NUMBER) {
-        return NextResponse.json({
-          success: false,
-          message: 'SMS service is not configured. Please use email registration instead, or configure Twilio in .env.local.'
-        }, { status: 503 });
-      }
-    } else {
-      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-        return NextResponse.json({
-          success: false,
-          message: 'Email service is not configured. Please configure SMTP settings in .env.local.'
-        }, { status: 503 });
-      }
-    }
+    const emailConfigured = !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+    const smsConfigured = !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
+    const isDemoMode = identifierType === 'email' ? !emailConfigured : !smsConfigured;
 
     // ──────────────────────────────────────────────
     // GENERATE OTP & SAVE
@@ -134,8 +122,19 @@ export async function POST(request: Request) {
     }
 
     // ──────────────────────────────────────────────
-    // SEND OTP via email or SMS
+    // SEND OTP via email or SMS (or demo mode)
     // ──────────────────────────────────────────────
+    if (isDemoMode) {
+      // Demo mode: return OTP directly in response (no email/SMS needed)
+      return NextResponse.json({
+        success: true,
+        identifierType,
+        demoOtp: otpCode,
+        isDemoMode: true,
+        message: `Demo mode: Your verification code is ${otpCode} (valid 5 min)`
+      });
+    }
+
     if (identifierType === 'email') {
       const result = await sendEmailOTP(normalizedIdentifier, otpCode);
       if (!result.success) {
