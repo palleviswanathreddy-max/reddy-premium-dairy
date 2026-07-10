@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
+/* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -52,6 +52,13 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
   const [searchVal, setSearchVal] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Hydration fix
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   // Monitor Scroll for Glass styling
   useEffect(() => {
@@ -256,7 +263,7 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors"
             >
               <Bell className="h-4.5 w-4.5" />
-              {unreadNotifications > 0 && (
+              {mounted && unreadNotifications > 0 && (
                 <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
                   {unreadNotifications}
                 </span>
@@ -269,7 +276,7 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors"
             >
               <Heart className="h-4.5 w-4.5" />
-              {wishlist.length > 0 && (
+              {mounted && wishlist.length > 0 && (
                 <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-secondary text-[9px] font-bold text-white ring-2 ring-white dark:ring-slate-950">
                   {wishlist.length}
                 </span>
@@ -282,7 +289,7 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               className="relative p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-900 rounded-full transition-colors"
             >
               <ShoppingBag className="h-4.5 w-4.5" />
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-slate-900 ring-2 ring-white dark:ring-slate-950">
                   {cartCount}
                 </span>
@@ -291,7 +298,9 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
 
             {/* User Profile / Dropdown */}
             <div className="relative">
-              {user ? (
+              {!mounted ? (
+                <div className="h-9 w-20 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"></div>
+              ) : user ? (
                 <>
                   <button 
                     onClick={() => setUserDropdown(!userDropdown)}

@@ -1,5 +1,5 @@
 'use client';
-/* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';

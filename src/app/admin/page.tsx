@@ -144,7 +144,7 @@ export default function AdminDashboard() {
       fetchAdminCustomers();
     }
     /* eslint-enable react-hooks/set-state-in-effect */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [user, router, showToast]);
 
   // Fetch insights when tab is activated
@@ -154,7 +154,7 @@ export default function AdminDashboard() {
       fetchInsights();
     }
     /* eslint-enable react-hooks/set-state-in-effect */
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [activeTab, insightsSummary]);
 
   // Submit Product CRUD form

@@ -6,6 +6,8 @@ export async function sendEmailOTP(toEmail: string, otpCode: string): Promise<{ 
   }
 
   try {
+    console.log("SMTP USER:", process.env.SMTP_USER);
+    console.log("SMTP PASS:", process.env.SMTP_PASS);
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.gmail.com',
       port: Number(process.env.SMTP_PORT) || 587,

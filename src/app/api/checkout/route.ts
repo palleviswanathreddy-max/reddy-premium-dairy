@@ -13,7 +13,7 @@ import { withAuth } from '@/middleware/auth';
 import { validateInput, sanitizeInput, orderSchema } from '@/middleware/validation';
 import { authRateLimiter, getRateLimitHeaders } from '@/middleware/rateLimiter';
 import { logger } from '@/utils/logger';
-import { getCache, setCache } from '@/utils/cache';
+import { cache } from '@/utils/cache';
 import { connectMongo } from '@/db/mongodb';
 
 async function handler(request: NextRequest, { auth }: any) {

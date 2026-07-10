@@ -1014,65 +1014,31 @@
   ],
   "users": [
     {
-      "id": "user-admin",
-      "email": "admin@reddy.com",
-      "password": "admin123",
+      "id": "admin-001",
+      "email": "admin@reddydairy.com",
       "name": "Palle Viswanath Reddy",
       "role": "admin",
-      "phone": "+91 6300928511",
-      "avatar": "/images/owner pic.png",
-      "addresses": [
-        {
-          "id": "addr-1",
-          "name": "Palle Viswanath Reddy",
-          "phone": "+91 6300928511",
-          "street": "Chiyyedu Village, Anantapur District",
-          "village": "Chiyyedu",
-          "district": "Anantapur",
-          "state": "Andhra Pradesh",
-          "pincode": "515721",
-          "isDefault": true
-        }
-      ],
-      "rewardPoints": 1500,
-      "walletBalance": 1000
-    },
-    {
-      "id": "user-customer",
-      "email": "customer@gmail.com",
-      "password": "user123",
-      "name": "Kiran Kumar",
-      "role": "customer",
-      "phone": "+91 9876543210",
+      "phone": "6300928511",
+      "passwordHash": "$2b$10$.ngxFcnPJVhDfbDlWLA3WOvUZxBbwmmtRdTLoJcrg8O8GFbQjzUx6",
       "avatar": null,
-      "addresses": [
-        {
-          "id": "addr-2",
-          "name": "Kiran Kumar",
-          "phone": "+91 9876543210",
-          "street": "Sai Nagar 3rd Cross",
-          "village": "Anantapur Town",
-          "district": "Anantapur",
-          "state": "Andhra Pradesh",
-          "pincode": "515001",
-          "isDefault": true
-        }
-      ],
-      "rewardPoints": 250,
-      "walletBalance": 200
+      "addresses": [],
+      "rewardPoints": 0,
+      "walletBalance": 0,
+      "isVerified": true
     },
     {
-      "id": "user-1783108915631",
-      "email": "palleviswanathreddy1111@gmail.com",
+      "id": "user-1783717014629",
+      "name": "palleviswanathreddy1111@gmail.com",
+      "email": "palleviswanathreddy11@gmail.com",
+      "phone": "",
       "password": "Viswa@123",
-      "passwordHash": "$2b$10$9A87uZ/K7TYUnKPcd9sH9e5X/u8FWtMh/D9igiO9LuyiKyC4C9w22",
-      "name": "viswa",
-      "phone": "6300928512",
+      "passwordHash": "$2b$10$hoqTgaEKsrt1k4qz.tPd1eON.sfAJsQVDO7WOxEMkQeFhSwN0B2oi",
       "role": "customer",
       "avatar": null,
       "addresses": [],
-      "rewardPoints": 107,
-      "walletBalance": 0
+      "rewardPoints": 100,
+      "walletBalance": 0,
+      "isVerified": true
     }
   ],
   "orders": [
@@ -1402,21 +1368,6 @@
       "createdAt": "2026-07-03T10:15:00.000Z"
     }
   ],
-  "users": [
-    {
-      "id": "admin-001",
-      "email": "admin@reddydairy.com",
-      "name": "Palle Viswanath Reddy",
-      "role": "admin",
-      "phone": "6300928511",
-      "passwordHash": "$2b$10$.ngxFcnPJVhDfbDlWLA3WOvUZxBbwmmtRdTLoJcrg8O8GFbQjzUx6",
-      "avatar": null,
-      "addresses": [],
-      "rewardPoints": 0,
-      "walletBalance": 0,
-      "isVerified": true
-    }
-  ],
   "tempOtps": [
     {
       "phone": "6300928511",
@@ -1431,11 +1382,25 @@
       "expiresAt": "2026-07-07T17:15:38.207Z"
     },
     {
+      "identifier": "mammu123@gmail.com",
+      "identifierType": "email",
+      "purpose": "registration",
+      "otpCode": "591836",
+      "expiresAt": "2026-07-10T17:59:56.603Z"
+    },
+    {
+      "identifier": "9963613670",
+      "identifierType": "phone",
+      "purpose": "registration",
+      "otpCode": "479440",
+      "expiresAt": "2026-07-10T19:26:32.803Z"
+    },
+    {
       "identifier": "palleviswanathreddy@gmail.com",
       "identifierType": "email",
       "purpose": "registration",
-      "otpCode": "732815",
-      "expiresAt": "2026-07-07T17:16:24.574Z"
+      "otpCode": "664550",
+      "expiresAt": "2026-07-10T21:02:10.425Z"
     }
   ]
 }

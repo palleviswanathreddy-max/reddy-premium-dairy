@@ -3,7 +3,7 @@
  * Call this once when the server starts
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { initializeApplication } from '@/utils/init';
 import { logger } from '@/utils/logger';
 

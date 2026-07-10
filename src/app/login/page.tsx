@@ -21,11 +21,10 @@ function StepIndicator({ registerStep }: { registerStep: RegisterStep }) {
     <div className="flex items-center justify-center gap-2 mb-6">
       {[1, 2, 3].map((step) => (
         <React.Fragment key={step}>
-          <div className={`flex items-center justify-center h-8 w-8 rounded-full text-xs font-bold transition-all duration-300 ${
-            registerStep >= step
+          <div className={`flex items-center justify-center h-8 w-8 rounded-full text-xs font-bold transition-all duration-300 ${registerStep >= step
               ? 'bg-accent text-slate-900 shadow-lg shadow-accent/30'
               : 'bg-slate-800 text-slate-500 border border-white/10'
-          }`}>
+            }`}>
             {registerStep > step ? (
               <CheckCircle2 className="h-4 w-4" />
             ) : (
@@ -33,9 +32,8 @@ function StepIndicator({ registerStep }: { registerStep: RegisterStep }) {
             )}
           </div>
           {step < 3 && (
-            <div className={`h-0.5 w-8 rounded-full transition-all duration-500 ${
-              registerStep > step ? 'bg-accent' : 'bg-slate-800'
-            }`} />
+            <div className={`h-0.5 w-8 rounded-full transition-all duration-500 ${registerStep > step ? 'bg-accent' : 'bg-slate-800'
+              }`} />
           )}
         </React.Fragment>
       ))}
@@ -142,6 +140,9 @@ export default function Login() {
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     const type = detectType(regIdentifier.trim());
+    console.log("Identifier:", regIdentifier);
+    console.log("Type:", type);
+
     if (!type) {
       showToast('Please enter a valid email address or 10-digit mobile number', 'error');
       return;
@@ -401,21 +402,19 @@ export default function Login() {
             <div className="flex bg-slate-900 border border-white/5 p-1 rounded-xl gap-1">
               <button
                 onClick={() => { setActiveTab('login'); resetRegister(); }}
-                className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all duration-300 ${
-                  activeTab === 'login'
+                className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all duration-300 ${activeTab === 'login'
                     ? 'bg-accent text-slate-900 shadow-md'
                     : 'text-slate-500 hover:text-slate-300'
-                }`}
+                  }`}
               >
                 Sign In
               </button>
               <button
                 onClick={() => setActiveTab('register')}
-                className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all duration-300 ${
-                  activeTab === 'register'
+                className={`flex-1 py-2.5 text-[11px] font-bold rounded-lg transition-all duration-300 ${activeTab === 'register'
                     ? 'bg-accent text-slate-900 shadow-md'
                     : 'text-slate-500 hover:text-slate-300'
-                }`}
+                  }`}
               >
                 Register
               </button>
@@ -563,9 +562,8 @@ export default function Login() {
                             value={digit}
                             onChange={(e) => handleOtpDigitChange(i, e.target.value)}
                             onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                            className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${
-                              digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'
-                            } focus:border-accent focus:shadow-md focus:shadow-accent/30`}
+                            className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'
+                              } focus:border-accent focus:shadow-md focus:shadow-accent/30`}
                           />
                         ))}
                       </div>

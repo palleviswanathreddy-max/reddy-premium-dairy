@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import React from 'react';
 import PageWrapper from '@/components/PageWrapper';
 import { Award, Compass, Heart, Sparkles, Building, Milk } from 'lucide-react';
