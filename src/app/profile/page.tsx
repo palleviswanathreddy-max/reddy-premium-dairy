@@ -8,7 +8,8 @@ import PageWrapper from '@/components/PageWrapper';
 import { 
   ShoppingBag, MapPin, Heart, Wallet, Gift, 
   ChevronRight, Plus, Trash2, Camera, LogOut,
-  LayoutDashboard, UserCircle, Bell, Shield, Key, Eye, AlertTriangle, Search, Loader2, Check, X 
+  LayoutDashboard, UserCircle, Bell, Shield, Key, Eye, AlertTriangle, Search, Loader2, Check, X,
+  Settings, Sun, Moon
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -26,7 +27,9 @@ function ProfileContent() {
     logout,
     showToast,
     addToCart,
-    toggleWishlist
+    toggleWishlist,
+    theme,
+    toggleTheme
   } = useApp();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -402,7 +405,8 @@ function ProfileContent() {
                   { id: 'addresses', label: 'Addresses', icon: <MapPin className="h-4 w-4" /> },
                   { id: 'notifications', label: 'Notifications', icon: <Bell className="h-4 w-4" />, badge: unreadNotificationsCount },
                   { id: 'security', label: 'Security', icon: <Shield className="h-4 w-4" /> },
-                  { id: 'password', label: 'Password', icon: <Key className="h-4 w-4" /> }
+                  { id: 'password', label: 'Password', icon: <Key className="h-4 w-4" /> },
+                  { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -898,6 +902,48 @@ function ProfileContent() {
                       <p className="text-xs text-red-400/80 font-semibold mt-1 max-w-lg">Deleting your account will remove all your personal data, order history, and wallet balances permanently. This action cannot be undone after 30 days.</p>
                       <button onClick={() => setShowDeleteModal(true)} className="mt-4 px-5 py-2.5 bg-red-500 text-white font-bold text-xs rounded-xl hover:bg-red-600 transition-colors">Delete Account</button>
                     </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* APP SETTINGS TAB */}
+            {activeTab === 'settings' && (
+              <div className="space-y-6 animate-splash text-left">
+                <h3 className="text-xl font-black font-display text-primary dark:text-white border-b pb-3.5">
+                  App Settings
+                </h3>
+
+                <div className="p-6 border border-slate-100 dark:border-slate-800 rounded-2xl bg-slate-50/50 dark:bg-slate-950/30 space-y-6">
+                  <div>
+                    <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Theme Preference</h4>
+                    <p className="text-xs text-slate-500 font-semibold mt-1">Switch between light and dark modes. Preference is saved automatically.</p>
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 bg-primary/10 text-primary dark:text-accent rounded-xl flex items-center justify-center">
+                        {theme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800 dark:text-white">Dark Mode</p>
+                        <p className="text-[10px] text-slate-500 font-semibold mt-0.5">{theme === 'dark' ? 'Currently Dark' : 'Currently Light'}</p>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={toggleTheme}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        theme === 'dark' ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-800'
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          theme === 'dark' ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
                   </div>
                 </div>
 
