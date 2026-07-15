@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
@@ -19,6 +19,22 @@ import { motion } from 'framer-motion';
 
 export default function Home() {
   const { t, products, addToCart, wishlist, toggleWishlist } = useApp();
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const hasSeenSplash = sessionStorage.getItem('reddy-splash-seen');
+    if (hasSeenSplash) {
+      setShowSplash(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+      sessionStorage.setItem('reddy-splash-seen', 'true');
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Get featured products (A2 Milk, Paneer, Ghee, Curd)
   const featuredProducts = products.slice(0, 4);
@@ -31,6 +47,53 @@ export default function Home() {
     { name: t('butter'), slug: 'Butter', icon: '🧈', color: 'from-cream-200 to-cream-100' },
     { name: t('cheese'), slug: 'Cheese', icon: '🧀', color: 'from-yellow-600/10 to-yellow-500/10' }
   ];
+
+  if (showSplash) {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-gradient-to-tr from-emerald-950 via-emerald-800 to-green-900">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: [0.8, 1.1, 1], opacity: 1 }}
+          transition={{ duration: 1.2, ease: "easeOut" }}
+          className="flex flex-col items-center space-y-4"
+        >
+          {/* Glowing Ring around Logo */}
+          <div className="relative h-32 w-32 md:h-40 md:w-40 bg-white/10 backdrop-blur-md rounded-full border border-white/20 p-4 shadow-2xl flex items-center justify-center overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-tr from-emerald-500/25 to-green-400/25 animate-pulse" />
+            <img 
+              src="/images/logo.png" 
+              alt="Reddy Premium Dairy Logo" 
+              className="h-24 w-24 md:h-32 md:w-32 object-contain relative z-10 filter drop-shadow-lg"
+            />
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="text-center"
+          >
+            <h1 className="text-2xl md:text-3xl font-black font-display tracking-tight text-white">
+              REDDY PREMIUM DAIRY
+            </h1>
+            <p className="text-[10px] md:text-xs font-bold text-emerald-300 uppercase tracking-widest mt-1">
+              Pure • Fresh • Healthy
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Premium Spinner/Progress Bar at bottom */}
+        <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-48 h-1 bg-white/10 rounded-full overflow-hidden">
+          <motion.div 
+            initial={{ left: "-100%" }}
+            animate={{ left: "0%" }}
+            transition={{ duration: 2, ease: "easeInOut" }}
+            className="absolute top-0 bottom-0 left-0 w-full bg-emerald-400 rounded-full shadow-[0_0_8px_#34d399]"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PageWrapper>
