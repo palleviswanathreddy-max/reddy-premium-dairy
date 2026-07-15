@@ -55,6 +55,12 @@ export default function Checkout() {
   const [giftMessage, setGiftMessage] = useState('');
   const [deliverySlot, setDeliverySlot] = useState('Morning 6:00 AM - 9:00 AM');
 
+  // UPI QR States
+  const [showQRModal, setShowQRModal] = useState(false);
+  const [qrCountdown, setQrCountdown] = useState(5);
+  const [qrVerifying, setQrVerifying] = useState(false);
+  const [generatedQRUrl, setGeneratedQRUrl] = useState('');
+
   // PIN Code Auto-fill State
   const [pincodeLoading, setPincodeLoading] = useState(false);
   const [pincodeError, setPincodeError] = useState('');
@@ -320,6 +326,63 @@ export default function Checkout() {
       } catch {
         showToast('Payment initialization failed', 'error');
       }
+    } else if (paymentMethod === 'UPI') {
+      const tempId = `ORD-${Date.now()}`;
+      const upiUrl = `upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR&tn=${tempId}`;
+      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+      
+      setGeneratedQRUrl(qrApiUrl);
+      setShowQRModal(true);
+      setQrCountdown(5);
+      setQrVerifying(false);
+
+      let count = 5;
+      const interval = setInterval(() => {
+        count--;
+        setQrCountdown(count);
+        if (count <= 0) {
+          clearInterval(interval);
+          setQrVerifying(true);
+          
+          setTimeout(async () => {
+            try {
+              if (useWallet && walletDiscount > 0 && user) {
+                await fetch('/api/wallet', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    userId: user.id,
+                    amount: walletDiscount,
+                    type: 'debit',
+                    description: 'Redeemed on UPI QR order'
+                  })
+                });
+              }
+
+              const orderPayload = {
+                ...finalOrderData,
+                paymentStatus: 'Paid' as const
+              };
+
+              const res = await createOrder(orderPayload);
+              if (res.success && res.orderId) {
+                clearCart();
+                setCompletedOrderId(res.orderId || 'ORD-ERROR');
+                setActiveStep(3);
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+              } else {
+                showToast('Failed to create order', 'error');
+              }
+            } catch (err) {
+              console.error(err);
+              showToast('Error finalizing transaction', 'error');
+            } finally {
+              setShowQRModal(false);
+              setQrVerifying(false);
+            }
+          }, 1500);
+        }
+      }, 1000);
     } else {
       setTimeout(async () => {
         // For COD, process wallet deduction immediately
@@ -667,12 +730,16 @@ export default function Checkout() {
                     {/* UPI QR Code simulation */}
                     {paymentMethod === 'UPI' && (
                       <div className="p-5 border border-dashed rounded-2xl bg-slate-50 dark:bg-slate-950/20 text-center space-y-3 flex flex-col items-center">
-                        <div className="h-32 w-32 border-2 border-accent rounded-xl p-2 bg-white flex items-center justify-center shadow-md">
-                          <span className="text-4xl">📱</span> {/* Simulated QR code */}
+                        <div className="h-40 w-40 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-white flex items-center justify-center shadow-md">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR`)}`} 
+                            alt="UPI QR Code" 
+                            className="h-36 w-36 object-contain"
+                          />
                         </div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">UPI: reddypremium@upi</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">UPI ID: 6300928511@ybl</p>
                         <p className="text-[11px] text-slate-500 font-semibold max-w-xs leading-relaxed">
-                          Scan the QR code with your mobile app to make an instant secure transfer. Order will process automatically upon payment verification.
+                          Scan this QR code using any UPI App (PhonePe, GPay, Paytm). The order will verify and process automatically after you click place order.
                         </p>
                       </div>
                     )}
@@ -839,6 +906,59 @@ export default function Checkout() {
         )}
 
       </div>
+
+      {/* UPI QR Code Verification Overlay Modal */}
+      {showQRModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm text-left">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-3xl p-6 w-full max-w-sm space-y-6 text-center animate-splash text-slate-800 dark:text-slate-200 relative overflow-hidden">
+            
+            {/* Background glowing sphere */}
+            <div className="absolute -top-16 -left-16 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+
+            <h3 className="text-base font-extrabold font-display text-primary dark:text-white">UPI QR Code Payment</h3>
+            
+            {/* Dynamic QR Code display */}
+            <div className="h-48 w-48 border border-slate-200 dark:border-slate-800 rounded-2xl p-2 bg-white flex items-center justify-center mx-auto shadow-md relative group">
+              {qrVerifying ? (
+                <div className="flex flex-col items-center justify-center space-y-2 text-slate-500">
+                  <Loader2 className="w-10 h-10 animate-spin text-primary animate-pulse" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verifying...</p>
+                </div>
+              ) : (
+                <img 
+                  src={generatedQRUrl} 
+                  alt="Scan UPI QR" 
+                  className="h-44 w-44 object-contain"
+                />
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs font-bold text-slate-600 dark:text-slate-300">Amount: <span className="text-primary dark:text-accent font-black">Rs. {grandTotal.toFixed(2)}</span></p>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-relaxed">Payee: Palle Viswanatha Reddy<br/>UPI VPA: 6300928511@ybl</p>
+            </div>
+
+            {/* Countdown / Verification status banner */}
+            <div className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl bg-slate-50 dark:bg-slate-950/40 text-center font-sans">
+              {qrVerifying ? (
+                <p className="text-xs font-bold text-primary dark:text-accent flex items-center justify-center gap-1.5 animate-pulse">
+                  <ShieldCheck className="h-4 w-4 animate-bounce" /> Securing Settlement with Bank...
+                </p>
+              ) : (
+                <p className="text-xs font-semibold text-slate-500 leading-normal">
+                  Please scan the QR code with your UPI App. Checking payment status automatically in <span className="font-extrabold text-primary dark:text-accent text-sm font-mono">{qrCountdown}s</span>...
+                </p>
+              )}
+            </div>
+
+            <div className="text-[10px] font-semibold text-slate-400 leading-relaxed">
+              Do not close this modal or go back. The order will progress automatically as soon as the bank settles your payment.
+            </div>
+
+          </div>
+        </div>
+      )}
+
     </PageWrapper>
   );
 }
