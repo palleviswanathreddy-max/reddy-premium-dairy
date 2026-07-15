@@ -4,14 +4,45 @@ import { AppProvider } from "@/context/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 export const metadata: Metadata = {
-  title: "REDDY PREMIUM DAIRY | Pure • Fresh • Healthy | Chiyyedu, Anantapur",
-  description: "Buy premium, farm-fresh dairy online. Sourced from grass-fed cows at our high-tech Chiyyedu farm, Anantapur. Enjoy A2 cow milk, rich buffalo milk, thick curd, fresh malai paneer, vedic ghee, and mozzarella cheese with same-day delivery.",
+  metadataBase: new URL("https://reddy-premium-dairy.vercel.app"),
+  title: "Reddy Premium Dairy",
+  description: "Pure • Fresh • Healthy premium dairy products delivered daily.",
   keywords: "Reddy Premium Dairy, Palle Viswanath Reddy, dairy shop online, buy milk Anantapur, A2 Cow Milk India, Malai Paneer, pure Cow Ghee online, Chiyyedu dairy, fresh butter, curd delivery, organic milk",
   authors: [{ name: "Palle Viswanath Reddy" }],
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon-192.png",
-    apple: "/icon-512.png"
+    icon: "/favicon.ico",
+    shortcut: "/icon-192.png",
+    apple: "/apple-touch-icon.png"
+  },
+  alternates: {
+    canonical: "https://reddy-premium-dairy.vercel.app"
+  },
+  robots: {
+    index: true,
+    follow: true
+  },
+  openGraph: {
+    title: "Reddy Premium Dairy",
+    description: "Pure • Fresh • Healthy premium dairy products delivered daily.",
+    url: "https://reddy-premium-dairy.vercel.app",
+    siteName: "Reddy Premium Dairy",
+    images: [
+      {
+        url: "/images/screenshot-desktop.png",
+        width: 1920,
+        height: 1323,
+        alt: "Reddy Premium Dairy"
+      }
+    ],
+    locale: "en_US",
+    type: "website"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Reddy Premium Dairy",
+    description: "Pure • Fresh • Healthy premium dairy products delivered daily.",
+    images: ["/images/screenshot-desktop.png"]
   },
   appleWebApp: {
     capable: true,
@@ -21,7 +52,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B2545",
+  themeColor: "#2E7D32",
   width: "device-width",
   initialScale: 1
 };
