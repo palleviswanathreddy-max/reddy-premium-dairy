@@ -164,7 +164,7 @@ export default function Contact() {
             <div className="w-full h-[300px] md:h-[400px] rounded-[16px] overflow-hidden shadow-md">
               <iframe
                 title="Reddy Dairy Farms Map Location"
-                src="https://www.google.com/maps?q=14.6186,77.6358&z=16&output=embed"
+                src="https://www.google.com/maps?q=14.6186,77.6358(Reddy+Dairy+Farms,+Chiyyedu,+Anantapur+-+515721)&z=16&output=embed"
                 className="w-full h-full border-0"
                 allowFullScreen
                 loading="lazy"
