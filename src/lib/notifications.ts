@@ -190,3 +190,17 @@ export async function sendPushNotification(userId: string, title: string, body: 
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
+
+/**
+ * Trigger a WhatsApp message notification
+ */
+export async function triggerWhatsApp(event: string, order: Order) {
+  try {
+    const { sendWhatsAppMessage, formatWhatsAppMessage } = await import('./whatsapp');
+    const message = formatWhatsAppMessage(event, order);
+    const recipient = order.deliveryAddress.phone;
+    await sendWhatsAppMessage(recipient, message, order.id, event);
+  } catch (err) {
+    console.error(`[WhatsApp Notification Trigger Failed] for ${event}:`, err);
+  }
+}

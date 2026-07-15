@@ -72,7 +72,9 @@ export async function POST(request: Request) {
     }
     
     // Fire and forget (don't block response)
-    sendOrderConfirmation(newOrder, userEmail).catch(e => console.error("Notification failed:", e));
+    sendOrderConfirmation(newOrder, userEmail).catch((e: any) => console.error("Notification failed:", e));
+    const { triggerWhatsApp } = require('@/lib/notifications');
+    triggerWhatsApp('Order Placed', newOrder).catch((e: any) => console.error("WhatsApp placement failed:", e));
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (err: any) {

@@ -456,10 +456,18 @@ export default function AdminDashboard() {
             { id: 'delivery', label: 'Delivery Status', icon: <Truck className="h-4.5 w-4.5" /> },
             { id: 'reports', label: 'Reports', icon: <FileBarChart className="h-4.5 w-4.5" /> },
             { id: 'insights', label: 'Customer Insights', icon: <Activity className="h-4.5 w-4.5" /> },
+            { id: 'whatsapp', label: 'WhatsApp Settings', icon: <MessageSquare className="h-4.5 w-4.5" /> },
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => { setActiveTab(tab.id); setIsAddingProduct(false); }}
+              onClick={() => {
+                if (tab.id === 'whatsapp') {
+                  router.push('/admin/whatsapp');
+                } else {
+                  setActiveTab(tab.id);
+                  setIsAddingProduct(false);
+                }
+              }}
               className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all ${
                 activeTab === tab.id 
                   ? 'bg-accent text-slate-900 shadow-md font-extrabold' 
@@ -494,10 +502,18 @@ export default function AdminDashboard() {
           { id: 'delivery', icon: <Truck className="h-4 w-4" />, label: 'Delivery' },
           { id: 'reports', icon: <FileBarChart className="h-4 w-4" />, label: 'Reports' },
           { id: 'insights', icon: <Activity className="h-4 w-4" />, label: 'Insights' },
+          { id: 'whatsapp', icon: <MessageSquare className="h-4 w-4" />, label: 'WhatsApp' },
         ].map(tab => (
           <button
             key={tab.id}
-            onClick={() => { setActiveTab(tab.id); setIsAddingProduct(false); }}
+            onClick={() => {
+              if (tab.id === 'whatsapp') {
+                router.push('/admin/whatsapp');
+              } else {
+                setActiveTab(tab.id);
+                setIsAddingProduct(false);
+              }
+            }}
             className={`flex-1 min-w-[60px] flex flex-col items-center gap-0.5 py-2.5 text-[9px] font-bold transition-all ${
               activeTab === tab.id ? 'text-accent' : 'text-slate-500'
             }`}

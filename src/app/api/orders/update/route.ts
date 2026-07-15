@@ -95,20 +95,38 @@ export async function POST(request: Request) {
 
     const updatedOrder = db.orders.update(orderId, updates);
 
-    // Trigger FCM status updates push notifications
-    if (status && order) {
-      const title = `Order Status: ${status}`;
-      let body = `Your order ${orderId} has been updated to ${status}.`;
-      if (status === 'Confirmed') {
-        body = `Your order ${orderId} has been confirmed and is being packed.`;
-      } else if (status === 'Out for Delivery') {
-        body = `Our delivery partner is on the way with your order ${orderId}!`;
-      } else if (status === 'Delivered') {
-        body = `Your order ${orderId} has been delivered successfully. Thank you for choosing us!`;
-      }
+    // Trigger WhatsApp & FCM notifications
+    const { triggerWhatsApp, sendPushNotification } = require('@/lib/notifications');
+
+    if (status) {
+      // Send WhatsApp Event (e.g. Order Confirmed, Order Packed, Out For Delivery, Delivered, Order Cancelled)
+      let waEvent = status;
+      if (status === 'Packed') waEvent = 'Order Packed';
+      else if (status === 'Out for Delivery') waEvent = 'Out For Delivery';
+      else if (status === 'Cancelled') waEvent = 'Order Cancelled';
       
-      const { sendPushNotification } = require('@/lib/notifications');
-      sendPushNotification(order.userId, title, body).catch((e: any) => console.error("FCM Send failed:", e));
+      triggerWhatsApp(waEvent, updatedOrder).catch((e: any) => console.error("WhatsApp status trigger failed:", e));
+
+      if (order) {
+        const title = `Order Status: ${status}`;
+        let body = `Your order ${orderId} has been updated to ${status}.`;
+        if (status === 'Confirmed') {
+          body = `Your order ${orderId} has been confirmed and is being packed.`;
+        } else if (status === 'Out for Delivery') {
+          body = `Our delivery partner is on the way with your order ${orderId}!`;
+        } else if (status === 'Delivered') {
+          body = `Your order ${orderId} has been delivered successfully. Thank you for choosing us!`;
+        }
+        sendPushNotification(order.userId, title, body).catch((e: any) => console.error("FCM Send failed:", e));
+      }
+    }
+
+    if (paymentStatus === 'Paid' && (!order || order.paymentStatus !== 'Paid')) {
+      triggerWhatsApp('Payment Successful', updatedOrder).catch((e: any) => console.error("WhatsApp payment trigger failed:", e));
+    }
+
+    if (refundStatus === 'Completed' && (!order || order.refundStatus !== 'Completed')) {
+      triggerWhatsApp('Refund Processed', updatedOrder).catch((e: any) => console.error("WhatsApp refund trigger failed:", e));
     }
 
     return NextResponse.json({ success: true, order: updatedOrder });

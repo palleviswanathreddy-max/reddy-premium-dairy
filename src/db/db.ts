@@ -227,6 +227,22 @@ export interface Review {
   deletedAt?: string;
 }
 
+export interface WhatsAppLog {
+  id: string;
+  orderId: string;
+  recipient: string;
+  event: string;
+  message: string;
+  status: 'Sent' | 'Failed';
+  attempts: number;
+  error?: string | null;
+  createdAt: string;
+}
+
+export interface AppSettings {
+  whatsappNotificationsEnabled: boolean;
+}
+
 export interface DatabaseSchema {
   products: Product[];
   users: User[];
@@ -237,6 +253,8 @@ export interface DatabaseSchema {
   notifications: Notification[];
   reviews: Review[];
   walletTransactions: WalletTransaction[];
+  whatsappLogs: WhatsAppLog[];
+  settings: AppSettings;
 }
 
 // In-memory fallback if file system is slow or locked
@@ -249,7 +267,7 @@ export function getDb(): DatabaseSchema {
   try {
     if (!fs.existsSync(DB_PATH)) {
       // Return empty schema if file doesn't exist
-      return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [] };
+      return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [], settings: { whatsappNotificationsEnabled: true } };
     }
     const rawData = fs.readFileSync(DB_PATH, 'utf-8');
     inMemoryDB = JSON.parse(rawData);
@@ -258,10 +276,12 @@ export function getDb(): DatabaseSchema {
     if (!inMemoryDB!.reviews) inMemoryDB!.reviews = [];
     if (!inMemoryDB!.walletTransactions) inMemoryDB!.walletTransactions = [];
     if (!inMemoryDB!.coupons) inMemoryDB!.coupons = [];
+    if (!inMemoryDB!.whatsappLogs) inMemoryDB!.whatsappLogs = [];
+    if (!inMemoryDB!.settings) inMemoryDB!.settings = { whatsappNotificationsEnabled: true };
     return inMemoryDB!;
   } catch (error) {
     console.error('Error reading database file, using empty default:', error);
-    return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [] };
+    return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [], settings: { whatsappNotificationsEnabled: true } };
   }
 }
 
@@ -479,6 +499,44 @@ export const db = {
       const current = getDb();
       current.coupons = current.coupons.filter(c => c.code !== code);
       saveDb(current);
+    }
+  },
+  whatsappLogs: {
+    getAll: () => getDb().whatsappLogs || [],
+    create: (log: WhatsAppLog) => {
+      const current = getDb();
+      if (!current.whatsappLogs) current.whatsappLogs = [];
+      current.whatsappLogs.unshift(log);
+      saveDb(current);
+      return log;
+    },
+    update: (id: string, updates: Partial<WhatsAppLog>) => {
+      const current = getDb();
+      if (!current.whatsappLogs) return null;
+      const idx = current.whatsappLogs.findIndex(l => l.id === id);
+      if (idx !== -1) {
+        current.whatsappLogs[idx] = { ...current.whatsappLogs[idx], ...updates };
+        saveDb(current);
+        return current.whatsappLogs[idx];
+      }
+      return null;
+    }
+  },
+  settings: {
+    get: () => {
+      const current = getDb();
+      if (!current.settings) {
+        current.settings = { whatsappNotificationsEnabled: true };
+        saveDb(current);
+      }
+      return current.settings;
+    },
+    update: (updates: Partial<AppSettings>) => {
+      const current = getDb();
+      if (!current.settings) current.settings = { whatsappNotificationsEnabled: true };
+      current.settings = { ...current.settings, ...updates };
+      saveDb(current);
+      return current.settings;
     }
   }
 };

@@ -113,3 +113,24 @@ export const MongooseUserActivity =
   mongoose.models.UserActivity ||
   mongoose.model('UserActivity', UserActivitySchema);
 
+// WhatsApp Log Schema
+const WhatsAppLogSchema = new mongoose.Schema({
+  orderId: { type: String, required: true },
+  recipient: { type: String, required: true },
+  event: { type: String, required: true },
+  message: { type: String, required: true },
+  status: { type: String, enum: ['Sent', 'Failed'], default: 'Sent' },
+  attempts: { type: Number, default: 1 },
+  error: { type: String, default: null },
+  createdAt: { type: Date, default: Date.now }
+});
+
+export const MongooseWhatsAppLog = mongoose.models.WhatsAppLog || mongoose.model('WhatsAppLog', WhatsAppLogSchema);
+
+// App Settings Schema
+const AppSettingsSchema = new mongoose.Schema({
+  whatsappNotificationsEnabled: { type: Boolean, default: true }
+});
+
+export const MongooseAppSettings = mongoose.models.AppSettings || mongoose.model('AppSettings', AppSettingsSchema);
+
