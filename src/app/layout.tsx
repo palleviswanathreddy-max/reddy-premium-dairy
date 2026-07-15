@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import SupportChatbot from "@/components/SupportChatbot";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://reddy-premium-dairy.vercel.app"),
@@ -84,6 +85,7 @@ export default function RootLayout({
         <AppProvider>
           {children}
           <PWAInstallPrompt />
+          <SupportChatbot />
         </AppProvider>
       </body>
     </html>
