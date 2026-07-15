@@ -19,14 +19,14 @@ export default function SupportChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const chatbotStartTime = useRef(new Date());
+  const [startTime] = useState(() => new Date());
 
   const welcomeMessage: Message = {
     sender: 'bot',
     text: lang === 'te'
       ? 'నమస్కారం! నేను రెడ్డి డెయిరీ AI సహాయకుడిని. నేను మీకు ఎలా సహాయం చేయగలను? తాజా పాలు, పెరుగు, ఆర్డర్ల స్థితి గురించి అడగండి.'
       : 'Hello! I am your Reddy Dairy AI Support assistant. How can I help you today? Ask me about products, pricing, or track your orders.',
-    timestamp: chatbotStartTime.current
+    timestamp: startTime
   };
 
   const allMessages = [welcomeMessage, ...messages];
