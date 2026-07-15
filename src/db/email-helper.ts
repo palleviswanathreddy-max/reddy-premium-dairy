@@ -37,7 +37,7 @@ export async function sendEmailOTP(toEmail: string, otpCode: string): Promise<{ 
             <p style="color: #64748b; font-size: 11px; margin-top: 10px;">Do not share this code with anyone.</p>
           </div>
           <div style="text-align: center; margin-top: 30px;">
-            <p style="color: #475569; font-size: 11px;">Chiyyedu Village, Anantapur District, Andhra Pradesh – 515721</p>
+            <p style="color: #475569; font-size: 11px;">Chiyyedu Village, Anantapur District, Andhra Pradesh – 515751</p>
             <p style="color: #475569; font-size: 11px;">© 2026 REDDY PREMIUM DAIRY. All Rights Reserved.</p>
           </div>
         </div>

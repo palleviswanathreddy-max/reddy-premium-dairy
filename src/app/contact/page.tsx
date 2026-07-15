@@ -112,7 +112,7 @@ export default function Contact() {
                   <p className="leading-relaxed">
                     <strong>REDDY PREMIUM DAIRY</strong><br />
                     Chiyyedu Village, Anantapur District,<br />
-                    Andhra Pradesh – 515721, India
+                    Andhra Pradesh – 515751, India
                   </p>
                 </div>
                 
