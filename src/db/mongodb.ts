@@ -60,6 +60,8 @@ const UserSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   bloodGroup: { type: String, default: null },
   emergencyContact: { type: String, default: null },
+  biometricsEnabled: { type: Boolean, default: false },
+  biometricCredentialId: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -91,6 +91,8 @@ export interface User {
   mobileVerified?: boolean;
   deletedAt?: string | null;
   fcmToken?: string | null;
+  biometricsEnabled?: boolean;
+  biometricCredentialId?: string;
 }
 
 export interface Notification {
