@@ -21,6 +21,7 @@ export default function Checkout() {
     applyCouponCode, 
     removeCoupon, 
     createOrder,
+    clearCart,
     showToast,
     t
   } = useApp();
@@ -286,6 +287,7 @@ export default function Checkout() {
               
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
+                clearCart();
                 setCompletedOrderId(verifyData.order.id || 'ORD-ERROR');
                 setActiveStep(3);
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
@@ -310,6 +312,9 @@ export default function Checkout() {
         } else {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const rzp = new (window as any).Razorpay(options);
+          rzp.on('payment.failed', function (response: any) {
+            showToast(response.error.description || 'Payment failed. Please try again.', 'error');
+          });
           rzp.open();
         }
       } catch {

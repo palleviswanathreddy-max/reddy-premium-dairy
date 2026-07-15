@@ -172,6 +172,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Register Firebase Cloud Messaging (FCM) Token
+  const registerFCMToken = async (userId: string) => {
+    try {
+      const { requestForToken } = await import('@/lib/firebase');
+      const token = await requestForToken();
+      if (token) {
+        await fetch('/api/user/fcm-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, token })
+        });
+        console.log('FCM Token registered with server successfully.');
+      }
+    } catch (err) {
+      console.error('FCM Token registration skipped/failed:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) {
+      registerFCMToken(user.id);
+    }
+  }, [user?.id]);
+
 
   // Sync Cart
   useEffect(() => {

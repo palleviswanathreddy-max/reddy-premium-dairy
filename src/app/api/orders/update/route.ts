@@ -63,6 +63,22 @@ export async function POST(request: Request) {
 
     const updatedOrder = db.orders.update(orderId, updates);
 
+    // Trigger FCM status updates push notifications
+    if (status && order) {
+      const title = `Order Status: ${status}`;
+      let body = `Your order ${orderId} has been updated to ${status}.`;
+      if (status === 'Confirmed') {
+        body = `Your order ${orderId} has been confirmed and is being packed.`;
+      } else if (status === 'Out for Delivery') {
+        body = `Our delivery partner is on the way with your order ${orderId}!`;
+      } else if (status === 'Delivered') {
+        body = `Your order ${orderId} has been delivered successfully. Thank you for choosing us!`;
+      }
+      
+      const { sendPushNotification } = require('@/lib/notifications');
+      sendPushNotification(order.userId, title, body).catch((e: any) => console.error("FCM Send failed:", e));
+    }
+
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

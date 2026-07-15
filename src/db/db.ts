@@ -90,6 +90,7 @@ export interface User {
   emailVerified?: boolean;
   mobileVerified?: boolean;
   deletedAt?: string | null;
+  fcmToken?: string | null;
 }
 
 export interface Notification {
