@@ -9,8 +9,9 @@ import {
   Users, ShoppingBag, DollarSign, Package, TrendingUp, AlertTriangle,
   Plus, Edit2, Trash2, Download, Check, X, ShieldAlert, BarChart3,
   CreditCard, Truck, FileBarChart, IndianRupee, Clock, CheckCircle2,
-  Receipt, PieChart, Activity
+  Receipt, PieChart, Activity, Ticket, Star, MessageSquare
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Product, Order } from '@/db/db';
 
 export default function AdminDashboard() {
@@ -23,6 +24,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
   const [ordersList, setOrdersList] = useState<Order[]>([]);
   const [customersList, setCustomersList] = useState<any[]>([]);
+  const [couponsList, setCouponsList] = useState<any[]>([]);
+  const [reviewsList, setReviewsList] = useState<any[]>([]);
+  const [ticketsList, setTicketsList] = useState<any[]>([]);
 
   // Insights state
   const [insightsSummary, setInsightsSummary] = useState<any>(null);
@@ -86,6 +90,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAdminCoupons = async () => {
+    try {
+      const res = await fetch('/api/coupons');
+      const data = await res.json();
+      if (data.success) setCouponsList(data.coupons || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAdminReviews = async () => {
+    try {
+      const res = await fetch('/api/reviews');
+      const data = await res.json();
+      if (data.success) setReviewsList(data.reviews || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAdminTickets = async () => {
+    try {
+      const res = await fetch('/api/tickets');
+      const data = await res.json();
+      if (data.success) setTicketsList(data.tickets || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchInsights = async () => {
     setInsightsLoading(true);
     try {
@@ -142,6 +176,9 @@ export default function AdminDashboard() {
       fetchAdminStats();
       fetchAdminOrders();
       fetchAdminCustomers();
+      fetchAdminCoupons();
+      fetchAdminReviews();
+      fetchAdminTickets();
     }
     /* eslint-enable react-hooks/set-state-in-effect */
      
@@ -412,6 +449,9 @@ export default function AdminDashboard() {
             { id: 'products', label: 'Product Control', icon: <Package className="h-4.5 w-4.5" /> },
             { id: 'orders', label: 'Order Statuses', icon: <ShoppingBag className="h-4.5 w-4.5" /> },
             { id: 'customers', label: 'Customer Lists', icon: <Users className="h-4.5 w-4.5" /> },
+            { id: 'coupons', label: 'Coupons & Offers', icon: <Ticket className="h-4.5 w-4.5" /> },
+            { id: 'reviews', label: 'User Reviews', icon: <Star className="h-4.5 w-4.5" /> },
+            { id: 'tickets', label: 'Support Tickets', icon: <MessageSquare className="h-4.5 w-4.5" /> },
             { id: 'payments', label: 'Payment Details', icon: <CreditCard className="h-4.5 w-4.5" /> },
             { id: 'delivery', label: 'Delivery Status', icon: <Truck className="h-4.5 w-4.5" /> },
             { id: 'reports', label: 'Reports', icon: <FileBarChart className="h-4.5 w-4.5" /> },
@@ -447,6 +487,9 @@ export default function AdminDashboard() {
           { id: 'products', icon: <Package className="h-4 w-4" />, label: 'Products' },
           { id: 'orders', icon: <ShoppingBag className="h-4 w-4" />, label: 'Orders' },
           { id: 'customers', icon: <Users className="h-4 w-4" />, label: 'Customers' },
+          { id: 'coupons', icon: <Ticket className="h-4 w-4" />, label: 'Coupons' },
+          { id: 'reviews', icon: <Star className="h-4 w-4" />, label: 'Reviews' },
+          { id: 'tickets', icon: <MessageSquare className="h-4 w-4" />, label: 'Tickets' },
           { id: 'payments', icon: <CreditCard className="h-4 w-4" />, label: 'Payments' },
           { id: 'delivery', icon: <Truck className="h-4 w-4" />, label: 'Delivery' },
           { id: 'reports', icon: <FileBarChart className="h-4 w-4" />, label: 'Reports' },
@@ -474,8 +517,11 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold font-display text-primary dark:text-white leading-none">
               {activeTab === 'overview' && 'Dashboard Analytics'}
               {activeTab === 'products' && 'Product Database Management'}
-              {activeTab === 'orders' && 'Real-Time Order Logistics'}
-              {activeTab === 'customers' && 'Active Customer Database'}
+              { activeTab === 'orders' && 'Real-Time Order Logistics' }
+              { activeTab === 'coupons' && 'Coupons & Offers Management' }
+              { activeTab === 'reviews' && 'Customer Reviews Moderation' }
+              { activeTab === 'tickets' && 'Customer Support Tickets' }
+              { activeTab === 'customers' && 'Active Customer Database' }
               {activeTab === 'payments' && 'Payment Details & Collection'}
               {activeTab === 'delivery' && 'Delivery Status Tracker'}
               {activeTab === 'reports' && 'Business Reports & Analytics'}
@@ -555,21 +601,40 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               
               {/* Revenue Trend chart */}
-              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4">
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Monthly Sales Breakdown (Rs.)</h3>
-                
-                {/* SVG simulated Chart */}
-                <div className="h-52 w-full flex items-end justify-between pt-4 gap-2">
-                  {stats.revenueHistory.map((h: any, i: number) => (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                      <div 
-                        className="w-full bg-primary dark:bg-accent rounded-t-lg transition-all duration-500 shadow-sm"
-                        style={{ height: `${Math.max(10, Math.min(100, (h.revenue / 1000) * 100))}%` }}
-                        title={`Rs. ${h.revenue}`}
+                <div className="h-56 w-full pt-4">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={stats.revenueHistory}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.2} />
+                      <XAxis 
+                        dataKey="label" 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fill: '#94a3b8' }} 
+                        dy={10} 
+                        tickFormatter={(val) => val.split(' ')[0]} 
                       />
-                      <span className="text-[8px] font-bold text-slate-400 rotate-12 mt-1 whitespace-nowrap">{h.label.split(' ')[0]}</span>
-                    </div>
-                  ))}
+                      <YAxis 
+                        axisLine={false} 
+                        tickLine={false} 
+                        tick={{ fontSize: 10, fill: '#94a3b8' }} 
+                        dx={-10} 
+                      />
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#1e293b', color: '#fff', fontSize: '12px' }}
+                        itemStyle={{ color: '#0ea5e9' }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="revenue" 
+                        stroke="#0ea5e9" 
+                        strokeWidth={4} 
+                        dot={{ r: 4, fill: '#0ea5e9', strokeWidth: 0 }} 
+                        activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} 
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
@@ -586,6 +651,49 @@ export default function AdminDashboard() {
                       <p className="text-slate-400 shrink-0 font-bold">{item.qty} sold (Rs. {item.revenue.toFixed(2)})</p>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Order Status Distribution */}
+              <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 lg:col-span-2 flex flex-col md:flex-row items-center justify-between gap-8">
+                <div className="flex-1 space-y-3">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 dark:border-slate-800 pb-2">Order Status Pipeline</h3>
+                  <div className="space-y-2">
+                    {deliveryPipeline.map(item => (
+                      <div key={item.status} className="flex justify-between items-center text-xs font-semibold">
+                        <span className="text-slate-600 dark:text-slate-300">{item.status}</span>
+                        <span className={`${item.color} font-bold`}>{item.count}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="h-56 w-56 relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsPieChart>
+                      <Pie
+                        data={deliveryPipeline.filter(p => p.count > 0)}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={80}
+                        paddingAngle={5}
+                        dataKey="count"
+                        stroke="none"
+                      >
+                        {deliveryPipeline.filter(p => p.count > 0).map((entry, index) => {
+                          const colors = ['#f97316', '#3b82f6', '#6366f1', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'];
+                          return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
+                        })}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ borderRadius: '12px', border: 'none', backgroundColor: '#1e293b', color: '#fff', fontSize: '12px' }}
+                      />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-2xl font-black font-display text-slate-800 dark:text-white">{stats.orderCount}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase">Orders</span>
+                  </div>
                 </div>
               </div>
 
@@ -923,7 +1031,178 @@ export default function AdminDashboard() {
         )}
 
         {/* ═══════════════════════════════════════════════════════ */}
-        {/* 5. PAYMENT DETAILS TAB */}
+        {/* 5. COUPONS TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'coupons' && (
+          <div className="space-y-6 animate-splash">
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">Promo Codes • {couponsList.length} Active</p>
+              <button onClick={() => window.open('/admin/coupons', '_blank')} className="px-4 py-2 bg-accent text-slate-900 hover:bg-accent-light rounded-xl flex items-center gap-1.5 shadow-md text-xs font-bold transition-all">
+                <Ticket className="h-4 w-4" /> Go to Full Coupon Manager
+              </button>
+            </div>
+
+            {couponsList.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-12 text-center shadow-sm">
+                <Ticket className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-400">No active coupons</p>
+                <p className="text-[10px] text-slate-400 mt-1">Create promotional coupons in the full Coupon Manager.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-slate-100 dark:border-slate-900 rounded-3xl bg-white dark:bg-slate-900 shadow-sm">
+                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-left text-xs font-semibold">
+                  <thead className="bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-4">Code</th>
+                      <th className="px-4 py-4">Type</th>
+                      <th className="px-4 py-4">Value</th>
+                      <th className="px-4 py-4">Min Purchase</th>
+                      <th className="px-4 py-4">Valid Until</th>
+                      <th className="px-4 py-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-600 dark:text-slate-350">
+                    {couponsList.map((c: any, idx: number) => {
+                      const isExpired = new Date(c.validUntil) < new Date();
+                      return (
+                        <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                          <td className="px-4 py-4 font-bold text-slate-800 dark:text-white uppercase">{c.code}</td>
+                          <td className="px-4 py-4">{c.type.replace('_', ' ').toUpperCase()}</td>
+                          <td className="px-4 py-4 text-emerald-600 font-bold">
+                            {c.type === 'percentage' ? `${c.value}%` : c.type === 'flat' ? `₹${c.value}` : 'Free'}
+                          </td>
+                          <td className="px-4 py-4">₹{c.minPurchase}</td>
+                          <td className="px-4 py-4">
+                            {new Date(c.validUntil).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </td>
+                          <td className="px-4 py-4">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              !c.isActive ? 'bg-slate-500/10 text-slate-500' :
+                              isExpired ? 'bg-red-500/10 text-red-500' : 
+                              'bg-emerald-500/10 text-emerald-600'
+                            }`}>
+                              {!c.isActive ? 'Inactive' : isExpired ? 'Expired' : 'Active'}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* REVIEWS TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'reviews' && (
+          <div className="space-y-6 animate-splash">
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">User Reviews • {reviewsList.length} Total</p>
+              <button onClick={() => window.open('/admin/reviews', '_blank')} className="px-4 py-2 bg-accent text-slate-900 hover:bg-accent-light rounded-xl flex items-center gap-1.5 shadow-md text-xs font-bold transition-all">
+                <Star className="h-4 w-4" /> Go to Full Review Moderation
+              </button>
+            </div>
+
+            {reviewsList.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-12 text-center shadow-sm">
+                <Star className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-400">No reviews yet</p>
+                <p className="text-[10px] text-slate-400 mt-1">Manage product reviews in the full Review Moderation panel.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-slate-100 dark:border-slate-900 rounded-3xl bg-white dark:bg-slate-900 shadow-sm">
+                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-left text-xs font-semibold">
+                  <thead className="bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-4">User</th>
+                      <th className="px-4 py-4">Rating</th>
+                      <th className="px-4 py-4">Title</th>
+                      <th className="px-4 py-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-600 dark:text-slate-350">
+                    {reviewsList.slice(0, 10).map((r: any, idx: number) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                        <td className="px-4 py-4 font-bold text-slate-800 dark:text-white">{r.userName}</td>
+                        <td className="px-4 py-4 text-yellow-500 font-bold flex items-center gap-1">
+                          {r.rating} <Star className="h-3 w-3 fill-current" />
+                        </td>
+                        <td className="px-4 py-4">{r.title}</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            r.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                            r.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                            r.status === 'spam' ? 'bg-orange-100 text-orange-700' :
+                            'bg-amber-100 text-amber-700'
+                          }`}>
+                            {r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* TICKETS TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'tickets' && (
+          <div className="space-y-6 animate-splash">
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">Support Tickets • {ticketsList.filter(t => t.status === 'Pending').length} Pending</p>
+              <button onClick={() => window.open('/admin/tickets', '_blank')} className="px-4 py-2 bg-accent text-slate-900 hover:bg-accent-light rounded-xl flex items-center gap-1.5 shadow-md text-xs font-bold transition-all">
+                <MessageSquare className="h-4 w-4" /> Go to Full Tickets Manager
+              </button>
+            </div>
+
+            {ticketsList.length === 0 ? (
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-12 text-center shadow-sm">
+                <MessageSquare className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                <p className="text-sm font-bold text-slate-400">No support tickets</p>
+                <p className="text-[10px] text-slate-400 mt-1">Manage customer support tickets in the full Tickets Manager.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto border border-slate-100 dark:border-slate-900 rounded-3xl bg-white dark:bg-slate-900 shadow-sm">
+                <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-left text-xs font-semibold">
+                  <thead className="bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                    <tr>
+                      <th className="px-4 py-4">Customer</th>
+                      <th className="px-4 py-4">Subject</th>
+                      <th className="px-4 py-4">Date</th>
+                      <th className="px-4 py-4">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-600 dark:text-slate-350">
+                    {ticketsList.slice(0, 10).map((t: any, idx: number) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                        <td className="px-4 py-4 font-bold text-slate-800 dark:text-white">{t.name}</td>
+                        <td className="px-4 py-4 truncate max-w-[200px]">{t.subject}</td>
+                        <td className="px-4 py-4">{new Date(t.createdAt).toLocaleDateString()}</td>
+                        <td className="px-4 py-4">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                            t.status === 'Resolved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                          }`}>
+                            {t.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 6. PAYMENT DETAILS TAB */}
         {/* ═══════════════════════════════════════════════════════ */}
         {activeTab === 'payments' && (
           <div className="space-y-6 animate-splash">

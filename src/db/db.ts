@@ -47,6 +47,13 @@ export interface Product {
   faq?: Array<{ q: string; a: string }>;
   frequentlyBoughtTogether: string[];
   relatedProducts: string[];
+  variants?: Array<{
+    id: string;
+    label: string;
+    price: number;
+    mrp: number;
+    stock: number;
+  }>;
 }
 
 export interface Address {
@@ -54,10 +61,13 @@ export interface Address {
   name: string;
   phone: string;
   street: string;
-  village: string;
+  village?: string;
+  city?: string;
+  mandal?: string;
   district: string;
   state: string;
   pincode: string;
+  landmark?: string;
   isDefault: boolean;
 }
 
@@ -73,7 +83,23 @@ export interface User {
   addresses: Address[];
   rewardPoints: number;
   walletBalance: number;
-  isVerified?: boolean;
+  gender?: 'Male' | 'Female' | 'Other';
+  dob?: string;
+  bloodGroup?: string;
+  emergencyContact?: string;
+  emailVerified?: boolean;
+  mobileVerified?: boolean;
+  deletedAt?: string | null;
+}
+
+export interface Notification {
+  id: string;
+  userId: string;
+  title: string;
+  message: string;
+  type: 'Order Updates' | 'Payment Status' | 'Offers' | 'Coupons' | 'Admin Messages';
+  isRead: boolean;
+  createdAt: string;
 }
 
 export interface OrderItem {
@@ -106,16 +132,45 @@ export interface Order {
   deliveryAddress: Omit<Address, 'id' | 'isDefault'>;
   createdAt: string;
   timeline: OrderTimeline[];
+  deliverySlot?: string;
   giftMessage?: string;
   deliveryInstructions?: string;
+  deliveryOtp?: string;
+  expectedDelivery?: string;
+  deliveredAt?: string;
+  deliveryPartner?: {
+    name: string;
+    phone: string;
+    vehicle: string;
+    locationUrl?: string;
+  };
+  cancellationReason?: string;
+  refundStatus?: 'Pending' | 'Completed' | 'Failed';
+  refundAmount?: number;
+  subscriptionType?: 'One Time Order' | 'Daily Subscription';
+  invoiceNumber?: string;
 }
 
 export interface Coupon {
+  id?: string;
   code: string;
   description: string;
   type: 'flat' | 'percentage' | 'free_shipping';
   value: number;
   minPurchase: number;
+  maxDiscount?: number;
+  expiryDate?: string;
+  isActive: boolean;
+}
+
+export interface WalletTransaction {
+  id: string;
+  userId: string;
+  type: 'credit' | 'debit';
+  amount: number;
+  balanceAfter: number;
+  description: string;
+  createdAt: string;
 }
 
 export interface Blog {
@@ -140,6 +195,30 @@ export interface Ticket {
   createdAt: string;
 }
 
+export interface Review {
+  id: string;
+  productId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  rating: number;
+  title: string;
+  description: string;
+  images: string[];
+  videos?: string[];
+  isVerifiedPurchase: boolean;
+  status: 'pending' | 'approved' | 'rejected' | 'spam';
+  helpfulCount: number;
+  likeCount: number;
+  helpfulVotes: string[];
+  likes: string[];
+  reports: { userId: string; reason: string; }[];
+  adminReply?: string;
+  createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string;
+}
+
 export interface DatabaseSchema {
   products: Product[];
   users: User[];
@@ -147,6 +226,9 @@ export interface DatabaseSchema {
   coupons: Coupon[];
   blogs: Blog[];
   tickets: Ticket[];
+  notifications: Notification[];
+  reviews: Review[];
+  walletTransactions: WalletTransaction[];
 }
 
 // In-memory fallback if file system is slow or locked
@@ -159,14 +241,19 @@ export function getDb(): DatabaseSchema {
   try {
     if (!fs.existsSync(DB_PATH)) {
       // Return empty schema if file doesn't exist
-      return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [] };
+      return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [] };
     }
     const rawData = fs.readFileSync(DB_PATH, 'utf-8');
     inMemoryDB = JSON.parse(rawData);
+    // Backward compatibility for notifications
+    // Backward compatibility for reviews
+    if (!inMemoryDB!.reviews) inMemoryDB!.reviews = [];
+    if (!inMemoryDB!.walletTransactions) inMemoryDB!.walletTransactions = [];
+    if (!inMemoryDB!.coupons) inMemoryDB!.coupons = [];
     return inMemoryDB!;
   } catch (error) {
     console.error('Error reading database file, using empty default:', error);
-    return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [] };
+    return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [] };
   }
 }
 
@@ -252,10 +339,7 @@ export const db = {
       return current.orders[index];
     }
   },
-  coupons: {
-    getAll: () => getDb().coupons,
-    getByCode: (code: string) => getDb().coupons.find(c => c.code.toUpperCase() === code.toUpperCase())
-  },
+
   blogs: {
     getAll: () => getDb().blogs,
     getById: (id: string) => getDb().blogs.find(b => b.id === id)
@@ -275,6 +359,118 @@ export const db = {
       current.tickets[index] = { ...current.tickets[index], ...updates };
       saveDb(current);
       return current.tickets[index];
+    },
+    delete: (id: string) => {
+      const current = getDb();
+      const initialLength = current.tickets.length;
+      current.tickets = current.tickets.filter(t => t.id !== id);
+      saveDb(current);
+      return current.tickets.length < initialLength;
+    }
+  },
+  notifications: {
+    getAll: () => getDb().notifications || [],
+    getByUserId: (userId: string) => (getDb().notifications || []).filter(n => n.userId === userId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    create: (notification: Notification) => {
+      const current = getDb();
+      if (!current.notifications) current.notifications = [];
+      current.notifications.unshift(notification);
+      saveDb(current);
+      return notification;
+    },
+    update: (id: string, updates: Partial<Notification>) => {
+      const current = getDb();
+      if (!current.notifications) return null;
+      const index = current.notifications.findIndex(n => n.id === id);
+      if (index === -1) return null;
+      current.notifications[index] = { ...current.notifications[index], ...updates };
+      saveDb(current);
+      return current.notifications[index];
+    },
+    delete: (id: string) => {
+      const current = getDb();
+      if (!current.notifications) return false;
+      const initialLength = current.notifications.length;
+      current.notifications = current.notifications.filter(n => n.id !== id);
+      saveDb(current);
+      return current.notifications.length < initialLength;
+    },
+    deleteByUserId: (userId: string) => {
+      const current = getDb();
+      if (!current.notifications) return false;
+      current.notifications = current.notifications.filter(n => n.userId !== userId);
+      saveDb(current);
+      return true;
+    }
+  },
+  reviews: {
+    getAll: () => getDb().reviews,
+    getById: (id: string) => getDb().reviews.find(r => r.id === id),
+    getByProductId: (productId: string) => getDb().reviews.filter(r => r.productId === productId),
+    create: (review: Review) => {
+      const current = getDb();
+      current.reviews.push(review);
+      saveDb(current);
+      return review;
+    },
+    update: (id: string, updates: Partial<Review>) => {
+      const current = getDb();
+      const index = current.reviews.findIndex(r => r.id === id);
+      if (index === -1) return null;
+      current.reviews[index] = { ...current.reviews[index], ...updates };
+      saveDb(current);
+      return current.reviews[index];
+    },
+    delete: (id: string) => {
+      const current = getDb();
+      const initialLength = current.reviews.length;
+      current.reviews = current.reviews.filter(r => r.id !== id);
+      saveDb(current);
+      return current.reviews.length < initialLength;
+    },
+    interact: (id: string, updates: Partial<Review>) => {
+      const current = getDb();
+      const index = current.reviews.findIndex(r => r.id === id);
+      if (index !== -1) {
+        current.reviews[index] = { ...current.reviews[index], ...updates };
+        saveDb(current);
+        return current.reviews[index];
+      }
+      return null;
+    }
+  },
+  wallet: {
+    getByUserId: (userId: string) => getDb().walletTransactions.filter(t => t.userId === userId).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    addTransaction: (tx: WalletTransaction) => {
+      const current = getDb();
+      current.walletTransactions.push(tx);
+      saveDb(current);
+      return tx;
+    }
+  },
+  coupons: {
+    getAll: () => getDb().coupons,
+    getByCode: (code: string) => getDb().coupons.find(c => c.code.toUpperCase() === code.toUpperCase()),
+    create: (coupon: Coupon) => {
+      const current = getDb();
+      current.coupons.push(coupon);
+      saveDb(current);
+      return coupon;
+    },
+    update: (code: string, updates: Partial<Coupon>) => {
+      const current = getDb();
+      const index = current.coupons.findIndex(c => c.code === code);
+      if (index !== -1) {
+        current.coupons[index] = { ...current.coupons[index], ...updates };
+        saveDb(current);
+        return current.coupons[index];
+      }
+      return null;
+    },
+    delete: (code: string) => {
+      const current = getDb();
+      current.coupons = current.coupons.filter(c => c.code !== code);
+      saveDb(current);
     }
   }
 };

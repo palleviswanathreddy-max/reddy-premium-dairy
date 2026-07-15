@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-type AuthTab = 'login' | 'register';
+type AuthTab = 'login' | 'register' | 'forgot-password';
 type RegisterStep = 1 | 2 | 3;
 
 // Declared outside Login so it is not recreated on every render
@@ -63,6 +63,14 @@ export default function Login() {
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+
+  // Forgot Password multi-step state
+  const [forgotStep, setForgotStep] = useState<RegisterStep>(1);
+  const [forgotIdentifier, setForgotIdentifier] = useState('');
+  const [forgotIdentifierType, setForgotIdentifierType] = useState<'email' | 'phone' | null>(null);
+  const [forgotNewPassword, setForgotNewPassword] = useState('');
+  const [forgotConfirmPassword, setForgotConfirmPassword] = useState('');
+  const [showForgotNewPassword, setShowForgotNewPassword] = useState(false);
 
   // Admin login
   const [isAdminLogin, setIsAdminLogin] = useState(false);
@@ -303,6 +311,109 @@ export default function Login() {
     setResendTimer(0);
   };
 
+  // ──────────────────────────────────────────────
+  // FORGOT PASSWORD HANDLERS
+  // ──────────────────────────────────────────────
+  const handleForgotSendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const type = detectType(forgotIdentifier.trim());
+    if (!type) {
+      showToast('Please enter a valid email address or 10-digit mobile number', 'error');
+      return;
+    }
+    setForgotIdentifierType(type);
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: forgotIdentifier.trim() })
+      });
+      const data = await res.json();
+      setIsLoading(false);
+      if (data.success) {
+        setForgotStep(2);
+        setResendTimer(30);
+        if (data.demoOtp) {
+          setDemoOtp(data.demoOtp);
+          setOtpDigits(data.demoOtp.split(''));
+          showToast(`Demo OTP: ${data.demoOtp} — auto-filled for you!`, 'success');
+        } else {
+          setDemoOtp(null);
+          showToast(data.message || 'Verification code sent!', 'success');
+        }
+      } else {
+        showToast(data.message || 'Failed to send OTP', 'error');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleForgotVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otpCode.length !== 6) {
+      showToast('Please enter the 6-digit verification code', 'error');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: forgotIdentifier.trim(), otpCode })
+      });
+      const data = await res.json();
+      setIsLoading(false);
+      if (data.success) {
+        setForgotStep(3);
+        showToast('OTP verified! Please set your new password.', 'success');
+      } else {
+        showToast(data.message || 'Invalid OTP', 'error');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (forgotNewPassword.length < 6) {
+      showToast('Password must be at least 6 characters', 'error');
+      return;
+    }
+    if (forgotNewPassword !== forgotConfirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          identifier: forgotIdentifier.trim(),
+          newPassword: forgotNewPassword
+        })
+      });
+      const data = await res.json();
+      setIsLoading(false);
+      if (data.success) {
+        showToast(data.message || 'Password reset successfully.', 'success');
+        setActiveTab('login');
+        setLoginIdentifier(forgotIdentifier.trim());
+        setLoginPassword(forgotNewPassword);
+      } else {
+        showToast(data.message || 'Failed to reset password', 'error');
+      }
+    } catch (err: any) {
+      setIsLoading(false);
+      showToast(err.message, 'error');
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-slate-950 flex flex-col justify-between py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center relative"
@@ -461,6 +572,15 @@ export default function Login() {
                       {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
+                  <div className="flex justify-end pt-1">
+                    <button 
+                      type="button" 
+                      onClick={() => setActiveTab('forgot-password')} 
+                      className="text-[10px] text-accent hover:underline font-bold"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                 </div>
 
                 <button
@@ -469,6 +589,24 @@ export default function Login() {
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
                   <span>Sign In</span>
+                </button>
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[10px]">
+                    <span className="bg-[#0f172a] px-2 text-slate-500 uppercase tracking-widest font-bold">Or</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => showToast('Google OAuth requires API keys. Please configure next-auth.', 'info')}
+                  className="w-full py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-xl shadow-md flex items-center justify-center gap-3 transition-all duration-200"
+                >
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-4 w-4" />
+                  <span>Continue with Google</span>
                 </button>
 
                 <div className="text-center pt-2">
@@ -672,6 +810,25 @@ export default function Login() {
                   </form>
                 )}
 
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-white/10"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[10px]">
+                    <span className="bg-[#0f172a] px-2 text-slate-500 uppercase tracking-widest font-bold">Or</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => showToast('Google OAuth requires API keys. Please configure next-auth.', 'info')}
+                  className="w-full py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-xl shadow-md flex items-center justify-center gap-3 transition-all duration-200"
+                >
+                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-4 w-4" />
+                  <span>Continue with Google</span>
+                </button>
+
+
                 {/* Bottom link */}
                 <div className="text-center pt-2 border-t border-white/10">
                   <p className="text-[10px] text-slate-500 pt-3">
@@ -680,6 +837,150 @@ export default function Login() {
                       Sign in here
                     </button>
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* ──────────────────────── FORGOT PASSWORD TAB ──────────────────────── */}
+            {activeTab === 'forgot-password' && (
+              <div className="space-y-4 text-xs font-semibold text-slate-400">
+                <div className="text-center mb-1">
+                  <h3 className="text-lg font-bold font-display text-white">Reset Password</h3>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">
+                    {forgotStep === 1 && 'Step 1 — Enter Email/Mobile'}
+                    {forgotStep === 2 && 'Step 2 — Verify Code'}
+                    {forgotStep === 3 && 'Step 3 — New Password'}
+                  </p>
+                </div>
+
+                <StepIndicator registerStep={forgotStep} />
+
+                {/* STEP 1: Enter email or mobile */}
+                {forgotStep === 1 && (
+                  <form onSubmit={handleForgotSendOTP} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
+                      <div className="relative">
+                        {detectType(forgotIdentifier) === 'phone' ? (
+                          <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        ) : (
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        )}
+                        <input
+                          type="text" required
+                          placeholder="name@email.com or 9876543210"
+                          value={forgotIdentifier}
+                          onChange={(e) => setForgotIdentifier(e.target.value)}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-accent transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit" disabled={isLoading}
+                      className="w-full py-3.5 bg-accent text-slate-900 hover:bg-accent-light font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all duration-200"
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                      <span>Send Reset Code</span>
+                    </button>
+                  </form>
+                )}
+
+                {/* STEP 2: Enter OTP */}
+                {forgotStep === 2 && (
+                  <form onSubmit={handleForgotVerifyOTP} className="space-y-4">
+                    {demoOtp ? (
+                      <div className="bg-amber-400/15 border border-amber-400/40 rounded-xl p-3 text-center space-y-1">
+                        <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">⚡ Demo Mode</p>
+                        <p className="text-2xl font-bold font-mono text-amber-300 tracking-[0.3em]">{demoOtp}</p>
+                      </div>
+                    ) : (
+                      <div className="bg-slate-900/60 border border-white/5 rounded-xl p-3 text-center">
+                        <p className="text-[11px] text-slate-300">
+                          We sent a code to <strong className="text-white">{forgotIdentifierType === 'phone' ? `+91 ${forgotIdentifier}` : forgotIdentifier}</strong>
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                        {otpDigits.map((digit, i) => (
+                          <input
+                            key={i}
+                            ref={(el) => { otpInputRefs.current[i] = el; }}
+                            type="text" inputMode="numeric" maxLength={1} value={digit}
+                            onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                            onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                            className="w-11 h-12 text-center text-lg font-bold bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:border-accent"
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit" disabled={isLoading || otpCode.length !== 6}
+                      className="w-full py-3.5 bg-accent text-slate-900 hover:bg-accent-light font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all duration-200"
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      <span>Verify Code</span>
+                    </button>
+                  </form>
+                )}
+
+                {/* STEP 3: Set New Password */}
+                {forgotStep === 3 && (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <input
+                          type={showForgotNewPassword ? 'text' : 'password'} required
+                          placeholder="Min. 6 characters"
+                          value={forgotNewPassword}
+                          onChange={(e) => setForgotNewPassword(e.target.value)}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-10 py-3 text-white outline-none focus:border-accent transition-colors"
+                        />
+                        <button
+                          type="button" onClick={() => setShowForgotNewPassword(!showForgotNewPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                        >
+                          {showForgotNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <input
+                          type="password" required
+                          placeholder="••••••••"
+                          value={forgotConfirmPassword}
+                          onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                          className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-accent transition-colors"
+                        />
+                      </div>
+                      {forgotNewPassword && forgotConfirmPassword && forgotNewPassword !== forgotConfirmPassword && (
+                        <p className="text-[10px] text-red-400 font-semibold">Passwords do not match</p>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit" disabled={isLoading}
+                      className="w-full py-3.5 bg-accent text-slate-900 hover:bg-accent-light font-bold rounded-xl shadow-md flex items-center justify-center gap-2 transition-all duration-200 hover:shadow-lg hover:shadow-accent/20"
+                    >
+                      {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                      <span>Reset Password</span>
+                    </button>
+                  </form>
+                )}
+
+                <div className="text-center pt-2 border-t border-white/10">
+                  <button type="button" onClick={() => { setActiveTab('login'); }} className="text-[10px] text-accent font-bold hover:underline pt-3">
+                    Back to Sign In
+                  </button>
                 </div>
               </div>
             )}

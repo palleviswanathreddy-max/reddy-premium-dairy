@@ -6,8 +6,10 @@ import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import { 
   CheckCircle2, CreditCard, Ticket, 
-  MapPin, ShieldCheck, ArrowRight, ArrowLeft 
+  MapPin, ShieldCheck, ArrowRight, ArrowLeft, Download,
+  Search, Loader2, Check, X 
 } from 'lucide-react';
+import Script from 'next/script';
 import confetti from 'canvas-confetti';
 
 export default function Checkout() {
@@ -19,10 +21,17 @@ export default function Checkout() {
     applyCouponCode, 
     removeCoupon, 
     createOrder,
-    showToast
+    showToast,
+    t
   } = useApp();
 
+  const [isMounted, setIsMounted] = useState(false);
   const [activeStep, setActiveStep] = useState(1); // 1: Address, 2: Payment, 3: Success
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsMounted(true);
+  }, []);
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -36,24 +45,31 @@ export default function Checkout() {
   const [phone, setPhone] = useState('');
   const [street, setStreet] = useState('');
   const [village, setVillage] = useState('');
+  const [mandal, setMandal] = useState('');
   const [district, setDistrict] = useState('');
   const [state, setState] = useState('Andhra Pradesh');
   const [pincode, setPincode] = useState('');
   const [landmark, setLandmark] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [giftMessage, setGiftMessage] = useState('');
+  const [deliverySlot, setDeliverySlot] = useState('Morning 6:00 AM - 9:00 AM');
+
+  // PIN Code Auto-fill State
+  const [pincodeLoading, setPincodeLoading] = useState(false);
+  const [pincodeError, setPincodeError] = useState('');
+  const [pincodeSuccess, setPincodeSuccess] = useState(false);
+  const [availableVillages, setAvailableVillages] = useState<string[]>([]);
 
   // Payment Options
-  const [paymentMethod, setPaymentMethod] = useState('UPI');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvv, setCardCvv] = useState('');
-  const [cardName, setCardName] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
 
   // Coupon State
   const [couponCode, setCouponCode] = useState('');
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+
+  // Wallet State
+  const [useWallet, setUseWallet] = useState(false);
 
   // Success Order details
   const [completedOrderId, setCompletedOrderId] = useState('');
@@ -67,14 +83,57 @@ export default function Checkout() {
       const defAddr = user.addresses.find(a => a.isDefault);
       if (defAddr) {
         setStreet(defAddr.street);
-        setVillage(defAddr.village);
+        setVillage(defAddr.village || '');
         setDistrict(defAddr.district);
         setState(defAddr.state);
         setPincode(defAddr.pincode);
+        if (defAddr.mandal) setMandal(defAddr.mandal);
+        if (defAddr.village) setAvailableVillages([defAddr.village]);
       }
       /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [user]);
+
+  // Handle PIN Code Auto Fill
+  useEffect(() => {
+    const fetchPincodeDetails = async () => {
+      if (pincode.length === 6 && /^\d+$/.test(pincode)) {
+        setPincodeLoading(true);
+        setPincodeError('');
+        setPincodeSuccess(false);
+        try {
+          const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const data = await res.json();
+          if (data && data[0] && data[0].Status === 'Success') {
+            const postOffices = data[0].PostOffice;
+            const firstPO = postOffices[0];
+            
+            setState(firstPO.State);
+            setDistrict(firstPO.District);
+            if (firstPO.Block && firstPO.Block !== 'NA') {
+              setMandal(firstPO.Block);
+            }
+            
+            const villages = postOffices.map((po: { Name: string }) => po.Name);
+            setAvailableVillages(villages);
+            if (villages.length > 0 && !villages.includes(village)) {
+              setVillage(villages[0]);
+            }
+            setPincodeSuccess(true);
+          } else {
+            setPincodeError('Invalid PIN Code');
+          }
+        } catch {
+          setPincodeError('Unable to fetch address. Please enter manually.');
+        } finally {
+          setPincodeLoading(false);
+        }
+      }
+    };
+
+    const timeoutId = setTimeout(fetchPincodeDetails, 500);
+    return () => clearTimeout(timeoutId);
+  }, [pincode, village]);
 
   // Calculations
   const subtotal = cart.reduce((acc, item) => acc + (item.product.price * item.quantity), 0);
@@ -88,13 +147,24 @@ export default function Checkout() {
       discountAmount = appliedCoupon.value;
     } else if (appliedCoupon.type === 'percentage') {
       discountAmount = subtotal * (appliedCoupon.value / 100);
+      if (appliedCoupon.maxDiscount && discountAmount > appliedCoupon.maxDiscount) {
+        discountAmount = appliedCoupon.maxDiscount;
+      }
     } else if (appliedCoupon.type === 'free_shipping') {
       deliveryCharges = 0;
       discountAmount = 0;
     }
   }
 
-  const grandTotal = Math.max(0, subtotal + gstTotal + deliveryCharges - discountAmount);
+  const totalBeforeWallet = Math.max(0, subtotal + gstTotal + deliveryCharges - discountAmount);
+  
+  // Wallet Discount
+  let walletDiscount = 0;
+  if (useWallet && user?.walletBalance) {
+    walletDiscount = Math.min(user.walletBalance, totalBeforeWallet - 1); // Keep at least Rs 1 for gateway
+  }
+  
+  const grandTotal = Math.max(0, totalBeforeWallet - walletDiscount);
 
   // Address step next
   const handleAddressSubmit = (e: React.FormEvent) => {
@@ -125,14 +195,6 @@ export default function Checkout() {
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Card Validation if selected
-    if (paymentMethod === 'CARD') {
-      if (!cardNumber || !cardExpiry || !cardCvv || !cardName) {
-        showToast("Please fill card details", "error");
-        return;
-      }
-    }
-
     showToast("Processing transaction...", "info");
     
     const items = cart.map(item => ({
@@ -148,42 +210,149 @@ export default function Checkout() {
       name,
       phone,
       street,
-      village: village || 'Chiyyedu',
-      district: district || 'Anantapur',
+      village,
+      mandal,
+      district,
       state,
       pincode
     };
 
-    setTimeout(async () => {
-      const res = await createOrder({
-        items,
-        subtotal,
-        gstTotal,
-        deliveryCharges,
-        discount: discountAmount,
-        grandTotal,
-        paymentMethod,
-        deliveryAddress,
-        giftMessage,
-        deliveryInstructions
-      });
+    const finalOrderData = {
+      items,
+      subtotal,
+      gstTotal,
+      deliveryCharges,
+      discount: discountAmount + walletDiscount, // Total discount includes wallet
+      grandTotal,
+      paymentMethod,
+      deliveryAddress,
+      giftMessage,
+      deliveryInstructions,
+      deliverySlot // NOTE: Normally this should be added to the createOrder signature in AppContext
+    };
 
-      if (res.success) {
-        setCompletedOrderId(res.orderId || 'ORD-ERROR');
-        setActiveStep(3);
-        
-        // Trigger Confetti explosion
-        confetti({
-          particleCount: 150,
-          spread: 80,
-          origin: { y: 0.6 }
+    if (paymentMethod === 'Razorpay') {
+      try {
+        // Deduct wallet if used
+        if (useWallet && walletDiscount > 0 && user) {
+          await fetch('/api/wallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              amount: walletDiscount,
+              type: 'debit',
+              description: 'Redeemed on checkout'
+            })
+          });
+        }
+
+        const res = await fetch('/api/razorpay/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount: Math.round(grandTotal * 100) })
         });
+        const data = await res.json();
+
+        if (!data.success) {
+          showToast('Failed to initialize payment', 'error');
+          return;
+        }
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'mock_key',
+          amount: data.order.amount,
+          currency: data.order.currency,
+          name: "Reddy Premium Dairy",
+          description: "Organic Milk Delivery",
+          order_id: data.order.id,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          handler: async function (response: any) {
+            // Success handler
+            showToast("Verifying secure payment...", "info");
+            
+            try {
+              const verifyRes = await fetch('/api/razorpay/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response?.razorpay_order_id || data.order.id,
+                  razorpay_payment_id: response?.razorpay_payment_id || 'mock_payment_id',
+                  razorpay_signature: response?.razorpay_signature || 'mock_signature',
+                  orderData: finalOrderData,
+                  isMock: !!data.mock
+                })
+              });
+              
+              const verifyData = await verifyRes.json();
+              if (verifyData.success) {
+                setCompletedOrderId(verifyData.order.id || 'ORD-ERROR');
+                setActiveStep(3);
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+              } else {
+                showToast(verifyData.message || 'Payment verification failed.', 'error');
+              }
+            } catch {
+              showToast('Error verifying payment.', 'error');
+            }
+          },
+          prefill: { name, contact: phone, email: user?.email || '' },
+          theme: { color: "#10b981" }
+        };
+
+        if (data.mock) {
+          showToast('Using Mock Razorpay. Completing test payment...', 'success');
+          setTimeout(() => options.handler({ 
+            razorpay_payment_id: 'mock_pay_123', 
+            razorpay_order_id: data.order.id, 
+            razorpay_signature: 'mock_sig_123' 
+          }), 1000);
+        } else {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const rzp = new (window as any).Razorpay(options);
+          rzp.open();
+        }
+      } catch {
+        showToast('Payment initialization failed', 'error');
       }
-    }, 1500);
+    } else {
+      setTimeout(async () => {
+        // For COD, process wallet deduction immediately
+        if (useWallet && walletDiscount > 0 && user) {
+          await fetch('/api/wallet', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              amount: walletDiscount,
+              type: 'debit',
+              description: 'Redeemed on COD order'
+            })
+          });
+        }
+        const res = await createOrder(finalOrderData);
+        if (res.success && res.orderId) {
+          setCompletedOrderId(res.orderId || 'ORD-ERROR');
+          setActiveStep(3);
+          confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+        }
+      }, 1500);
+    }
   };
+
+  if (!isMounted) {
+    return (
+      <PageWrapper>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-10 h-10 animate-spin text-accent" />
+        </div>
+      </PageWrapper>
+    );
+  }
 
   return (
     <PageWrapper>
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 text-left">
         
         {/* Progress Timeline Header */}
@@ -230,16 +399,23 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between font-semibold">
                 <span className="text-slate-400">Delivery Slot:</span>
-                <span className="text-slate-850 dark:text-slate-200">Morning 6:00 AM</span>
+                <span className="text-slate-850 dark:text-slate-200">{deliverySlot}</span>
               </div>
             </div>
 
             <div className="flex gap-4 max-w-sm mx-auto pt-4">
               <button 
-                onClick={() => router.push('/profile?tab=orders')}
-                className="flex-1 py-3 bg-primary text-white dark:bg-slate-800 font-bold text-xs rounded-xl shadow-md"
+                onClick={() => router.push(`/orders/${completedOrderId}`)}
+                className="flex-1 py-3 bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 font-bold text-xs rounded-xl shadow-md transition-colors"
               >
                 Track Order
+              </button>
+              <button 
+                onClick={() => window.open(`/invoice/${completedOrderId}`, '_blank')}
+                className="flex-1 py-3 bg-primary text-white hover:bg-primary-light dark:bg-accent dark:text-slate-900 dark:hover:bg-accent-light font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                <span>Invoice</span>
               </button>
               <button 
                 onClick={() => router.push('/products')}
@@ -299,46 +475,90 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Village / Town</label>
+                    <div className="space-y-1.5 relative">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PIN Code *</label>
+                      <div className="relative">
                         <input
                           type="text"
-                          value={village}
-                          onChange={(e) => setVillage(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                          required
+                          maxLength={6}
+                          placeholder="6-digit PIN"
+                          value={pincode}
+                          onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                          className={`w-full bg-slate-50 dark:bg-slate-955 border rounded-xl pl-10 pr-10 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200 transition-colors ${
+                            pincodeError ? 'border-red-500 bg-red-50 dark:bg-red-950/20' : 
+                            pincodeSuccess ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20' : ''
+                          }`}
+                        />
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                        {pincodeLoading && (
+                          <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-accent animate-spin" />
+                        )}
+                        {pincodeSuccess && (
+                          <Check className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
+                        )}
+                        {pincodeError && (
+                          <X className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+                      {pincodeError && <p className="text-[10px] text-red-500 font-bold mt-1">{pincodeError}</p>}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">State</label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={state}
+                          className="w-full bg-slate-100 dark:bg-slate-900 border rounded-xl px-4 py-3 outline-none text-slate-500 dark:text-slate-400 cursor-not-allowed"
                         />
                       </div>
                       <div className="space-y-1.5">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">District</label>
                         <input
                           type="text"
+                          readOnly
                           value={district}
-                          onChange={(e) => setDistrict(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                          className="w-full bg-slate-100 dark:bg-slate-900 border rounded-xl px-4 py-3 outline-none text-slate-500 dark:text-slate-400 cursor-not-allowed"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PIN Code *</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mandal / Taluk</label>
                         <input
                           type="text"
-                          required
-                          value={pincode}
-                          onChange={(e) => setPincode(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                          readOnly={mandal !== '' && pincodeSuccess}
+                          value={mandal}
+                          onChange={(e) => setMandal(e.target.value)}
+                          className={`w-full border rounded-xl px-4 py-3 outline-none focus:border-accent ${
+                            mandal !== '' && pincodeSuccess ? 'bg-slate-100 dark:bg-slate-900 text-slate-500 cursor-not-allowed' : 'bg-slate-50 dark:bg-slate-955 text-slate-800 dark:text-slate-200'
+                          }`}
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">State</label>
-                        <input
-                          type="text"
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
-                        />
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Village / Post Office *</label>
+                        {availableVillages.length > 0 ? (
+                          <select
+                            value={village}
+                            onChange={(e) => setVillage(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200 appearance-none"
+                          >
+                            {availableVillages.map((v, i) => (
+                              <option key={i} value={v}>{v}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <input
+                            type="text"
+                            required
+                            value={village}
+                            onChange={(e) => setVillage(e.target.value)}
+                            className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                          />
+                        )}
                       </div>
                     </div>
 
@@ -374,6 +594,18 @@ export default function Checkout() {
                       />
                     </div>
 
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferred Delivery Slot *</label>
+                      <select 
+                        value={deliverySlot}
+                        onChange={(e) => setDeliverySlot(e.target.value)}
+                        className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                      >
+                        <option value="Morning (6:00 AM - 9:00 AM)">Morning (6:00 AM - 9:00 AM)</option>
+                        <option value="Evening (5:00 PM - 8:00 PM)">Evening (5:00 PM - 8:00 PM)</option>
+                      </select>
+                    </div>
+
                     <button 
                       type="submit"
                       className="w-full h-12 bg-primary text-white hover:bg-primary-light dark:bg-slate-800 font-bold rounded-xl mt-4 flex items-center justify-center gap-2 hover:scale-[1.01] transition-transform"
@@ -395,12 +627,13 @@ export default function Checkout() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
+                      { id: 'Razorpay', title: 'Razorpay (Cards, UPI, NetBanking)', desc: 'Secure payment via Razorpay' },
                       { id: 'UPI', title: 'UPI QR Codes', desc: 'Google Pay / PhonePe / Paytm' },
-                      { id: 'CARD', title: 'Credit & Debit Cards', desc: 'Secure payment via Stripe/Visa' },
                       { id: 'COD', title: 'Cash on Delivery (COD)', desc: 'Pay cash when milk arrives' }
                     ].map(pay => (
                       <button
                         key={pay.id}
+                        type="button"
                         onClick={() => setPaymentMethod(pay.id)}
                         className={`text-left p-4 rounded-2xl border transition-all flex flex-col justify-between ${
                           paymentMethod === pay.id 
@@ -416,6 +649,16 @@ export default function Checkout() {
 
                   <form onSubmit={handlePlaceOrder} className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
                     
+                    {/* Razorpay Information */}
+                    {paymentMethod === 'Razorpay' && (
+                      <div className="p-4 border border-emerald-500/20 bg-emerald-500/5 rounded-2xl flex items-start gap-2.5 text-emerald-600 dark:text-emerald-400">
+                        <ShieldCheck className="h-5 w-5 shrink-0 mt-0.5" />
+                        <p className="text-[11px] leading-relaxed font-semibold">
+                          You will be redirected to Razorpay&apos;s secure checkout modal. You can pay using any Credit/Debit Card, UPI app, or NetBanking.
+                        </p>
+                      </div>
+                    )}
+
                     {/* UPI QR Code simulation */}
                     {paymentMethod === 'UPI' && (
                       <div className="p-5 border border-dashed rounded-2xl bg-slate-50 dark:bg-slate-950/20 text-center space-y-3 flex flex-col items-center">
@@ -426,60 +669,6 @@ export default function Checkout() {
                         <p className="text-[11px] text-slate-500 font-semibold max-w-xs leading-relaxed">
                           Scan the QR code with your mobile app to make an instant secure transfer. Order will process automatically upon payment verification.
                         </p>
-                      </div>
-                    )}
-
-                    {/* CARD FIELDS */}
-                    {paymentMethod === 'CARD' && (
-                      <div className="p-5 border rounded-2xl bg-slate-50 dark:bg-slate-950/20 space-y-4 text-left">
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Cardholder Name</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Kiran Kumar"
-                            value={cardName}
-                            onChange={(e) => setCardName(e.target.value)}
-                            className="w-full bg-white dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                          />
-                        </div>
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Card Number</label>
-                          <input
-                            type="text"
-                            required
-                            maxLength={16}
-                            placeholder="4111 2222 3333 4444"
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(e.target.value.replace(/\D/g, ''))}
-                            className="w-full bg-white dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expiry Date</label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="MM/YY"
-                              value={cardExpiry}
-                              onChange={(e) => setCardExpiry(e.target.value)}
-                              className="w-full bg-white dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                            />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">CVV</label>
-                            <input
-                              type="password"
-                              required
-                              maxLength={3}
-                              placeholder="•••"
-                              value={cardCvv}
-                              onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, ''))}
-                              className="w-full bg-white dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                            />
-                          </div>
-                        </div>
                       </div>
                     )}
 
@@ -602,6 +791,30 @@ export default function Checkout() {
                     <div className="flex justify-between text-secondary dark:text-emerald-400">
                       <span>{t('discount')}</span>
                       <span className="font-bold">- Rs. {discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+                  
+                  {/* Wallet Option UI */}
+                  {user && user.walletBalance > 0 && (
+                    <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
+                      <label className="flex items-center gap-2 cursor-pointer group text-slate-700 dark:text-slate-300">
+                        <input
+                          type="checkbox"
+                          checked={useWallet}
+                          onChange={(e) => setUseWallet(e.target.checked)}
+                          className="w-4 h-4 rounded border-slate-300 text-accent focus:ring-accent/20 cursor-pointer"
+                        />
+                        <span className="flex-1">Use Reddy Coins</span>
+                        <span className="text-accent font-bold text-[10px] bg-accent/10 px-2 py-0.5 rounded-full group-hover:bg-accent/20 transition-colors">
+                          Bal: {user.walletBalance}
+                        </span>
+                      </label>
+                      {useWallet && walletDiscount > 0 && (
+                        <div className="flex justify-between text-accent mt-2">
+                          <span>Coins Redeemed</span>
+                          <span className="font-bold">- Rs. {walletDiscount.toFixed(2)}</span>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

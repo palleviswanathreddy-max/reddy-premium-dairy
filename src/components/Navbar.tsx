@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @next/next/no-img-element */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
@@ -53,6 +53,9 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
   const [isScrolled, setIsScrolled] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
 
   // Hydration fix
   useEffect(() => {
@@ -86,20 +89,61 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
     }
   };
 
-  // Voice Search Simulation
+  // Real Voice Search using Web Speech API
   const startVoiceSearch = () => {
-    setIsListening(true);
-    showToast(t('voiceSearch'), 'info');
-    
-    // Simulate recording for 2.5 seconds
-    setTimeout(() => {
+    // If already listening, stop it manually
+    if (isListening) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
       setIsListening(false);
-      const voiceResults = ["A2 Cow Milk", "Fresh Curd", "Malai Paneer", "Vedic Ghee"];
-      const randomResult = voiceResults[Math.floor(Math.random() * voiceResults.length)];
-      setSearchVal(randomResult);
-      showToast(`Detected voice: "${randomResult}"`, 'success');
-      router.push(`/products?search=${encodeURIComponent(randomResult)}`);
-    }, 2500);
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      showToast('Microphone not supported on this browser.', 'error');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = language === 'te' ? 'te-IN' : 'en-US';
+
+    recognition.onstart = () => {
+      setIsListening(true);
+      showToast('Listening... Speak a product name', 'info');
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchVal(transcript);
+      showToast(`Searching for "${transcript}"`, 'success');
+      router.push(`/products?search=${encodeURIComponent(transcript)}`);
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    recognition.onerror = (event: any) => {
+      if (event.error === 'not-allowed') {
+        showToast('Permission Denied. Please allow microphone access.', 'error');
+      } else if (event.error === 'no-speech') {
+        showToast("Didn't catch that. Try again.", 'error');
+      } else {
+        showToast(`Microphone error: ${event.error}`, 'error');
+      }
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognition.start();
   };
 
   // Image Search Simulation

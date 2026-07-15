@@ -6,13 +6,14 @@
 
 ## 🌐 Live Website
 
-**➡️ https://reddy-primum-dairy.vercel.app**
+**➡️ <https://reddy-premium-dairy.vercel.app>**
 
 ---
 
 ## ✨ Features
 
 ### 🛍️ Customer Features
+
 - Browse **Fresh Milk, Curd, Paneer, Ghee, Butter, Cheese** and more
 - **Cart & Wishlist** with real-time quantity management
 - **Product comparison** side-by-side
@@ -27,6 +28,7 @@
 - 📱 Fully **mobile responsive**
 
 ### 🧑‍💼 Admin Dashboard Features
+
 - 📊 **Analytics Overview** — Revenue, Orders, Customers, Best Sellers
 - 📦 **Product Management** — Add / Edit / Delete products with CRUD
 - 🚚 **Order Management** — View & update delivery status
@@ -40,6 +42,7 @@
 ## 🚀 Getting Started (Local Development)
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 
@@ -47,8 +50,8 @@
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/reddy-primum-dairy.git
-cd reddy-primum-dairy
+git clone https://github.com/YOUR_USERNAME/reddy-premium-dairy.git
+cd reddy-premium-dairy
 
 # Install dependencies
 npm install
@@ -86,7 +89,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
-|---|---|
+| --- | --- |
 | **Framework** | Next.js 16.2 (App Router) |
 | **Language** | TypeScript 5 |
 | **Styling** | Tailwind CSS v4 |
@@ -100,7 +103,7 @@ TWILIO_PHONE_NUMBER=+1234567890
 
 ## 📁 Project Structure
 
-```
+```text
 src/
 ├── app/
 │   ├── page.tsx          # Homepage
@@ -132,7 +135,7 @@ src/
 ## 🔐 Admin Access
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | **URL** | `/admin` |
 | **Email** | `admin@reddydairy.com` |
 | **Password** | `Admin@123` |
@@ -163,9 +166,10 @@ npx vercel --prod
 
 ## 👨‍💻 Owner
 
-**Palle Viswanath Reddy**
+### Palle Viswanath Reddy
+
 - 📞 +91 63009 28511
-- 📧 palleviswanathreddy19@gmail.com
+- 📧 <palleviswanathreddy19@gmail.com>
 - 🏭 Chiyyedu Farm, Andhra Pradesh
 
 ---

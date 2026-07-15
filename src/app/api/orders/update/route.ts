@@ -4,14 +4,14 @@ import { db } from '@/db/db';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, status, paymentStatus } = body;
+    const { orderId, status, paymentStatus, cancellationReason, refundStatus, refundAmount } = body;
 
     if (!orderId) {
       return NextResponse.json({ success: false, message: 'Order ID is required' }, { status: 400 });
     }
 
-    if (!status && !paymentStatus) {
-      return NextResponse.json({ success: false, message: 'At least status or paymentStatus is required' }, { status: 400 });
+    if (!status && !paymentStatus && !cancellationReason) {
+      return NextResponse.json({ success: false, message: 'No fields to update' }, { status: 400 });
     }
 
     const order = db.orders.getById(orderId);
@@ -20,6 +20,10 @@ export async function POST(request: Request) {
     }
 
     const updates: any = {};
+
+    if (cancellationReason) updates.cancellationReason = cancellationReason;
+    if (refundStatus) updates.refundStatus = refundStatus;
+    if (refundAmount) updates.refundAmount = Number(refundAmount);
 
     // Handle delivery status update
     if (status) {
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
         const currentIdx = statusOrder.indexOf(status);
         const stepIdx = statusOrder.indexOf(step.status);
         
-        if (stepIdx < currentIdx && !step.done) {
+        if (stepIdx < currentIdx && !step.done && currentIdx !== -1) {
           return { ...step, done: true, time: new Date().toISOString() };
         }
         return step;
@@ -42,9 +46,13 @@ export async function POST(request: Request) {
       updates.status = status;
       updates.timeline = updatedTimeline;
 
-      // Auto-mark as paid when delivered
+      // Auto-mark as paid when delivered, or refunded when cancelled
       if (status === 'Delivered') {
         updates.paymentStatus = 'Paid';
+      } else if (status === 'Cancelled') {
+        updates.paymentStatus = 'Refunded';
+        if (!updates.refundStatus) updates.refundStatus = 'Completed';
+        if (!updates.refundAmount) updates.refundAmount = order.grandTotal;
       }
     }
 

@@ -234,6 +234,14 @@ export default function OrdersPage() {
                           </div>
                         ))}
                       </div>
+                      <div className="mt-4 flex justify-end">
+                        <Link 
+                          href={`/orders/${order.id}`}
+                          className="px-4 py-2 bg-primary text-white text-[10px] font-bold rounded-lg hover:bg-primary-light transition-colors shadow-sm"
+                        >
+                          View Full Details & Invoice
+                        </Link>
+                      </div>
                     </div>
                   )}
                 </div>

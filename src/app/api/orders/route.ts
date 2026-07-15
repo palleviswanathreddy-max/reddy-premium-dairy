@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db/db';
+import { sendOrderConfirmation } from '@/lib/notifications';
 
 export async function GET(request: Request) {
   try {
@@ -38,13 +39,16 @@ export async function POST(request: Request) {
       { status: 'Delivered', time: '', done: false }
     ];
 
+    const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
+
     const newOrder = db.orders.create({
       ...body,
       id: orderId,
       status: 'Pending',
       paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Paid',
       createdAt: new Date().toISOString(),
-      timeline
+      timeline,
+      deliveryOtp
     });
 
     // Update Product Stock Levels
@@ -59,6 +63,16 @@ export async function POST(request: Request) {
         });
       }
     }
+
+    // Trigger Notification
+    let userEmail;
+    if (body.userId) {
+      const user = db.users.getById(body.userId);
+      if (user) userEmail = user.email;
+    }
+    
+    // Fire and forget (don't block response)
+    sendOrderConfirmation(newOrder, userEmail).catch(e => console.error("Notification failed:", e));
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (err: any) {

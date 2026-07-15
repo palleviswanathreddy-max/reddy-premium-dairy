@@ -58,6 +58,8 @@ const UserSchema = new mongoose.Schema({
   verifiedEmail: { type: Boolean, default: false },
   verifiedPhone: { type: Boolean, default: false },
   isVerified: { type: Boolean, default: false },
+  bloodGroup: { type: String, default: null },
+  emergencyContact: { type: String, default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

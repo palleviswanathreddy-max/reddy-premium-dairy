@@ -4,12 +4,12 @@ import React, { useState, useEffect, useMemo, use } from 'react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
-import { Product } from '@/db/db';
 import { 
   Star, Heart, ShieldCheck, ShoppingCart, RefreshCw, 
   Share2, ArrowLeft, Truck, Clock, Calendar 
 } from 'lucide-react';
 import Link from 'next/link';
+import ReviewSection from './ReviewSection';
 
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
@@ -41,10 +41,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     [products, product]
   );
 
-  // customReviews: derived from product but also allows user-added reviews
-  const [localReviews, setLocalReviews] = useState<Product['reviews']>([]);
-  const customReviews = localReviews.length > 0 ? localReviews : (product?.reviews ?? []);
-  const setCustomReviews = setLocalReviews;
+
 
   // UI state
   // selectedImage = user's thumbnail click; falls back to first product image when empty
@@ -53,6 +50,16 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   const setActiveImage = setSelectedImage; // alias for readability in JSX
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' });
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariantId, setSelectedVariantId] = useState<string | null>(null);
+
+  const activeVariant = useMemo(() => {
+    if (!product?.variants?.length) return null;
+    if (selectedVariantId) {
+      const found = product.variants.find(v => v.id === selectedVariantId);
+      if (found) return found;
+    }
+    return product.variants[0];
+  }, [product, selectedVariantId]);
 
 
   // Track product view — fire-and-forget, never blocks render
@@ -74,10 +81,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     }
   }, [product, id]);
 
-  // Review form state
-  const [reviewName, setReviewName] = useState('');
-  const [reviewText, setReviewText] = useState('');
-  const [reviewRating, setReviewRating] = useState(5);
+
 
   if (!product) {
     return (
@@ -113,25 +117,6 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
     window.location.href = '/checkout';
   };
 
-  // Submit dynamic review
-  const handleReviewSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!reviewName.trim() || !reviewText.trim()) return;
-
-    const newRev = {
-      username: reviewName,
-      rating: reviewRating,
-      date: new Date().toISOString().slice(0, 10),
-      comment: reviewText,
-      photo: null
-    };
-
-    setCustomReviews(prev => [newRev, ...prev]);
-    showToast("Review submitted successfully! It will appear after moderation.", "success");
-    setReviewName('');
-    setReviewText('');
-    setReviewRating(5);
-  };
 
   // Calculate dynamic Mfg & Exp Dates based on current date
   const now = new Date();
@@ -269,7 +254,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 ))}
               </div>
               <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">{product.rating} ★</span>
-              <span className="text-xs text-slate-400">({customReviews.length} verified buyers)</span>
+              <span className="text-xs text-slate-400">({product.reviews.length} verified buyers)</span>
             </div>
 
             {/* Description */}
@@ -295,20 +280,42 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
               </div>
             </div>
 
+            {/* Variants Selector */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Select Size / Volume</p>
+                <div className="flex flex-wrap gap-3">
+                  {product.variants.map(v => (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariantId(v.id)}
+                      className={`px-4 py-2 border rounded-xl text-sm font-bold transition-all duration-200 ${
+                        selectedVariantId === v.id 
+                          ? 'border-accent bg-accent/10 text-slate-900 dark:text-accent shadow-sm' 
+                          : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:border-slate-300'
+                      }`}
+                    >
+                      {v.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Prices, Discounts, Stock */}
-            <div className="space-y-3">
+            <div className="space-y-3 pt-2">
               <div className="flex items-baseline justify-between">
                 <div className="flex items-baseline gap-3">
                   <span className="text-2xl font-extrabold text-primary dark:text-white">
-                    Rs. {product.price}
+                    Rs. {activeVariant ? activeVariant.price : product.price}
                   </span>
-                  {product.price < product.mrp && (
+                  {(activeVariant ? activeVariant.mrp : product.mrp) > (activeVariant ? activeVariant.price : product.price) && (
                     <>
                       <span className="text-sm text-slate-400 line-through">
-                        Rs. {product.mrp}
+                        Rs. {activeVariant ? activeVariant.mrp : product.mrp}
                       </span>
                       <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
-                        {product.discount}% Off
+                        {Math.round((( (activeVariant ? activeVariant.mrp : product.mrp) - (activeVariant ? activeVariant.price : product.price) ) / (activeVariant ? activeVariant.mrp : product.mrp)) * 100)}% Off
                       </span>
                     </>
                   )}
@@ -324,9 +331,9 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 <div className="flex items-center gap-1.5 font-bold">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-slate-600 dark:text-slate-300">
-                    Stock status: {product.stock > 15 ? 'In Stock' : product.stock > 0 ? 'Low Stock' : 'Out of Stock'}
+                    Stock status: {(activeVariant ? activeVariant.stock : product.stock) > 15 ? 'In Stock' : (activeVariant ? activeVariant.stock : product.stock) > 0 ? 'Low Stock' : 'Out of Stock'}
                   </span>
-                  <span className="text-slate-400">({product.stock} items left)</span>
+                  <span className="text-slate-400">({activeVariant ? activeVariant.stock : product.stock} items left)</span>
                 </div>
                 <span className="text-slate-400 font-bold text-[9px] uppercase tracking-wider">Incl. all taxes</span>
               </div>
@@ -349,7 +356,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                     {quantity}
                   </span>
                   <button 
-                    onClick={() => setQuantity((q: number) => Math.min(product.stock, q + 1))}
+                    onClick={() => setQuantity((q: number) => Math.min((activeVariant ? activeVariant.stock : product.stock), q + 1))}
                     className="p-3.5 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 font-extrabold transition-colors flex-1"
                   >
                     +
@@ -548,94 +555,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
         )}
 
         {/* 9. Reviews & Submission Section */}
-        <section className="py-10 border-t border-slate-100 dark:border-slate-900 text-left grid grid-cols-1 lg:grid-cols-12 gap-12">
-          
-          {/* Reviews list */}
-          <div className="lg:col-span-8 space-y-6">
-            <h2 className="text-lg font-bold font-display text-primary dark:text-white">{t('reviews')}</h2>
-            
-            {customReviews.length === 0 ? (
-              <p className="text-xs text-slate-400 font-semibold">{t('noReviews')}</p>
-            ) : (
-              <div className="space-y-4">
-                {customReviews.map((rev, i) => (
-                  <div key={i} className="p-5 border border-slate-100 dark:border-slate-900 rounded-2xl bg-white dark:bg-slate-900/50">
-                    <div className="flex justify-between items-center mb-2 text-xs">
-                      <div>
-                        <p className="font-bold text-slate-800 dark:text-white">{rev.username}</p>
-                        <div className="flex items-center text-yellow-500 mt-0.5">
-                          {Array.from({ length: 5 }).map((_, idx) => (
-                            <Star key={idx} className={`h-3 w-3 ${idx < rev.rating ? 'fill-current' : 'text-slate-200 dark:text-slate-800'}`} />
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-slate-400 font-semibold">{rev.date}</span>
-                    </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 font-semibold leading-relaxed">
-                      {rev.comment}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Submit Review */}
-          <div className="lg:col-span-4 space-y-4">
-            <div className="p-6 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-slate-100 dark:border-slate-900 space-y-4">
-              <h3 className="text-sm font-bold text-slate-800 dark:text-white font-display border-b pb-2.5">
-                {t('writeReview')}
-              </h3>
-              
-              <form onSubmit={handleReviewSubmit} className="space-y-4 text-xs font-semibold">
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Your Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={reviewName}
-                    onChange={(e) => setReviewName(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                  />
-                </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</label>
-                  <select
-                    value={reviewRating}
-                    onChange={(e) => setReviewRating(Number(e.target.value))}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 rounded-xl px-3 py-2.5 outline-none focus:border-accent font-semibold"
-                  >
-                    <option value={5}>5 Stars (Excellent)</option>
-                    <option value={4}>4 Stars (Good)</option>
-                    <option value={3}>3 Stars (Average)</option>
-                    <option value={2}>2 Stars (Poor)</option>
-                    <option value={1}>1 Star (Awful)</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Review text</label>
-                  <textarea
-                    rows={4}
-                    required
-                    value={reviewText}
-                    onChange={(e) => setReviewText(e.target.value)}
-                    className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
-                  />
-                </div>
-
-                <button 
-                  type="submit"
-                  className="w-full py-3 bg-primary hover:bg-primary-light text-white text-xs font-bold rounded-xl transition-all shadow-md"
-                >
-                  Submit Review
-                </button>
-              </form>
-            </div>
-          </div>
-
-        </section>
+        <ReviewSection productId={product.id} />
 
         {/* 10. Related Products Slider */}
         {related.length > 0 && (

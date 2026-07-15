@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 export const metadata: Metadata = {
   title: "REDDY PREMIUM DAIRY | Pure • Fresh • Healthy | Chiyyedu, Anantapur",
@@ -9,8 +10,13 @@ export const metadata: Metadata = {
   authors: [{ name: "Palle Viswanath Reddy" }],
   manifest: "/manifest.json",
   icons: {
-    icon: "/images/logo.png",
-    apple: "/images/logo.png"
+    icon: "/icon-192.png",
+    apple: "/icon-512.png"
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Reddy Dairy"
   }
 };
 
@@ -26,10 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full scroll-smooth">
+    <html lang="en" className="h-full scroll-smooth" data-scroll-behavior="smooth">
       <body className="min-h-full flex flex-col antialiased">
         <AppProvider>
           {children}
+          <PWAInstallPrompt />
         </AppProvider>
       </body>
     </html>
