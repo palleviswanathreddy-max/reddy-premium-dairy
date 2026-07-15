@@ -47,8 +47,40 @@ export async function POST(request: Request) {
       updates.timeline = updatedTimeline;
 
       // Auto-mark as paid when delivered, or refunded when cancelled
-      if (status === 'Delivered') {
+      if (status === 'Out for Delivery') {
+        updates.deliveryPartner = {
+          name: "Ramesh Kumar",
+          phone: "+91 98765 43210",
+          vehicle: "Hero Electric – AP 39 AB 1234",
+          lat: 14.6186, // Chiyyedu Farm
+          lng: 77.6358,
+          destLat: 14.6819, // Destination Anantapur
+          destLng: 77.6006,
+          eta: "15 mins"
+        };
+        updates.expectedDelivery = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      } else if (status === 'Delivered') {
         updates.paymentStatus = 'Paid';
+        updates.deliveredAt = new Date().toISOString();
+        if (order.deliveryPartner) {
+          updates.deliveryPartner = {
+            ...order.deliveryPartner,
+            lat: order.deliveryPartner.destLat || 14.6819,
+            lng: order.deliveryPartner.destLng || 77.6006,
+            eta: "Delivered"
+          };
+        } else {
+          updates.deliveryPartner = {
+            name: "Ramesh Kumar",
+            phone: "+91 98765 43210",
+            vehicle: "Hero Electric – AP 39 AB 1234",
+            lat: 14.6819,
+            lng: 77.6006,
+            destLat: 14.6819,
+            destLng: 77.6006,
+            eta: "Delivered"
+          };
+        }
       } else if (status === 'Cancelled') {
         updates.paymentStatus = 'Refunded';
         if (!updates.refundStatus) updates.refundStatus = 'Completed';

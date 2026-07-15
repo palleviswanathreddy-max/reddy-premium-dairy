@@ -144,6 +144,11 @@ export interface Order {
     phone: string;
     vehicle: string;
     locationUrl?: string;
+    lat?: number;
+    lng?: number;
+    destLat?: number;
+    destLng?: number;
+    eta?: string;
   };
   cancellationReason?: string;
   refundStatus?: 'Pending' | 'Completed' | 'Failed';

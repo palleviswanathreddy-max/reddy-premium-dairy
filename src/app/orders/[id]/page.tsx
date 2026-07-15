@@ -11,6 +11,7 @@ import {
   Ban, Star, Receipt, CreditCard, ChevronRight, User, CalendarClock
 } from 'lucide-react';
 import Link from 'next/link';
+import LiveOrderTracker from '@/components/LiveOrderTracker';
 
 export default function OrderTrackingPage() {
   const { id } = useParams();
@@ -273,34 +274,9 @@ export default function OrderTrackingPage() {
               </div>
             )}
 
-            {/* Delivery Partner */}
+            {/* Live Order Tracking */}
             {(order.status === 'Out for Delivery' || order.status === 'Delivered') && order.deliveryPartner && (
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-3xl shadow-sm">
-                <h2 className="text-base font-black text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Truck className="h-5 w-5 text-primary" /> Delivery Partner
-                </h2>
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-slate-500" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900 dark:text-white">{order.deliveryPartner.name}</p>
-                      <p className="text-xs font-semibold text-slate-500 mt-0.5">Vehicle: {order.deliveryPartner.vehicle}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <a href={`tel:${order.deliveryPartner.phone}`} className="p-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl text-slate-700 dark:text-slate-300 transition-colors">
-                      <PhoneCall className="h-4 w-4" />
-                    </a>
-                    {order.status === 'Out for Delivery' && (
-                      <button className="px-4 py-2.5 bg-primary/10 text-primary hover:bg-primary/20 text-xs font-bold rounded-xl transition-colors flex items-center gap-2">
-                        <MapPin className="h-4 w-4" /> Live Location
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <LiveOrderTracker partner={order.deliveryPartner} />
             )}
 
             {/* Ordered Products */}
