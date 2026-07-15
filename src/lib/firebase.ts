@@ -1,4 +1,5 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDummyKeyForDevelopment12345",
@@ -11,6 +12,7 @@ const firebaseConfig = {
 
 // Initialize Firebase client
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+export const auth = typeof window !== 'undefined' ? getAuth(app) : null;
 
 export const getFirebaseMessaging = async () => {
   if (typeof window === 'undefined') return null;
