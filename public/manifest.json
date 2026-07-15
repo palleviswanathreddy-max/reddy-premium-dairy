@@ -13,6 +13,7 @@
   "background_color": "#020617",
   "theme_color": "#0B2545",
   "orientation": "portrait-primary",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",
@@ -25,6 +26,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-desktop.png",
+      "sizes": "1920x1323",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Reddy Premium Dairy Desktop Store"
+    },
+    {
+      "src": "/images/screenshot-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Reddy Premium Dairy Mobile Store"
     }
   ]
 }
