@@ -19,20 +19,17 @@ export default function SupportChatbot() {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize welcome message when language changes
-  useEffect(() => {
-    const welcomeText = lang === 'te'
+  const chatbotStartTime = useRef(new Date());
+
+  const welcomeMessage: Message = {
+    sender: 'bot',
+    text: lang === 'te'
       ? 'నమస్కారం! నేను రెడ్డి డెయిరీ AI సహాయకుడిని. నేను మీకు ఎలా సహాయం చేయగలను? తాజా పాలు, పెరుగు, ఆర్డర్ల స్థితి గురించి అడగండి.'
-      : 'Hello! I am your Reddy Dairy AI Support assistant. How can I help you today? Ask me about products, pricing, or track your orders.';
-    
-    setMessages([
-      {
-        sender: 'bot',
-        text: welcomeText,
-        timestamp: new Date()
-      }
-    ]);
-  }, [lang]);
+      : 'Hello! I am your Reddy Dairy AI Support assistant. How can I help you today? Ask me about products, pricing, or track your orders.',
+    timestamp: chatbotStartTime.current
+  };
+
+  const allMessages = [welcomeMessage, ...messages];
 
   // Scroll to bottom
   useEffect(() => {
@@ -140,7 +137,7 @@ export default function SupportChatbot() {
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-950/40">
-            {messages.map((msg, i) => (
+            {allMessages.map((msg, i) => (
               <div 
                 key={i} 
                 className={`flex gap-2.5 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}

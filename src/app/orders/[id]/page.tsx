@@ -6,9 +6,9 @@ import { Order } from '@/db/db';
 import PageWrapper from '@/components/PageWrapper';
 import { useApp } from '@/context/AppContext';
 import { 
-  CheckCircle2, Package, Truck, MapPin, Clock, ArrowLeft, Download,
+  CheckCircle2, Package, Clock, ArrowLeft, Download,
   PhoneCall, MessageCircle, RotateCcw, AlertTriangle,
-  Ban, Star, Receipt, CreditCard, ChevronRight, User, CalendarClock
+  Ban, Star, Receipt, CreditCard, ChevronRight, CalendarClock
 } from 'lucide-react';
 import Link from 'next/link';
 import LiveOrderTracker from '@/components/LiveOrderTracker';
