@@ -1315,7 +1315,7 @@ export default function Login() {
       <footer className="border-t border-white/10 pt-6 max-w-5xl mx-auto w-full text-center space-y-2 text-[10px] font-semibold text-slate-400">
         <p className="font-bold text-white font-display uppercase tracking-widest text-xs">REDDY PREMIUM DAIRY</p>
         <p className="text-[10px] text-slate-400">Owner: Palle Viswanath Reddy • 📞 +91 6300928511 • 📧 palleviswanathreddy11@gmail.com</p>
-        <p className="text-[9px] text-slate-500">📍 Chiyyedu Village, Anantapur District, Andhra Pradesh – 515751, India</p>
+        <p className="text-[9px] text-slate-500">📍 Chiyyedu Village, Anantapur District, Andhra Pradesh – 515721, India</p>
         <p className="text-[9px] text-slate-500/80">© 2026 REDDY PREMIUM DAIRY. All Rights Reserved.</p>
       </footer>
 

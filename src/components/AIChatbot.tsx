@@ -81,7 +81,7 @@ export default function AIChatbot() {
       recommended = products.filter(p => ['Paneer', 'Curd', 'Ghee'].includes(p.category)).slice(0, 2);
     } 
     else if (text.includes('address') || text.includes('location') || text.includes('where') || text.includes('farm')) {
-      reply = "Our farm and processing facility is located in Chiyyedu Village, Anantapur District, Andhra Pradesh - 515751, India. You are welcome to visit our state-of-the-art farm to see our healthy cattle and automated milking systems!";
+      reply = "Our farm and processing facility is located in Chiyyedu Village, Anantapur District, Andhra Pradesh - 515721, India. You are welcome to visit our state-of-the-art farm to see our healthy cattle and automated milking systems!";
     } 
     else if (text.includes('delivery') || text.includes('time') || text.includes('ship')) {
       reply = "We offer same-day delivery within 3 hours for Curd, Paneer, Butter, and Ghee. Fresh milk is delivered in our early morning slot (6:00 AM - 9:00 AM) to ensure it reaches you cold and fresh.";

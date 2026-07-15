@@ -153,7 +153,7 @@ export default function Footer() {
                 <p className="leading-relaxed">
                   <strong>REDDY PREMIUM DAIRY</strong><br />
                   Chiyyedu Village, Anantapur District,<br />
-                  Andhra Pradesh – 515751, India
+                  Andhra Pradesh – 515721, India
                 </p>
               </div>
               <div className="flex items-center gap-2.5">

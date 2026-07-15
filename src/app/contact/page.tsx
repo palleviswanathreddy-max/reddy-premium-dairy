@@ -112,7 +112,7 @@ export default function Contact() {
                   <p className="leading-relaxed">
                     <strong>REDDY PREMIUM DAIRY</strong><br />
                     Chiyyedu Village, Anantapur District,<br />
-                    Andhra Pradesh – 515751, India
+                    Andhra Pradesh – 515721, India
                   </p>
                 </div>
                 
@@ -164,7 +164,7 @@ export default function Contact() {
             <div className="w-full h-[300px] md:h-[400px] rounded-[16px] overflow-hidden shadow-md">
               <iframe
                 title="Reddy Dairy Farms Map Location"
-                src="https://www.google.com/maps?q=14.6823052,77.6013356&z=16&output=embed"
+                src="https://www.google.com/maps?q=14.6186,77.6358&z=16&output=embed"
                 className="w-full h-full border-0"
                 allowFullScreen
                 loading="lazy"
