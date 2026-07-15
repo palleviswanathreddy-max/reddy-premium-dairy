@@ -393,7 +393,11 @@ export default function OrderTrackingPage() {
                  </div>
                  <div className="flex justify-between items-center text-xs">
                    <span className="font-semibold text-slate-500">Payment Status</span>
-                   <span className={`font-bold px-2 py-0.5 rounded-md ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30'}`}>{order.paymentStatus}</span>
+                    <span className={`font-bold px-2 py-0.5 rounded-md ${
+                      order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30' :
+                      order.paymentStatus === 'Refunded' ? 'bg-red-100 text-red-700 dark:bg-red-900/30' :
+                      'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30'
+                    }`}>{order.paymentStatus}</span>
                  </div>
                  <div className="flex justify-between items-center text-xs">
                    <span className="font-semibold text-slate-500">Transaction ID</span>

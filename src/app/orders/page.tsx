@@ -181,7 +181,9 @@ export default function OrdersPage() {
                         <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">{order.paymentMethod}</span>
                       </div>
                       <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${
-                        order.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
+                        order.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-600' :
+                        order.paymentStatus === 'Refunded' ? 'bg-red-500/10 text-red-600 border border-red-500/20' :
+                        'bg-amber-500/10 text-amber-600'
                       }`}>
                         {order.paymentStatus}
                       </span>
@@ -203,7 +205,7 @@ export default function OrdersPage() {
                   </div>
 
                   {/* Order Timeline (visual tracker) */}
-                  {order.timeline && order.timeline.length > 0 && (
+                  {order.timeline && order.timeline.length > 0 && order.status !== 'Cancelled' && (
                     <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-3">Tracking Timeline</p>
                       <div className="flex items-center gap-0 overflow-x-auto pb-2">
