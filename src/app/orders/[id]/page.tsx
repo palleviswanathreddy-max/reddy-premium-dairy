@@ -38,7 +38,11 @@ export default function OrderTrackingPage() {
         setLoading(false);
       }
     };
-    if (id) fetchOrder();
+    if (id) {
+      fetchOrder();
+      const interval = setInterval(fetchOrder, 4000);
+      return () => clearInterval(interval);
+    }
   }, [id]);
 
   if (loading) {

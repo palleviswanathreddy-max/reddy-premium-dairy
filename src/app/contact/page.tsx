@@ -53,11 +53,36 @@ export default function Contact() {
     }
   };
 
-  const handleFranchiseSubmit = (e: React.FormEvent) => {
+  const handleFranchiseSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    showToast("Franchise application recorded! Our team will contact you.", "success");
-    setBusinessName('');
-    setLocation('');
+    if (!name || !email || !location) return;
+
+    showToast("Submitting your application...", "info");
+
+    try {
+      const res = await fetch('/api/tickets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name, 
+          email, 
+          phone, 
+          subject: `Partnership: ${activeTab === 'franchise' ? 'Franchise' : 'Dealer'}`, 
+          message: `Business Name: ${businessName || 'N/A'}\nLocation: ${location}\nInvestment Capability: ${investment}` 
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Franchise application recorded! Our team will contact you.", "success");
+        setBusinessName('');
+        setLocation('');
+        setName('');
+        setEmail('');
+        setPhone('');
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const toggleFaq = (idx: number) => {

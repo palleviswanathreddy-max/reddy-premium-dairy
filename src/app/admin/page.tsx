@@ -179,6 +179,13 @@ export default function AdminDashboard() {
       fetchAdminCoupons();
       fetchAdminReviews();
       fetchAdminTickets();
+
+      const interval = setInterval(() => {
+        fetchAdminStats();
+        fetchAdminOrders();
+      }, 4000);
+
+      return () => clearInterval(interval);
     }
     /* eslint-enable react-hooks/set-state-in-effect */
      

@@ -100,17 +100,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
   const [user, setUser] = useState<User | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('reddy-cart');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
-  const [wishlist, setWishlist] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    const stored = localStorage.getItem('reddy-wishlist');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [wishlist, setWishlist] = useState<string[]>([]);
   const [compareList, setCompareList] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMsg[]>([]);
@@ -147,6 +139,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Fetch cart & wishlist from database
+  const fetchCartAndWishlist = async (userId: string) => {
+    try {
+      const cartRes = await fetch(`/api/cart?userId=${userId}`, { cache: 'no-store' });
+      const cartData = await cartRes.json();
+      if (cartData.success) {
+        setCart(cartData.cart);
+      }
+      const wishlistRes = await fetch(`/api/wishlist?userId=${userId}`, { cache: 'no-store' });
+      const wishlistData = await wishlistRes.json();
+      if (wishlistData.success) {
+        setWishlist(wishlistData.wishlist);
+      }
+    } catch (err) {
+      console.error('Failed to fetch cart/wishlist:', err);
+    }
+  };
+
+  // Fetch notifications from database
+  const fetchNotifications = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/notifications?userId=${userId}`, { cache: 'no-store' });
+      const data = await res.json();
+      if (data.success) {
+        const msgs = data.notifications.map((n: any) => ({
+          id: n.id,
+          type: n.type === 'email' || n.type === 'sms' || n.type === 'whatsapp' ? n.type : 'inapp',
+          title: n.title,
+          message: n.message,
+          time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: n.isRead
+        }));
+        setNotifications(msgs);
+      }
+    } catch (err) {
+      console.error('Failed to fetch notifications:', err);
+    }
+  };
+
   // Load state on mount
   useEffect(() => {
     // Initialize application (database indexes, caching, etc.)
@@ -163,14 +194,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProducts();
 
-    // Restore user session
+    // Restore user session or load guest
     const storedUser = localStorage.getItem('reddy-user');
+    const activeId = storedUser ? JSON.parse(storedUser).id : 'user-guest';
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
       fetchOrders(parsedUser.id, parsedUser.role);
     }
+
+    fetchCartAndWishlist(activeId);
+    fetchNotifications(activeId);
   }, []);
+
+  // Poll orders & notifications if user is logged in
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    const interval = setInterval(() => {
+      fetchOrders(user.id, user.role);
+      fetchNotifications(user.id);
+    }, 4000);
+    
+    return () => clearInterval(interval);
+  }, [user?.id, user?.role]);
 
   // Register Firebase Cloud Messaging (FCM) Token
   const registerFCMToken = async (userId: string) => {
@@ -197,15 +244,39 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]);
 
 
-  // Sync Cart
+  // Sync Cart to database
   useEffect(() => {
-    localStorage.setItem('reddy-cart', JSON.stringify(cart));
-  }, [cart]);
+    const syncCart = async () => {
+      const activeId = user ? user.id : 'user-guest';
+      try {
+        await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: activeId, cart })
+        });
+      } catch (err) {
+        console.error('Failed to sync cart to db:', err);
+      }
+    };
+    syncCart();
+  }, [cart, user?.id]);
 
-  // Sync Wishlist
+  // Sync Wishlist to database
   useEffect(() => {
-    localStorage.setItem('reddy-wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
+    const syncWishlist = async () => {
+      const activeId = user ? user.id : 'user-guest';
+      try {
+        await fetch('/api/wishlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: activeId, wishlist })
+        });
+      } catch (err) {
+        console.error('Failed to sync wishlist to db:', err);
+      }
+    };
+    syncWishlist();
+  }, [wishlist, user?.id]);
 
   // Theme Toggler
   const toggleTheme = () => {
@@ -255,17 +326,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Add Notification System (Logs simulation as well)
-  const addNotification = (type: NotificationMsg['type'], title: string, message: string) => {
-    const newNotif: NotificationMsg = {
-      id: `notif-${Date.now()}`,
-      type,
-      title,
-      message,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      read: false
-    };
-
-    setNotifications(prev => [newNotif, ...prev]);
+  const addNotification = async (type: NotificationMsg['type'], title: string, message: string) => {
+    const userId = user ? user.id : 'user-guest';
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          title,
+          message,
+          type: type === 'email' || type === 'sms' || type === 'whatsapp' ? type : 'inapp'
+        })
+      });
+      await fetchNotifications(userId);
+    } catch (err) {
+      console.error(err);
+    }
 
     // Simulated messaging logs to console
     console.log(`[SIMULATED ${type.toUpperCase()} NOTIFICATION]`);
@@ -275,8 +352,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     console.log(`-----------------------------------`);
   };
 
-  const markAllNotificationsRead = () => {
+  const markAllNotificationsRead = async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    if (user) {
+      try {
+        const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+        await Promise.all(unreadIds.map(id => 
+          fetch('/api/notifications', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ notificationId: id })
+          })
+        ));
+        await fetchNotifications(user.id);
+      } catch (err) {
+        console.error(err);
+      }
+    }
   };
 
   const refreshProducts = async () => {
@@ -305,6 +397,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user);
         localStorage.setItem('reddy-user', JSON.stringify(data.user));
         fetchOrders(data.user.id, data.user.role);
+        fetchCartAndWishlist(data.user.id);
+        fetchNotifications(data.user.id);
         addNotification('inapp', 'Login Successful', `Welcome back, ${data.user.name}!`);
         addNotification('email', 'Login Notification', `Hello ${data.user.name}, you have successfully signed into REDDY PREMIUM DAIRY.`);
         showToast(`Logged in as ${data.user.name}`, 'success');
@@ -349,7 +443,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     setOrders([]);
+    setCart([]);
+    setWishlist([]);
+    setNotifications([]);
     localStorage.removeItem('reddy-user');
+    fetchCartAndWishlist('user-guest');
+    fetchNotifications('user-guest');
     showToast('Logged out successfully', 'success');
   };
 
