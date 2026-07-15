@@ -262,8 +262,6 @@ let inMemoryDB: DatabaseSchema | null = null;
 
 // Read Database
 export function getDb(): DatabaseSchema {
-  if (inMemoryDB) return inMemoryDB;
-
   try {
     if (!fs.existsSync(DB_PATH)) {
       // Return empty schema if file doesn't exist
@@ -280,7 +278,8 @@ export function getDb(): DatabaseSchema {
     if (!inMemoryDB!.settings) inMemoryDB!.settings = { whatsappNotificationsEnabled: true };
     return inMemoryDB!;
   } catch (error) {
-    console.error('Error reading database file, using empty default:', error);
+    console.error('Error reading database file, using memory fallback:', error);
+    if (inMemoryDB) return inMemoryDB;
     return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [], settings: { whatsappNotificationsEnabled: true } };
   }
 }

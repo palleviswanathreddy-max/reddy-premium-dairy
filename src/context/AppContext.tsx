@@ -137,7 +137,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   // Fetch Orders from Database API — declared BEFORE the mount useEffect that calls it
   const fetchOrders = async (userId: string, role: string) => {
     try {
-      const res = await fetch(`/api/orders?userId=${userId}&role=${role}`);
+      const res = await fetch(`/api/orders?userId=${userId}&role=${role}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);

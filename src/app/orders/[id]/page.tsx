@@ -16,7 +16,7 @@ import LiveOrderTracker from '@/components/LiveOrderTracker';
 export default function OrderTrackingPage() {
   const { id } = useParams();
   const router = useRouter();
-  const { products, addToCart, showToast } = useApp();
+  const { products, addToCart, showToast, refreshOrders } = useApp();
   
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +27,7 @@ export default function OrderTrackingPage() {
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const res = await fetch(`/api/orders/${id}`);
+        const res = await fetch(`/api/orders/${id}`, { cache: 'no-store' });
         const data = await res.json();
         if (data.success) {
           setOrder(data.order);
@@ -131,6 +131,7 @@ export default function OrderTrackingPage() {
       const data = await res.json();
       if (data.success) {
         setOrder(data.order);
+        await refreshOrders();
         showToast('Order cancelled successfully', 'success');
       } else {
         showToast(data.message || 'Failed to cancel order', 'error');
