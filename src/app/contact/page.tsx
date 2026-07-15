@@ -160,27 +160,16 @@ export default function Contact() {
               </a>
             </div>
 
-            {/* Simulated Google Map */}
-            <div className="relative h-64 border rounded-3xl bg-slate-100 dark:bg-slate-900 overflow-hidden shadow-inner flex items-center justify-center text-center">
-              {/* Map grid simulation */}
-              <div className="absolute inset-0 grid grid-cols-8 grid-rows-6 opacity-20">
-                {Array.from({ length: 48 }).map((_, i) => (
-                  <div key={i} className="border border-slate-400" />
-                ))}
-              </div>
-              <div className="relative z-10 p-6 space-y-2">
-                <span className="h-10 w-10 bg-accent text-slate-900 rounded-full flex items-center justify-center mx-auto text-lg shadow-md animate-bounce">📍</span>
-                <p className="text-xs font-bold text-slate-800 dark:text-white">REDDY DAIRY FARMS</p>
-                <p className="text-[10px] text-slate-400 font-semibold max-w-xs leading-relaxed">Chiyyedu, Anantapur District, Andhra Pradesh - 515721</p>
-                <a 
-                  href="https://maps.google.com/?q=Chiyyedu+Anantapur" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="inline-block mt-2 text-[10px] font-bold text-primary dark:text-accent uppercase hover:underline"
-                >
-                  Open in Google Maps
-                </a>
-              </div>
+            {/* Live Google Map */}
+            <div className="w-full h-[300px] md:h-[400px] rounded-[16px] overflow-hidden shadow-md">
+              <iframe
+                title="Reddy Dairy Farms Map Location"
+                src="https://www.google.com/maps?q=14.6823052,77.6013356&z=16&output=embed"
+                className="w-full h-full border-0"
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
 
           </div>
