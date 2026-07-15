@@ -206,23 +206,23 @@ export default function OrderTrackingPage() {
         </div>
 
         {isCancelled && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-3xl p-6 shadow-sm space-y-4">
-             <div className="flex items-center gap-3 text-red-600 dark:text-red-400">
-               <Ban className="h-6 w-6" />
-               <h3 className="text-lg font-black">Order Cancelled</h3>
+          <div className="bg-red-600 border border-red-700 rounded-3xl p-6 shadow-sm space-y-4 text-white">
+             <div className="flex items-center gap-3 text-white">
+                <Ban className="h-6 w-6" />
+                <h3 className="text-lg font-black text-white">Order Cancelled</h3>
              </div>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-red-100 dark:border-red-900/30">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-red-700/40 p-4 rounded-2xl border border-red-500/30">
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Reason</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{order.cancellationReason || 'Customer Requested'}</p>
+                  <p className="text-xs font-bold text-red-200 uppercase">Reason</p>
+                  <p className="text-sm font-bold text-white">{order.cancellationReason || 'Customer Requested'}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Refund Status</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{order.refundStatus || 'Completed'}</p>
+                  <p className="text-xs font-bold text-red-200 uppercase">Refund Status</p>
+                  <p className="text-sm font-bold text-white">{order.refundStatus || 'Completed'}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-500 uppercase">Refund Amount</p>
-                  <p className="text-sm font-bold text-slate-800 dark:text-slate-200">₹{(order.refundAmount || order.grandTotal).toFixed(2)}</p>
+                  <p className="text-xs font-bold text-red-200 uppercase">Refund Amount</p>
+                  <p className="text-sm font-bold text-white">₹{(order.refundAmount || order.grandTotal).toFixed(2)}</p>
                 </div>
              </div>
           </div>
@@ -452,7 +452,7 @@ export default function OrderTrackingPage() {
                      {!cancelling ? (
                        <button 
                          onClick={() => setCancelling(true)} 
-                         className="w-full py-3 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2"
+                         className="w-full py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-bold transition-colors flex items-center justify-center gap-2 shadow-sm"
                        >
                          <Ban className="h-4 w-4" /> Cancel Order
                        </button>
