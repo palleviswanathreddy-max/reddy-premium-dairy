@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
-// xlsx is imported dynamically to avoid SSR issues
+import { prisma } from '@/lib/prisma';
 import * as XLSX from 'xlsx';
 
 export const dynamic = 'force-dynamic';
@@ -40,76 +39,96 @@ export async function GET(request: Request) {
     let filename = '';
 
     if (type === 'orders') {
-      const orders = db.orders.getAll().filter(o => {
-        const d = new Date(o.createdAt);
-        return d >= fromDate && d <= toDate;
+      const orders = await prisma.order.findMany({
+        where: { createdAt: { gte: fromDate, lte: toDate } },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' }
       });
 
       headers = ['Order ID', 'Date', 'Customer', 'Phone', 'Products', 'Subtotal', 'GST', 'Delivery', 'Discount', 'Grand Total', 'Payment Method', 'Payment Status', 'Delivery Status', 'Address'];
-      rows = orders.map(o => [
-        o.id,
-        new Date(o.createdAt).toLocaleDateString('en-IN'),
-        o.deliveryAddress.name,
-        o.deliveryAddress.phone,
-        o.items.map(i => `${i.name} x${i.quantity}`).join('; '),
-        o.subtotal,
-        o.gstTotal,
-        o.deliveryCharges,
-        o.discount,
-        o.grandTotal,
-        o.paymentMethod,
-        o.paymentStatus,
-        o.status,
-        `${o.deliveryAddress.street}, ${o.deliveryAddress.district}`
-      ]);
+      rows = orders.map(o => {
+        const addr = o.deliveryAddress as any;
+        return [
+          o.id,
+          new Date(o.createdAt).toLocaleDateString('en-IN'),
+          addr?.name || '',
+          addr?.phone || '',
+          o.items.map(i => `${i.name} x${i.quantity}`).join('; '),
+          o.subtotal,
+          o.gstTotal,
+          o.deliveryCharges,
+          o.discount,
+          o.grandTotal,
+          o.paymentMethod,
+          o.paymentStatus,
+          o.status,
+          addr ? `${addr.street || ''}, ${addr.district || ''}` : ''
+        ];
+      });
       filename = `orders_${new Date().toISOString().slice(0, 10)}`;
 
     } else if (type === 'customers') {
-      const users = db.users.getAll().filter(u => u.role === 'customer');
-      const orders = db.orders.getAll();
+      const users = await prisma.user.findMany({
+        where: { role: 'customer' },
+        include: {
+          orders: { where: { status: { not: 'Cancelled' } } },
+          addresses: { select: { id: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
       headers = ['ID', 'Name', 'Email', 'Phone', 'Total Orders', 'Total Spending (Rs.)', 'Wallet Balance', 'Reward Points', 'Addresses', 'Registered On'];
       rows = users.map(u => {
-        const userOrders = orders.filter(o => o.userId === u.id && o.status !== 'Cancelled');
-        const spent = userOrders.reduce((s, o) => s + o.grandTotal, 0);
+        const spent = u.orders.reduce((s, o) => s + o.grandTotal, 0);
         return [
-          u.id, u.name, u.email, u.phone,
-          userOrders.length, spent.toFixed(2),
-          u.walletBalance || 0, u.rewardPoints || 0,
-          u.addresses?.length || 0,
-          (u as any).createdAt ? new Date((u as any).createdAt).toLocaleDateString('en-IN') : 'N/A'
+          u.id, u.name, u.email || '', u.phone || '',
+          u.orders.length, spent.toFixed(2),
+          u.walletBalance, u.rewardPoints,
+          u.addresses.length,
+          new Date(u.createdAt).toLocaleDateString('en-IN')
         ];
       });
       filename = `customers_${new Date().toISOString().slice(0, 10)}`;
 
     } else if (type === 'products') {
-      const products = db.products.getAll();
+      const products = await prisma.product.findMany({
+        include: { category: true },
+        orderBy: { name: 'asc' }
+      });
 
       headers = ['ID', 'SKU', 'Name', 'Category', 'MRP (Rs.)', 'Price (Rs.)', 'Discount %', 'GST %', 'Stock', 'Status', 'Rating'];
       rows = products.map(p => [
-        p.id, p.sku, p.name, p.category,
+        p.id, p.sku, p.name, p.category?.name || 'Other',
         p.mrp, p.price, p.discount, p.gst,
         p.stock, p.status, p.rating
       ]);
       filename = `products_${new Date().toISOString().slice(0, 10)}`;
 
     } else if (type === 'inventory') {
-      const products = db.products.getAll();
-      const incomingStock = db.incomingStock.getAll();
-      const orders = db.orders.getAll();
+      const products = await prisma.product.findMany({
+        include: {
+          category: true,
+          inventoryLogs: true,
+          orderItems: { include: { order: { select: { status: true } } } }
+        }
+      });
 
       headers = ['SKU', 'Name', 'Category', 'Current Stock', 'Total Incoming', 'Total Sold', 'Stock Value (Rs.)', 'Status'];
       rows = products.map(p => {
-        const incoming = incomingStock.filter(s => s.productId === p.id).reduce((s, e) => s + e.quantity, 0);
-        const sold = orders.flatMap(o => o.items).filter(i => i.productId === p.id).reduce((s, i) => s + i.quantity, 0);
-        return [p.sku, p.name, p.category, p.stock, incoming, sold, (p.stock * p.price).toFixed(2), p.status];
+        const incoming = p.inventoryLogs.filter(l => l.quantity > 0).reduce((s, l) => s + l.quantity, 0);
+        const sold = p.orderItems.filter(i => !['Cancelled', 'Returned'].includes(i.order.status)).reduce((s, i) => s + i.quantity, 0);
+        return [p.sku, p.name, p.category?.name || 'Other', p.stock, incoming, sold, (p.stock * p.price).toFixed(2), p.status];
       });
       filename = `inventory_${new Date().toISOString().slice(0, 10)}`;
 
     } else if (type === 'sales') {
-      const orders = db.orders.getAll().filter(o => {
-        const d = new Date(o.createdAt);
-        return d >= fromDate && d <= toDate && !['Cancelled', 'Returned'].includes(o.status);
+      const orders = await prisma.order.findMany({
+        where: {
+          createdAt: { gte: fromDate, lte: toDate },
+          status: { notIn: ['Cancelled', 'Returned'] }
+        },
+        include: { items: true },
+        orderBy: { createdAt: 'desc' }
       });
 
       headers = ['Date', 'Order ID', 'Items', 'Revenue (Rs.)', 'GST (Rs.)', 'Payment Method'];
@@ -124,19 +143,30 @@ export async function GET(request: Request) {
       filename = `sales_report_${new Date().toISOString().slice(0, 10)}`;
 
     } else if (type === 'refunds') {
-      const orders = db.orders.getAll().filter(o => o.status === 'Cancelled' || o.refundStatus);
+      const orders = await prisma.order.findMany({
+        where: {
+          OR: [
+            { status: 'Cancelled' },
+            { refundStatus: { not: null } }
+          ]
+        },
+        orderBy: { createdAt: 'desc' }
+      });
 
       headers = ['Order ID', 'Date', 'Customer', 'Grand Total (Rs.)', 'Refund Amount (Rs.)', 'Refund Status', 'Reason', 'Payment Method'];
-      rows = orders.map(o => [
-        o.id,
-        new Date(o.createdAt).toLocaleDateString('en-IN'),
-        o.deliveryAddress.name,
-        o.grandTotal,
-        o.refundAmount ?? o.grandTotal,
-        o.refundStatus || 'Pending',
-        o.cancellationReason || '',
-        o.paymentMethod
-      ]);
+      rows = orders.map(o => {
+        const addr = o.deliveryAddress as any;
+        return [
+          o.id,
+          new Date(o.createdAt).toLocaleDateString('en-IN'),
+          addr?.name || '',
+          o.grandTotal,
+          Number(o.refundAmount) || o.grandTotal,
+          o.refundStatus || 'Pending',
+          o.cancellationReason || '',
+          o.paymentMethod
+        ];
+      });
       filename = `refunds_${new Date().toISOString().slice(0, 10)}`;
     }
 

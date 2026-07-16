@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
-import { logActivity } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 /**
  * POST /api/track/cart
@@ -21,22 +20,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid type' }, { status: 400 });
     }
 
-    // Always log to local JSON DB first
-    const localType = type === 'cart_add' ? 'add_to_cart' : 'wishlist_add';
-    logActivity(userId, localType, { productId, productName: productName || '', quantity });
+    const logType = type === 'cart_add' ? 'add_to_cart' : 'wishlist_add';
 
-    if (!process.env.MONGODB_URI) {
-      return NextResponse.json({ success: true, localOnly: true });
-    }
-
-    await connectMongo();
-    await MongooseUserActivity.create({
-      userId,
-      type,
-      productId,
-      productName: productName || null,
-      quantity: quantity || null
-    });
+    // Non-blocking write
+    prisma.activityLog.create({
+      data: {
+        userId,
+        type: logType,
+        meta: { productId, productName: productName || '', quantity }
+      }
+    }).catch(err => console.error('[track/cart]', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

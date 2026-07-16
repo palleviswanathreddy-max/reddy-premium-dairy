@@ -42,7 +42,11 @@ export default function InvoicePage() {
   }
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    const invoiceSuffix = order.invoiceNumber || `INV-${new Date(order.createdAt).getFullYear()}-${order.id.split('-').pop()}`;
+    document.title = `Invoice-${invoiceSuffix}`;
     window.print();
+    document.title = originalTitle;
   };
 
   return (

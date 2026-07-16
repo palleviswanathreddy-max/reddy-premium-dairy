@@ -1,45 +1,55 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const orders = db.orders.getAll();
-    const users = db.users.getAll();
-    const products = db.products.getAll();
+    const now = new Date();
+    const todayStart = new Date(now.toISOString().slice(0, 10));
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    // Counts
-    const orderCount = orders.length;
-    const customerCount = users.filter(u => u.role === 'customer').length;
-    const productCount = products.length;
-    const categoryCount = new Set(products.map(p => p.category)).size;
+    // Fetch all needed data in parallel
+    const [orders, products, users, categoryCount] = await Promise.all([
+      prisma.order.findMany({
+        include: {
+          items: {
+            include: { product: { include: { category: true } } }
+          },
+          user: { select: { id: true, name: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.product.findMany({
+        select: { id: true, name: true, sku: true, stock: true, status: true, price: true }
+      }),
+      prisma.user.findMany({
+        where: { role: 'customer' },
+        select: { id: true, name: true, createdAt: true }
+      }),
+      prisma.category.count()
+    ]);
 
     // Revenue accumulators
-    let totalRevenue = 0, todaySales = 0, monthlySales = 0, yearlySales = 0;
-    let weeklySales = 0, totalCollected = 0, totalPending = 0;
+    let totalRevenue = 0, todaySales = 0, weeklySales = 0, monthlySales = 0, yearlySales = 0;
+    let totalCollected = 0, totalPending = 0;
     let cancelledCount = 0, refundTotal = 0;
-
-    const now = new Date();
-    const todayStr = now.toISOString().slice(0, 10);
-    const monthStr = now.toISOString().slice(0, 7);
-    const yearStr = now.toISOString().slice(0, 4);
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     orders.forEach(order => {
       const isCancelled = order.status === 'Cancelled';
       if (isCancelled) cancelledCount++;
-      if (order.refundStatus === 'Completed') refundTotal += order.refundAmount || order.grandTotal;
+      if (order.refundStatus === 'Completed') refundTotal += Number(order.refundAmount) || order.grandTotal;
 
       if (!isCancelled) {
         const amt = order.grandTotal;
         totalRevenue += amt;
 
-        const createdDate = order.createdAt.slice(0, 10);
-        if (createdDate === todayStr) todaySales += amt;
-        if (createdDate >= weekAgo) weeklySales += amt;
-        if (order.createdAt.slice(0, 7) === monthStr) monthlySales += amt;
-        if (order.createdAt.slice(0, 4) === yearStr) yearlySales += amt;
+        if (order.createdAt >= todayStart) todaySales += amt;
+        if (order.createdAt >= weekAgo) weeklySales += amt;
+        if (order.createdAt >= monthStart) monthlySales += amt;
+        if (order.createdAt >= yearStart) yearlySales += amt;
       }
 
       if (order.paymentStatus === 'Paid') totalCollected += order.grandTotal;
@@ -72,9 +82,13 @@ export async function GET() {
     const customerSpend: Record<string, { name: string; orders: number; spent: number }> = {};
     orders.forEach(o => {
       if (o.status === 'Cancelled') return;
-      const user = users.find(u => u.id === o.userId);
+      const deliveryAddr = o as any;
       if (!customerSpend[o.userId]) {
-        customerSpend[o.userId] = { name: user?.name || o.deliveryAddress.name, orders: 0, spent: 0 };
+        customerSpend[o.userId] = {
+          name: o.user?.name || deliveryAddr?.deliveryAddress?.name || 'Guest',
+          orders: 0,
+          spent: 0
+        };
       }
       customerSpend[o.userId].orders++;
       customerSpend[o.userId].spent += o.grandTotal;
@@ -89,8 +103,7 @@ export async function GET() {
     orders.forEach(order => {
       if (order.status === 'Cancelled') return;
       order.items.forEach(item => {
-        const prod = products.find(p => p.id === item.productId);
-        const cat = prod?.category || 'Other';
+        const cat = item.product?.category?.name || 'Other';
         categorySales[cat] = (categorySales[cat] || 0) + item.price * item.quantity;
       });
     });
@@ -108,13 +121,12 @@ export async function GET() {
     const revenueHistory = months.map(m => {
       let sales = 0;
       orders.forEach(o => {
-        if (o.status !== 'Cancelled' && o.createdAt.slice(0, 7) === m) sales += o.grandTotal;
+        if (o.status !== 'Cancelled' && o.createdAt.toISOString().slice(0, 7) === m) sales += o.grandTotal;
       });
       const label = new Date(m + '-02').toLocaleString('en-US', { month: 'short', year: 'numeric' });
       return { label, revenue: sales };
     });
 
-    // Monthly growth rate (last 2 months)
     const lastMonth = revenueHistory[revenueHistory.length - 2]?.revenue || 0;
     const thisMonth = revenueHistory[revenueHistory.length - 1]?.revenue || 0;
     const monthlyGrowthRate = lastMonth > 0 ? (((thisMonth - lastMonth) / lastMonth) * 100).toFixed(1) : null;
@@ -127,7 +139,7 @@ export async function GET() {
       const dateStr = d.toISOString().slice(0, 10);
       let daySales = 0, dayOrders = 0;
       orders.forEach(o => {
-        if (o.createdAt.slice(0, 10) === dateStr) {
+        if (o.createdAt.toISOString().slice(0, 10) === dateStr) {
           if (o.status !== 'Cancelled') daySales += o.grandTotal;
           dayOrders++;
         }
@@ -147,7 +159,6 @@ export async function GET() {
     const paymentMethodDistribution = Object.entries(paymentMethodCounts)
       .map(([method, v]) => ({ method, ...v }));
 
-    // Payment & delivery status breakdowns
     const paymentStatusCounts: Record<string, number> = {};
     const deliveryStatusCounts: Record<string, number> = {};
     orders.forEach(order => {
@@ -161,24 +172,24 @@ export async function GET() {
 
     // Customer acquisition trend (last 6 months)
     const customerAcquisition = months.map(m => {
-      let count = 0;
-      users.forEach(u => {
-        const createdAt = (u as { createdAt?: string }).createdAt || '';
-        if (typeof createdAt === 'string' && createdAt.slice(0, 7) === m) count++;
-      });
+      const count = users.filter(u => u.createdAt.toISOString().slice(0, 7) === m).length;
       const label = new Date(m + '-02').toLocaleString('en-US', { month: 'short', year: 'numeric' });
       return { label, count };
     });
 
-    // Pending refunds count
-    const pendingRefunds = orders.filter(o => o.status === 'Cancelled' && (!o.refundStatus || o.refundStatus === 'Pending')).length;
+    const pendingRefunds = orders.filter(o =>
+      o.status === 'Cancelled' && (!o.refundStatus || o.refundStatus === 'Pending')
+    ).length;
 
     return NextResponse.json({
       success: true,
       stats: {
         totalRevenue, todaySales, weeklySales, monthlySales, yearlySales,
         profit, loss: 0,
-        customerCount, orderCount, productCount, categoryCount,
+        customerCount: users.length,
+        orderCount: orders.length,
+        productCount: products.length,
+        categoryCount,
         cancelledCount, refundTotal, pendingRefunds, monthlyGrowthRate,
         totalCollected, totalPending,
         lowStockProducts, bestSellers, topCustomers,

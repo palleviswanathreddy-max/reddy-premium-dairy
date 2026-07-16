@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseOTP } from '@/db/mongodb';
 import { generateRegistrationToken } from '@/db/auth-helper';
-import { getDb, saveDb } from '@/db/db';
+import { cache } from '@/utils/cache';
 
 export async function POST(request: Request) {
   try {
@@ -25,34 +24,12 @@ export async function POST(request: Request) {
 
     let isValid = false;
 
-    // 1. Verify against MongoDB Atlas
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const record = await MongooseOTP.findOne({ identifier: normalizedIdentifier }).sort({ _id: -1 });
-        if (record && record.otpCode === otpCode && new Date() < record.expiresAt) {
-          isValid = true;
-          // Delete OTP after successful verification
-          await MongooseOTP.deleteMany({ identifier: normalizedIdentifier });
-        }
-      } catch (err) {
-        console.warn('[MongoDB OTP Verification Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    // 2. Verify against Local JSON DB
-    if (!isValid) {
-      const localData = getDb();
-      const tempOtps = (localData as any).tempOtps || [];
-      const match = tempOtps.find(
-        (o: any) => o.identifier === normalizedIdentifier && o.otpCode === otpCode && new Date() < new Date(o.expiresAt)
-      );
-      if (match) {
-        isValid = true;
-        // Clean up used OTP
-        (localData as any).tempOtps = tempOtps.filter((o: any) => o.identifier !== normalizedIdentifier);
-        saveDb(localData);
-      }
+    // Verify against cache
+    const cachedRecord = cache.get<{ otpCode: string; expiresAt: number }>(`otp:${normalizedIdentifier}`);
+    if (cachedRecord && cachedRecord.otpCode === otpCode && Date.now() < cachedRecord.expiresAt) {
+      isValid = true;
+      // Delete OTP after successful verification
+      cache.delete(`otp:${normalizedIdentifier}`);
     }
 
     if (!isValid) {

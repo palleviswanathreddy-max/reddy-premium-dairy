@@ -1,11 +1,153 @@
-/**
- * Application Initialization Utilities
- * Initialize all advanced features on app startup
- */
-
-import { createDatabaseIndexes, getDatabaseStats } from '@/db/optimization';
 import { logger } from '@/utils/logger';
 import { cache } from '@/utils/cache';
+import { getDb } from '@/db/db';
+import { prisma } from '@/lib/prisma';
+import bcrypt from 'bcryptjs';
+
+async function seedPostgresFromLocalJSON() {
+  try {
+    const localDb = getDb();
+
+    // 1. Categories & Products
+    const productCount = await prisma.product.count();
+    if (productCount === 0 && localDb.products && localDb.products.length > 0) {
+      logger.info('🌱 Seeding Categories and Products in PostgreSQL...');
+      
+      // Get unique categories
+      const categories = Array.from(new Set(localDb.products.map((p: any) => p.category)));
+      
+      // Seed Categories
+      for (const catName of categories) {
+        await prisma.category.upsert({
+          where: { name: catName },
+          update: {},
+          create: {
+            name: catName,
+            slug: catName.toLowerCase().replace(/\s+/g, '-'),
+          },
+        });
+      }
+
+      const dbCategories = await prisma.category.findMany();
+      const catMap: Record<string, string> = {};
+      dbCategories.forEach(c => {
+        catMap[c.name] = c.id;
+      });
+
+      // Seed Products
+      for (const p of localDb.products) {
+        const catId = catMap[p.category];
+        if (!catId) continue;
+        
+        await prisma.product.create({
+          data: {
+            id: p.id,
+            sku: p.sku,
+            name: p.name,
+            categoryId: catId,
+            brand: p.brand,
+            description: p.description,
+            ingredients: p.ingredients,
+            storage: p.storage,
+            nutrition: p.nutrition as any,
+            weight: p.weight,
+            volume: p.volume,
+            mrp: p.mrp,
+            price: p.price,
+            discount: p.discount,
+            gst: p.gst,
+            stock: p.stock,
+            status: p.status,
+            expiryDays: p.expiryDays,
+            deliveryTime: p.deliveryTime,
+            rating: p.rating,
+            images: p.images,
+            tags: p.tags,
+            frequentlyBoughtTogether: p.frequentlyBoughtTogether,
+            relatedProducts: p.relatedProducts,
+            variants: p.variants as any || [],
+            faq: p.faq as any || [],
+          },
+        });
+      }
+    }
+
+    // 2. Coupons
+    const couponCount = await prisma.coupon.count();
+    if (couponCount === 0 && localDb.coupons && localDb.coupons.length > 0) {
+      logger.info('🌱 Seeding Coupons in PostgreSQL...');
+      for (const cp of localDb.coupons) {
+        await prisma.coupon.create({
+          data: {
+            code: cp.code,
+            description: cp.description,
+            type: cp.type || 'flat',
+            value: cp.value,
+            minPurchase: cp.minPurchase,
+            maxDiscount: cp.maxDiscount,
+            expiryDate: cp.expiryDate ? new Date(cp.expiryDate) : null,
+            isActive: cp.isActive !== false,
+          },
+        });
+      }
+    }
+
+    // 3. Delivery Partners
+    const dpCount = await prisma.deliveryPartner.count();
+    if (dpCount === 0 && localDb.deliveryPartners && localDb.deliveryPartners.length > 0) {
+      logger.info('🌱 Seeding Delivery Partners in PostgreSQL...');
+      for (const dp of localDb.deliveryPartners) {
+        await prisma.deliveryPartner.create({
+          data: {
+            id: dp.id,
+            name: dp.name,
+            phone: dp.phone,
+            email: dp.email || null,
+            vehicle: dp.vehicle,
+            vehicleNumber: dp.vehicleNumber || null,
+            isActive: dp.isActive !== false,
+            currentOrderId: dp.currentOrderId || null,
+            completedDeliveries: dp.completedDeliveries || 0,
+            rating: dp.rating || 5.0,
+          },
+        });
+      }
+    }
+
+    // 4. Users (Admin and standard users)
+    const userCount = await prisma.user.count();
+    if (userCount === 0 && localDb.users && localDb.users.length > 0) {
+      logger.info('🌱 Seeding Users in PostgreSQL...');
+      for (const u of localDb.users) {
+        const passwordHash = u.passwordHash || (u.password ? await bcrypt.hash(u.password, 10) : null);
+        await prisma.user.create({
+          data: {
+            id: u.id,
+            email: u.email ? u.email.trim() : null,
+            passwordHash,
+            name: u.name,
+            role: u.role === 'admin' ? 'admin' : 'customer',
+            phone: u.phone ? u.phone.trim() : null,
+            avatar: u.avatar || null,
+            rewardPoints: u.rewardPoints || 0,
+            walletBalance: u.walletBalance || 0.0,
+            gender: u.gender || null,
+            dob: u.dob || null,
+            bloodGroup: u.bloodGroup || null,
+            emergencyContact: u.emergencyContact || null,
+            emailVerified: u.emailVerified || false,
+            mobileVerified: u.mobileVerified || false,
+            biometricsEnabled: u.biometricsEnabled || false,
+            biometricCredentialId: u.biometricCredentialId || null,
+          },
+        });
+      }
+    }
+
+  } catch (err) {
+    logger.error('Error seeding PostgreSQL from LocalDB', err as Error);
+  }
+}
 
 /**
  * Initialize all application services
@@ -15,15 +157,16 @@ export async function initializeApplication() {
   logger.info('🚀 Initializing application...');
 
   try {
-    // 1. Create database indexes
-    logger.info('📊 Setting up database indexes...');
-    await createDatabaseIndexes();
-    
-    // 2. Verify database connection
-    const dbStats = await getDatabaseStats();
-    logger.info('✅ Database connected', dbStats ?? undefined);
+    // 1. Verify database connection
+    logger.info('🔌 Connecting to PostgreSQL...');
+    await prisma.$connect();
+    logger.info('✅ Database connected successfully');
 
-    // 3. Clear cache on startup (optional)
+    // 2. Seed PostgreSQL Catalog / Users if database is empty
+    logger.info('🌱 Verifying collection seeds...');
+    await seedPostgresFromLocalJSON();
+
+    // 3. Clear cache on startup
     cache.clear();
     logger.info('🧹 Cache cleared');
 
@@ -49,13 +192,17 @@ export async function initializeApplication() {
  */
 export async function healthCheck() {
   try {
-    const stats = await getDatabaseStats();
+    const [userCount, orderCount, productCount] = await Promise.all([
+      prisma.user.count(),
+      prisma.order.count(),
+      prisma.product.count()
+    ]);
     const cacheStats = cache.getStats();
 
     return {
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      database: stats,
+      database: { users: userCount, orders: orderCount, products: productCount },
       cache: cacheStats,
       uptime: process.uptime()
     };
@@ -67,6 +214,7 @@ export async function healthCheck() {
     };
   }
 }
+
 
 /**
  * Graceful shutdown

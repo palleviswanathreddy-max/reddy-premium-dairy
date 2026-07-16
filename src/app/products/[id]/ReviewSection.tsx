@@ -17,11 +17,6 @@ export default function ReviewSection({ productId }: { productId: string }) {
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchReviews();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
-
   const fetchReviews = async () => {
     try {
       const res = await fetch(`/api/reviews?productId=${productId}`);
@@ -35,6 +30,13 @@ export default function ReviewSection({ productId }: { productId: string }) {
       setLoading(false);
     }
   };
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchReviews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [productId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;

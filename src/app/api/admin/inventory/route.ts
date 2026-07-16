@@ -1,31 +1,37 @@
 import { NextResponse } from 'next/server';
-import { db, IncomingStock } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 // GET — full inventory view
 export async function GET() {
   try {
-    const products = db.products.getAll();
-    const incomingStock = db.incomingStock.getAll();
+    const products = await prisma.product.findMany({
+      include: {
+        category: true,
+        inventoryLogs: true,
+        orderItems: {
+          include: {
+            order: { select: { status: true } }
+          }
+        }
+      }
+    });
 
     const inventory = products.map(p => {
-      const incoming = incomingStock
-        .filter(s => s.productId === p.id)
-        .reduce((sum, s) => sum + s.quantity, 0);
+      const incoming = p.inventoryLogs
+        .filter(l => l.quantity > 0)
+        .reduce((sum, l) => sum + l.quantity, 0);
 
-      const orders = db.orders.getAll();
-      const sold = orders
-        .filter(o => !['Cancelled', 'Returned'].includes(o.status))
-        .flatMap(o => o.items)
-        .filter(item => item.productId === p.id)
+      const sold = p.orderItems
+        .filter(item => !['Cancelled', 'Returned'].includes(item.order.status))
         .reduce((sum, item) => sum + item.quantity, 0);
 
       return {
         id: p.id,
         name: p.name,
         sku: p.sku,
-        category: p.category,
+        category: p.category?.name || 'Other',
         currentStock: p.stock,
         status: p.status,
         totalIncoming: incoming,
@@ -36,7 +42,6 @@ export async function GET() {
       };
     });
 
-    // Summary stats
     const totalStockValue = inventory.reduce((sum, p) => sum + p.stockValue, 0);
     const lowStockCount = inventory.filter(p => p.isLowStock).length;
     const outOfStockCount = inventory.filter(p => p.isOutOfStock).length;
@@ -57,7 +62,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { productId, quantity, batchNumber, expiryDate, notes, addedBy } = body;
+    const { productId, quantity, notes, addedBy } = body;
 
     if (!productId || !quantity || quantity <= 0) {
       return NextResponse.json(
@@ -66,29 +71,29 @@ export async function POST(request: Request) {
       );
     }
 
-    const product = db.products.getById(productId);
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+
     if (!product) {
       return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
     }
 
-    // Add to incoming stock log
-    const entry: IncomingStock = {
-      id: `STK-${Date.now()}`,
-      productId,
-      productName: product.name,
-      quantity: Number(quantity),
-      batchNumber: batchNumber || undefined,
-      expiryDate: expiryDate || undefined,
-      notes: notes || undefined,
-      addedBy: addedBy || 'Admin',
-      createdAt: new Date().toISOString()
-    };
-    db.incomingStock.create(entry);
-
-    // Update product stock
     const newStock = product.stock + Number(quantity);
     const newStatus = newStock === 0 ? 'Out of Stock' : newStock <= 10 ? 'Low Stock' : 'Available';
-    const updatedProduct = db.products.update(productId, { stock: newStock, status: newStatus });
+
+    const [entry, updatedProduct] = await prisma.$transaction([
+      prisma.inventoryLog.create({
+        data: {
+          productId,
+          quantity: Number(quantity),
+          notes: notes || undefined,
+          addedBy: addedBy || 'Admin'
+        }
+      }),
+      prisma.product.update({
+        where: { id: productId },
+        data: { stock: newStock, status: newStatus }
+      })
+    ]);
 
     return NextResponse.json({ success: true, entry, product: updatedProduct });
   } catch (err: unknown) {
@@ -110,28 +115,36 @@ export async function PUT(request: Request) {
       );
     }
 
-    const product = db.products.getById(productId);
+    const product = await prisma.product.findUnique({ where: { id: productId } });
+
     if (!product) {
       return NextResponse.json({ success: false, message: 'Product not found' }, { status: 404 });
     }
 
     const newStatus = stock === 0 ? 'Out of Stock' : stock <= 10 ? 'Low Stock' : 'Available';
-    const updatedProduct = db.products.update(productId, { stock: Number(stock), status: newStatus });
-
-    // Log the adjustment as incoming stock if positive delta
     const delta = Number(stock) - product.stock;
+
+    const ops: any[] = [
+      prisma.product.update({
+        where: { id: productId },
+        data: { stock: Number(stock), status: newStatus }
+      })
+    ];
+
     if (delta !== 0) {
-      const entry: IncomingStock = {
-        id: `STK-ADJ-${Date.now()}`,
-        productId,
-        productName: product.name,
-        quantity: delta,
-        notes: notes || `Manual stock adjustment (delta: ${delta > 0 ? '+' : ''}${delta})`,
-        addedBy: 'Admin',
-        createdAt: new Date().toISOString()
-      };
-      db.incomingStock.create(entry);
+      ops.push(
+        prisma.inventoryLog.create({
+          data: {
+            productId,
+            quantity: delta,
+            notes: notes || `Manual stock adjustment (delta: ${delta > 0 ? '+' : ''}${delta})`,
+            addedBy: 'Admin'
+          }
+        })
+      );
     }
+
+    const [updatedProduct] = await prisma.$transaction(ops);
 
     return NextResponse.json({ success: true, product: updatedProduct });
   } catch (err: unknown) {

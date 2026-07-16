@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { hashPassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb, saveDb, db, logActivity } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -10,33 +9,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'All fields are required' }, { status: 400 });
     }
 
-    let existingUser = false;
     const cleanEmail = email.toLowerCase().trim();
     const cleanPhone = phone.replace(/\D/g, '').slice(-10);
 
-    // 1. Try MongoDB check
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const existing = await MongooseUser.findOne({ 
-          $or: [{ email: cleanEmail }, { phone: cleanPhone }] 
-        });
-        if (existing) {
-          existingUser = true;
-        }
-      } catch (err) {
-        console.warn('[MongoDB Atlas Error] Falling back to LocalDB checks:', err);
+    // Duplicate check
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: { equals: cleanEmail, mode: 'insensitive' } },
+          { phone: { endsWith: cleanPhone } }
+        ]
       }
-    }
-
-    // 2. Fallback to Local JSON DB check
-    if (!existingUser) {
-      const localData = getDb();
-      const existing = localData.users.find(u => u.email.toLowerCase() === cleanEmail || u.phone.replace(/\D/g, '').slice(-10) === cleanPhone);
-      if (existing) {
-        existingUser = true;
-      }
-    }
+    });
 
     if (existingUser) {
       return NextResponse.json({ success: false, message: 'User with this email or mobile number already exists' }, { status: 409 });
@@ -45,12 +29,9 @@ export async function POST(request: Request) {
     // Hash Password securely
     const hashed = await hashPassword(password);
 
-    let newUserPayload: any = null;
-
-    if (process.env.MONGODB_URI) {
-      // Create user in MongoDB Atlas
-      await connectMongo();
-      const mUser = new MongooseUser({
+    // Create user in PostgreSQL via Prisma Client
+    const dbUser = await prisma.user.create({
+      data: {
         name,
         email: cleanEmail,
         phone: cleanPhone,
@@ -58,72 +39,71 @@ export async function POST(request: Request) {
         role: 'customer',
         walletBalance: 0,
         rewardPoints: 100, // starting loyalty bonus
-        addresses: [],
-        verifiedPhone: true, // set verified if signing up
-        lastLoginAt: new Date().toISOString()
-      });
-      await mUser.save();
-      newUserPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-    } else {
-      // Create user in Local DB
-      const localData = getDb();
-      const lUser = {
-        id: `user-${Date.now()}`,
-        email: cleanEmail,
-        password: password, // plaintext for dev access
-        passwordHash: hashed,
-        name,
-        phone: cleanPhone,
-        role: 'customer' as const,
-        avatar: null,
-        addresses: [],
-        rewardPoints: 100,
-        walletBalance: 0,
-        lastLoginAt: new Date().toISOString(),
-        createdAt: new Date().toISOString()
-      };
-      localData.users.push(lUser);
-      saveDb(localData);
-      newUserPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
-    }
-
-    // Generate real JWT tokens
-    const accessToken = generateAccessToken(newUserPayload);
-    const refreshToken = generateRefreshToken(newUserPayload);
-
-    const response = NextResponse.json({ 
-      success: true, 
-      user: {
-        id: newUserPayload.id,
-        email: newUserPayload.email,
-        role: newUserPayload.role,
-        name: newUserPayload.name,
-        phone: cleanPhone,
-        walletBalance: 0,
-        rewardPoints: 100,
-        addresses: []
+        lastLoginAt: new Date()
       }
     });
 
-    logActivity(newUserPayload.id, 'register');
+    const userPayload = {
+      id: dbUser.id,
+      email: dbUser.email || '',
+      role: dbUser.role,
+      name: dbUser.name
+    };
+
+    // Generate JWT tokens
+    const accessToken = generateAccessToken(userPayload);
+    const refreshToken = generateRefreshToken(userPayload);
+
+    // Save Refresh Token in PostgreSQL database
+    await prisma.refreshToken.create({
+      data: {
+        userId: dbUser.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Log Activity
+    await prisma.activityLog.create({
+      data: {
+        userId: dbUser.id,
+        type: 'register'
+      }
+    });
 
     // Admin notification for new registration
     try {
-      const adminUsers = db.users.getAll().filter(u => u.role === 'admin');
-      for (const admin of adminUsers) {
-        db.notifications.create({
-          id: `NOT-ADM-REG-${Date.now()}-${Math.floor(Math.random() * 999)}`,
-          userId: admin.id,
-          title: 'New Customer Registered',
-          message: `${name} (${cleanEmail}) has signed up.`,
-          type: 'Admin Messages',
-          isRead: false,
-          createdAt: new Date().toISOString()
+      const admins = await prisma.user.findMany({
+        where: { role: 'admin' }
+      });
+      for (const admin of admins) {
+        await prisma.notification.create({
+          data: {
+            userId: admin.id,
+            title: 'New Customer Registered',
+            message: `${name} (${cleanEmail}) has signed up.`,
+            type: 'Admin Messages',
+            isRead: false
+          }
         });
       }
     } catch (e) {
       console.error('[Admin registration notification failed]', e);
     }
+
+    const response = NextResponse.json({ 
+      success: true, 
+      user: {
+        id: dbUser.id,
+        email: dbUser.email || '',
+        role: dbUser.role,
+        name: dbUser.name,
+        phone: dbUser.phone || '',
+        walletBalance: 0,
+        rewardPoints: 100,
+        addresses: []
+      }
+    });
 
     // Set secure HTTP Only cookie headers
     response.cookies.set('accessToken', accessToken, {

@@ -9,7 +9,7 @@ export async function isWhatsAppEnabled(): Promise<boolean> {
     if (localSettings && !localSettings.whatsappNotificationsEnabled) {
       return false;
     }
-  } catch (_) {}
+  } catch {}
 
   // Check MongoDB settings if enabled
   if (process.env.MONGODB_URI) {
@@ -188,17 +188,18 @@ export async function sendWhatsAppMessage(recipientPhone: string, messageText: s
       });
       return { success: false, error: errMsg };
     }
-  } catch (err: any) {
-    console.error(`[WhatsApp Fetch Network Error]`, err.message);
+  } catch (err: unknown) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    console.error(`[WhatsApp Fetch Network Error]`, errMsg);
     await logWhatsAppMessage({
       orderId,
       recipient: formattedPhone,
       event,
       message: messageText,
       status: 'Failed',
-      error: err.message
+      error: errMsg
     });
-    return { success: false, error: err.message };
+    return { success: false, error: errMsg };
   }
 }
 
@@ -243,8 +244,9 @@ export async function retryFailedWhatsAppMessages() {
         const data = await response.json();
         db.whatsappLogs.update(log.id, { attempts: updatedAttempts, error: JSON.stringify(data.error || data) });
       }
-    } catch (err: any) {
-      db.whatsappLogs.update(log.id, { attempts: updatedAttempts, error: err.message });
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      db.whatsappLogs.update(log.id, { attempts: updatedAttempts, error: errMsg });
     }
   }
 
@@ -285,8 +287,8 @@ export async function retryFailedWhatsAppMessages() {
             const data = await response.json();
             log.error = JSON.stringify(data.error || data);
           }
-        } catch (err: any) {
-          log.error = err.message;
+        } catch (err: unknown) {
+          log.error = err instanceof Error ? err.message : String(err);
         }
         await log.save();
       }

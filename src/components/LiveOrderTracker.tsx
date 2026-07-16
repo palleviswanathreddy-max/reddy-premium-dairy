@@ -26,12 +26,13 @@ export default function LiveOrderTracker({ partner }: { partner: DeliveryPartner
   const [etaVal, setEtaVal] = useState(15); // in minutes
 
   // Simulate movement in real-time
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (partner.eta === 'Delivered') {
-      setProgress(100);
-      setCurrentLat(destLat);
-      setCurrentLng(destLng);
-      setEtaVal(0);
+      if (progress !== 100) setProgress(100);
+      if (currentLat !== destLat) setCurrentLat(destLat);
+      if (currentLng !== destLng) setCurrentLng(destLng);
+      if (etaVal !== 0) setEtaVal(0);
       return;
     }
 
@@ -60,7 +61,9 @@ export default function LiveOrderTracker({ partner }: { partner: DeliveryPartner
     }, 2000); // update every 2 seconds
 
     return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destLat, destLng, partner.eta]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleOpenGoogleMaps = () => {
     const url = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${destLat},${destLng}&travelmode=driving`;

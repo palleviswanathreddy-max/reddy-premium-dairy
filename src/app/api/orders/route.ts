@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, logActivity } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 import { sendOrderConfirmation, triggerWhatsApp } from '@/lib/notifications';
 import { sseManager } from '@/utils/events';
 
@@ -12,52 +12,107 @@ export async function GET(request: Request) {
     const role = searchParams.get('role');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(200, parseInt(searchParams.get('limit') || '100'));
-    const statusFilter = searchParams.get('status'); // optional filter
+    const statusFilter = searchParams.get('status');
     const paymentFilter = searchParams.get('payment');
     const from = searchParams.get('from');
     const to = searchParams.get('to');
     const searchId = searchParams.get('q');
 
-    let orders = db.orders.getAll();
+    // Build Prisma where clause
+    const where: any = {};
 
-    // Role-based filtering
     if (role !== 'admin') {
       if (userId) {
-        orders = orders.filter(o => o.userId === userId);
+        where.userId = userId;
       } else {
-        orders = [];
+        return NextResponse.json(
+          { success: true, orders: [], total: 0, page, limit },
+          { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+        );
       }
     }
 
-    // Optional filters
     if (statusFilter && statusFilter !== 'all') {
-      orders = orders.filter(o => o.status === statusFilter);
+      where.status = statusFilter;
     }
     if (paymentFilter && paymentFilter !== 'all') {
-      orders = orders.filter(o => o.paymentStatus === paymentFilter || o.paymentMethod === paymentFilter);
+      where.OR = [
+        { paymentStatus: paymentFilter },
+        { paymentMethod: paymentFilter }
+      ];
     }
     if (from) {
-      const fromDate = new Date(from);
-      orders = orders.filter(o => new Date(o.createdAt) >= fromDate);
+      where.createdAt = { ...(where.createdAt || {}), gte: new Date(from) };
     }
     if (to) {
-      const toDate = new Date(to);
-      orders = orders.filter(o => new Date(o.createdAt) <= toDate);
+      where.createdAt = { ...(where.createdAt || {}), lte: new Date(to) };
     }
     if (searchId) {
-      orders = orders.filter(o => o.id.toLowerCase().includes(searchId.toLowerCase()));
+      where.id = { contains: searchId, mode: 'insensitive' };
     }
 
-    const total = orders.length;
-    const paginated = orders.slice((page - 1) * limit, page * limit);
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        where,
+        include: {
+          items: { include: { product: true } },
+          user: true,
+          deliveryPartner: true
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.order.count({ where })
+    ]);
+
+    const mapped = orders.map(o => ({
+      id: o.id,
+      userId: o.userId,
+      userName: o.user.name,
+      userEmail: o.user.email,
+      userPhone: o.user.phone,
+      subtotal: o.subtotal,
+      gstTotal: o.gstTotal,
+      deliveryCharges: o.deliveryCharges,
+      discount: o.discount,
+      grandTotal: o.grandTotal,
+      status: o.status,
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentStatus,
+      deliverySlot: o.deliverySlot,
+      deliveryAddress: o.deliveryAddress,
+      giftMessage: o.giftMessage,
+      deliveryInstructions: o.deliveryInstructions,
+      deliveryOtp: o.deliveryOtp,
+      expectedDelivery: o.expectedDelivery?.toISOString() || null,
+      deliveredAt: o.deliveredAt?.toISOString() || null,
+      cancellationReason: o.cancellationReason,
+      refundStatus: o.refundStatus,
+      refundAmount: o.refundAmount,
+      subscriptionType: o.subscriptionType,
+      invoiceNumber: o.invoiceNumber,
+      timeline: o.timeline,
+      couponCode: o.couponCode,
+      createdAt: o.createdAt.toISOString(),
+      items: o.items.map(item => ({
+        productId: item.productId,
+        sku: item.sku,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        gst: item.gst
+      })),
+      deliveryPartner: o.deliveryPartner ? {
+        id: o.deliveryPartner.id,
+        name: o.deliveryPartner.name,
+        phone: o.deliveryPartner.phone
+      } : null
+    }));
 
     return NextResponse.json(
-      { success: true, orders: paginated, total, page, limit },
-      {
-        headers: {
-          'Cache-Control': 'no-store, no-cache, must-revalidate'
-        }
-      }
+      { success: true, orders: mapped, total, page, limit },
+      { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
     );
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';
@@ -84,14 +139,18 @@ export async function POST(request: Request) {
     }
 
     // ── Duplicate Order Prevention ───────────────────────────────────────
-    // Prevent placing the same order twice within 60 seconds
     if (body.userId && body.userId !== 'user-guest') {
-      const recentOrders = db.orders.getByUserId(body.userId);
-      const sixtySecondsAgo = Date.now() - 60_000;
-      const sameItemIds = body.items.map((i: { productId: string }) => i.productId).sort().join(',');
+      const sixtySecondsAgo = new Date(Date.now() - 60_000);
+      const recentOrders = await prisma.order.findMany({
+        where: {
+          userId: body.userId,
+          createdAt: { gte: sixtySecondsAgo }
+        },
+        include: { items: true }
+      });
 
+      const sameItemIds = body.items.map((i: { productId: string }) => i.productId).sort().join(',');
       const duplicate = recentOrders.find(o => {
-        if (new Date(o.createdAt).getTime() < sixtySecondsAgo) return false;
         const existingItemIds = o.items.map(i => i.productId).sort().join(',');
         return existingItemIds === sameItemIds;
       });
@@ -103,7 +162,7 @@ export async function POST(request: Request) {
     }
 
     const orderId = `ORD-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    
+
     // Create timeline
     const timeline = [
       { status: 'Pending', time: new Date().toISOString(), done: true },
@@ -117,65 +176,138 @@ export async function POST(request: Request) {
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const invoiceNumber = `INV-${new Date().getFullYear()}-${orderId.split('-').pop()}`;
 
-    const newOrder = await db.orders.create({
-      ...body,
-      id: orderId,
-      status: 'Pending',
-      paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Paid',
-      createdAt: new Date().toISOString(),
-      timeline,
-      deliveryOtp,
-      invoiceNumber
+    // Resolve product details for order items
+    const productIds = body.items.map((i: any) => i.productId);
+    const products = await prisma.product.findMany({
+      where: { id: { in: productIds } }
+    });
+    const productMap = new Map(products.map(p => [p.id, p]));
+
+    // Create order with items in a transaction
+    const newOrder = await prisma.order.create({
+      data: {
+        id: orderId,
+        userId: body.userId || 'user-guest',
+        subtotal: Number(body.subtotal) || 0,
+        gstTotal: Number(body.gstTotal) || 0,
+        deliveryCharges: Number(body.deliveryCharges) || 0,
+        discount: Number(body.discount) || 0,
+        grandTotal: Number(body.grandTotal),
+        status: 'Pending',
+        paymentMethod: body.paymentMethod,
+        paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Paid',
+        deliverySlot: body.deliverySlot || null,
+        deliveryAddress: body.deliveryAddress,
+        giftMessage: body.giftMessage || null,
+        deliveryInstructions: body.deliveryInstructions || null,
+        deliveryOtp,
+        subscriptionType: body.subscriptionType || 'One Time Order',
+        invoiceNumber,
+        timeline,
+        couponCode: body.couponCode || null,
+        items: {
+          create: body.items.map((item: any) => {
+            const prod = productMap.get(item.productId);
+            return {
+              productId: item.productId,
+              sku: prod?.sku || item.sku || 'UNKNOWN',
+              name: prod?.name || item.name || 'Unknown Product',
+              price: Number(item.price) || Number(prod?.price) || 0,
+              quantity: Number(item.quantity) || 1,
+              gst: Number(item.gst) || Number(prod?.gst) || 0
+            };
+          })
+        }
+      },
+      include: {
+        items: true,
+        user: true
+      }
     });
 
     // Update Product Stock Levels
     for (const item of body.items) {
-      const prod = db.products.getById(item.productId);
+      const prod = productMap.get(item.productId);
       if (prod) {
-        const nextStock = Math.max(0, prod.stock - item.quantity);
+        const nextStock = Math.max(0, prod.stock - (Number(item.quantity) || 1));
         const nextStatus = nextStock === 0 ? 'Out of Stock' : nextStock <= 10 ? 'Low Stock' : 'Available';
-        db.products.update(item.productId, { stock: nextStock, status: nextStatus });
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: nextStock, status: nextStatus }
+        });
       }
     }
 
     // Log activity
     if (body.userId && body.userId !== 'user-guest') {
-      logActivity(body.userId, 'order_placed', { orderId, grandTotal: body.grandTotal });
-      logActivity(body.userId, 'payment', { orderId, method: body.paymentMethod });
+      await prisma.activityLog.createMany({
+        data: [
+          { userId: body.userId, type: 'order_placed', meta: { orderId, grandTotal: body.grandTotal } },
+          { userId: body.userId, type: 'payment', meta: { orderId, method: body.paymentMethod } }
+        ]
+      });
     }
 
     // Admin notification for new order
     try {
-      const adminUsers = db.users.getAll().filter(u => u.role === 'admin');
-      for (const admin of adminUsers) {
-        db.notifications.create({
-          id: `NOT-ADM-${Date.now()}-${Math.floor(Math.random() * 999)}`,
-          userId: admin.id,
-          title: 'New Order Received',
-          message: `Order ${orderId} placed for Rs. ${body.grandTotal?.toFixed(2) || '0.00'} via ${body.paymentMethod}.`,
-          type: 'Order Updates',
-          isRead: false,
-          createdAt: new Date().toISOString()
+      const adminUsers = await prisma.user.findMany({ where: { role: 'admin' } });
+      if (adminUsers.length > 0) {
+        await prisma.notification.createMany({
+          data: adminUsers.map(admin => ({
+            userId: admin.id,
+            title: 'New Order Received',
+            message: `Order ${orderId} placed for Rs. ${body.grandTotal?.toFixed(2) || '0.00'} via ${body.paymentMethod}.`,
+            type: 'Order Updates',
+            isRead: false
+          }))
         });
       }
     } catch (adminNotifErr) {
       console.error('[Admin notification failed]', adminNotifErr);
     }
 
+    // Build response object
+    const orderResponse = {
+      id: newOrder.id,
+      userId: newOrder.userId,
+      subtotal: newOrder.subtotal,
+      gstTotal: newOrder.gstTotal,
+      deliveryCharges: newOrder.deliveryCharges,
+      discount: newOrder.discount,
+      grandTotal: newOrder.grandTotal,
+      status: newOrder.status,
+      paymentMethod: newOrder.paymentMethod,
+      paymentStatus: newOrder.paymentStatus,
+      deliverySlot: newOrder.deliverySlot,
+      deliveryAddress: newOrder.deliveryAddress,
+      giftMessage: newOrder.giftMessage,
+      deliveryInstructions: newOrder.deliveryInstructions,
+      deliveryOtp: newOrder.deliveryOtp,
+      subscriptionType: newOrder.subscriptionType,
+      invoiceNumber: newOrder.invoiceNumber,
+      timeline: newOrder.timeline,
+      couponCode: newOrder.couponCode,
+      createdAt: newOrder.createdAt.toISOString(),
+      items: newOrder.items.map(item => ({
+        productId: item.productId,
+        sku: item.sku,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        gst: item.gst
+      }))
+    };
+
     // Trigger Notification (fire and forget)
-    let userEmail: string | undefined;
-    if (body.userId) {
-      const user = db.users.getById(body.userId);
-      if (user) userEmail = user.email;
-    }
-    
-    sendOrderConfirmation(newOrder, userEmail).catch((e: unknown) => console.error('Notification failed:', e));
-    triggerWhatsApp('Order Placed', newOrder).catch((e: unknown) => console.error('WhatsApp placement failed:', e));
+    const userEmail = newOrder.user?.email || undefined;
+    sendOrderConfirmation(orderResponse as any, userEmail).catch((e: unknown) => console.error('Notification failed:', e));
+    triggerWhatsApp('Order Placed', orderResponse as any).catch((e: unknown) => console.error('WhatsApp placement failed:', e));
+
 
     // Broadcast SSE event
-    sseManager.broadcast('order_created', newOrder);
+    sseManager.broadcast('order_created', orderResponse);
 
-    return NextResponse.json({ success: true, order: newOrder });
+    return NextResponse.json({ success: true, order: orderResponse });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';
     return NextResponse.json({ success: false, message: msg }, { status: 400 });

@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
-import { logActivity } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 /**
  * POST /api/track/view
@@ -11,31 +10,20 @@ import { logActivity } from '@/db/db';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, productId, productName, meta } = body;
+    const { userId, productId, productName } = body;
 
     if (!userId || !productId) {
       return NextResponse.json({ success: false }, { status: 400 });
     }
 
-    // Always log to local JSON DB first
-    logActivity(userId, 'view_product', {
-      productId,
-      productName: productName || '',
-      meta: meta ? JSON.stringify(meta) : ''
-    });
-
-    if (!process.env.MONGODB_URI) {
-      return NextResponse.json({ success: true, localOnly: true });
-    }
-
-    await connectMongo();
-    await MongooseUserActivity.create({
-      userId,
-      type: 'view',
-      productId,
-      productName: productName || null,
-      meta: meta || {}
-    });
+    // Non-blocking write — don't await
+    prisma.activityLog.create({
+      data: {
+        userId,
+        type: 'view_product',
+        meta: { productId, productName: productName || '' }
+      }
+    }).catch(err => console.error('[track/view]', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

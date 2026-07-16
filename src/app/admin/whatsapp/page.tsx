@@ -56,6 +56,7 @@ export default function WhatsAppManagerPage() {
     }
   }, [showToast]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (user) {
       if (user.role !== 'admin') {
@@ -66,6 +67,7 @@ export default function WhatsAppManagerPage() {
       }
     }
   }, [user, router, fetchSettings, fetchLogs]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleToggleNotifications = async () => {
     const nextVal = !isEnabled;

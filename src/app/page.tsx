@@ -21,6 +21,7 @@ export default function Home() {
   const { t, products, addToCart, wishlist, toggleWishlist } = useApp();
   const [showSplash, setShowSplash] = useState(true);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     const hasSeenSplash = sessionStorage.getItem('reddy-splash-seen');
     if (hasSeenSplash) {
@@ -35,6 +36,7 @@ export default function Home() {
 
     return () => clearTimeout(timer);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Get featured products (A2 Milk, Paneer, Ghee, Curd)
   const featuredProducts = products.slice(0, 4);
@@ -308,7 +310,7 @@ export default function Home() {
                           {prod.rating}
                         </span>
                         <span className="text-[10px] font-semibold text-slate-400">
-                          ({prod.reviews.length || 3} reviews)
+                          ({(prod.reviews?.length ?? prod.reviewCount ?? 0)} reviews)
                         </span>
                       </div>
                     </div>

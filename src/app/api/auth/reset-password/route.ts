@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { hashPassword } from '@/db/auth-helper';
-import { getDb, saveDb } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -24,46 +23,31 @@ export async function POST(request: Request) {
       : trimmed.replace(/\D/g, '').slice(-10);
 
     const hashed = await hashPassword(newPassword);
-    let updated = false;
 
-    // 1. Try MongoDB
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const query = isEmail ? { email: normalizedIdentifier } : { phone: normalizedIdentifier };
-        const mUser = await MongooseUser.findOne(query);
+    // Query user in PostgreSQL
+    const dbUser = await prisma.user.findFirst({
+      where: isEmail
+        ? { email: { equals: normalizedIdentifier, mode: 'insensitive' } }
+        : { phone: { endsWith: normalizedIdentifier } }
+    });
 
-        if (mUser) {
-          mUser.passwordHash = hashed;
-          await mUser.save();
-          updated = true;
-        }
-      } catch (err) {
-        console.warn('[MongoDB Reset Password Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    // 2. Fallback to Local DB
-    if (!updated) {
-      const localData = getDb();
-      const userIndex = localData.users.findIndex(u => {
-        if (isEmail) return u.email.toLowerCase() === normalizedIdentifier;
-        return u.phone.replace(/\D/g, '').slice(-10) === normalizedIdentifier;
-      });
-
-      if (userIndex !== -1) {
-        // Local fallback (we'll just store plain text for fallback or hash if implemented in DB)
-        // For security, ideally we store the hash.
-        (localData.users[userIndex] as any).passwordHash = hashed;
-        localData.users[userIndex].password = newPassword; // keeping the original insecure field for local legacy support
-        saveDb(localData);
-        updated = true;
-      }
-    }
-
-    if (!updated) {
+    if (!dbUser) {
       return NextResponse.json({ success: false, message: 'User not found. Please register.' }, { status: 404 });
     }
+
+    // Update passwordHash
+    await prisma.user.update({
+      where: { id: dbUser.id },
+      data: { passwordHash: hashed }
+    });
+
+    // Log Activity
+    await prisma.activityLog.create({
+      data: {
+        userId: dbUser.id,
+        type: 'password_change'
+      }
+    });
 
     return NextResponse.json({ success: true, message: 'Password reset successfully. You can now login.' });
 

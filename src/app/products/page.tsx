@@ -514,7 +514,7 @@ function ProductsContent() {
                               {prod.rating}
                             </span>
                             <span className="text-[10px] font-semibold text-slate-400">
-                              ({prod.reviews.length || 3} reviews)
+                              ({prod.reviews?.length ?? prod.reviewCount ?? 0} reviews)
                             </span>
                           </div>
                         </div>

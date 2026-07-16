@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { connectMongo } from '@/db/mongodb';
 import { getDb } from '@/db/db';
 import mongoose from 'mongoose';
 
@@ -34,7 +34,6 @@ export async function POST(request: Request) {
 
     const query = message.toLowerCase().trim();
     let reply = '';
-    let foundData: any = null;
 
     // 1. Establish DB Connections
     let productsList: any[] = [];

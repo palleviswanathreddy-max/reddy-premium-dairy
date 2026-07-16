@@ -1111,6 +1111,19 @@
       "dob": "2004-05-04",
       "bloodGroup": "O+",
       "emergencyContact": "6300928511",
+      "cart": [],
+      "wishlist": []
+    },
+    {
+      "id": "user-guest",
+      "email": "guest@reddypremiumdairy.com",
+      "name": "Guest User",
+      "role": "customer",
+      "phone": "",
+      "avatar": null,
+      "addresses": [],
+      "rewardPoints": 0,
+      "walletBalance": 0,
       "cart": [
         {
           "product": {
@@ -1197,21 +1210,70 @@
             ]
           },
           "quantity": 1
+        },
+        {
+          "product": {
+            "id": "prod-milk-powder",
+            "sku": "REDDY-MLKPOW-500",
+            "name": "REDDY PREMIUM Milk Powder – Spray Dried (500g)",
+            "category": "Milk Powder",
+            "brand": "REDDY PREMIUM DAIRY",
+            "description": "High-quality spray-dried whole milk powder. Retains natural dairy flavor and full nutrition. Dissolves easily to prepare milk, tea, coffee, and traditional sweets.",
+            "ingredients": "Pasteurized Cow and Buffalo Milk Solids",
+            "storage": "Store in cool dry place. Keep in airtight container after opening.",
+            "nutrition": {
+              "calories": "496 kcal",
+              "fat": "26.5g",
+              "protein": "26.0g",
+              "carbohydrates": "38.0g",
+              "calcium": "950mg"
+            },
+            "weight": "500g",
+            "volume": "500g",
+            "mrp": 220,
+            "price": 195,
+            "discount": 11,
+            "gst": 5,
+            "stock": 60,
+            "status": "Available",
+            "expiryDays": 180,
+            "deliveryTime": "Same Day (Within 3 Hours)",
+            "rating": 4.8,
+            "images": [
+              "/images/products/16_milk_powder.png"
+            ],
+            "tags": [
+              "Milk Powder",
+              "Whole Milk Powder",
+              "Baking"
+            ],
+            "reviews": [
+              {
+                "username": "Naveen S.",
+                "rating": 5,
+                "date": "2026-06-28",
+                "comment": "Dissolves easily without lumps. Makes thick tea.",
+                "photo": null
+              }
+            ],
+            "faq": [
+              {
+                "q": "Can I use this for baking?",
+                "a": "Yes, it is ideal for baking, kheer, sweets, and daily milk preparation."
+              }
+            ],
+            "frequentlyBoughtTogether": [
+              "prod-khova",
+              "prod-ghee"
+            ],
+            "relatedProducts": [
+              "prod-ghee",
+              "prod-khova"
+            ]
+          },
+          "quantity": 1
         }
       ],
-      "wishlist": []
-    },
-    {
-      "id": "user-guest",
-      "email": "guest@reddypremiumdairy.com",
-      "name": "Guest User",
-      "role": "customer",
-      "phone": "",
-      "avatar": null,
-      "addresses": [],
-      "rewardPoints": 0,
-      "walletBalance": 0,
-      "cart": [],
       "wishlist": []
     }
   ],
@@ -1888,5 +1950,31 @@
       "isRead": false,
       "createdAt": "2026-07-15T18:09:18.574Z"
     }
-  ]
+  ],
+  "deliveryPartners": [],
+  "activityLogs": [
+    {
+      "id": "ACT-1784206066335-8932",
+      "userId": "guest_1784206065936",
+      "type": "add_to_cart",
+      "meta": {
+        "productId": "prod-milk-powder",
+        "productName": "REDDY PREMIUM Milk Powder – Spray Dried (500g)",
+        "quantity": 1
+      },
+      "createdAt": "2026-07-16T12:47:46.335Z"
+    },
+    {
+      "id": "ACT-1784206049756-1993",
+      "userId": "guest_1784206046486",
+      "type": "add_to_cart",
+      "meta": {
+        "productId": "prod-fresh-milk",
+        "productName": "REDDY PREMIUM Fresh Milk – Pasteurised & Homogenised (500ml)",
+        "quantity": 1
+      },
+      "createdAt": "2026-07-16T12:47:29.756Z"
+    }
+  ],
+  "incomingStock": []
 }

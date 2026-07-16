@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,18 +12,22 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
     }
 
-    let user = db.users.getById(userId);
+    let user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    // Auto-create guest user if requested
     if (!user && userId === 'user-guest') {
-      user = db.users.create({
-        id: 'user-guest',
-        email: 'guest@reddypremiumdairy.com',
-        name: 'Guest User',
-        role: 'customer',
-        phone: '',
-        avatar: null,
-        addresses: [],
-        rewardPoints: 0,
-        walletBalance: 0,
+      user = await prisma.user.create({
+        data: {
+          id: 'user-guest',
+          email: 'guest@reddypremiumdairy.com',
+          name: 'Guest User',
+          role: 'customer',
+          phone: null,
+          walletBalance: 0,
+          rewardPoints: 0
+        }
       });
     }
 
@@ -31,8 +35,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    // Return custom fields wishlist stored on user object in database
-    return NextResponse.json({ success: true, wishlist: (user as any).wishlist || [] });
+    const dbWishlistItems = await prisma.wishlistItem.findMany({
+      where: { userId }
+    });
+
+    const wishlist = dbWishlistItems.map(item => item.productId);
+
+    return NextResponse.json({ success: true, wishlist });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -41,24 +50,28 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { userId, wishlist } = body;
+    const { userId, wishlist } = body; // Array of product IDs
 
     if (!userId) {
       return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
     }
 
-    let user = db.users.getById(userId);
+    let user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    // Auto-create guest user if requested
     if (!user && userId === 'user-guest') {
-      user = db.users.create({
-        id: 'user-guest',
-        email: 'guest@reddypremiumdairy.com',
-        name: 'Guest User',
-        role: 'customer',
-        phone: '',
-        avatar: null,
-        addresses: [],
-        rewardPoints: 0,
-        walletBalance: 0,
+      user = await prisma.user.create({
+        data: {
+          id: 'user-guest',
+          email: 'guest@reddypremiumdairy.com',
+          name: 'Guest User',
+          role: 'customer',
+          phone: null,
+          walletBalance: 0,
+          rewardPoints: 0
+        }
       });
     }
 
@@ -66,7 +79,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    db.users.update(userId, { wishlist } as any);
+    // Clean old wishlist items
+    await prisma.wishlistItem.deleteMany({
+      where: { userId }
+    });
+
+    // Save new wishlist items
+    if (wishlist && wishlist.length > 0) {
+      await prisma.wishlistItem.createMany({
+        data: wishlist.map((prodId: string) => ({
+          userId,
+          productId: prodId
+        }))
+      });
+    }
+
     return NextResponse.json({ success: true });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

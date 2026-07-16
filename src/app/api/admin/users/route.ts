@@ -1,53 +1,63 @@
 /**
  * User Management - Admin Only
- * Examples:
- * - GET: List users (admin)
- * - PUT: Update user (admin)
- * - DELETE: Remove user (admin)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, withRole } from '@/middleware/auth';
 import { logger } from '@/utils/logger';
-import { connectMongo } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { cache, CacheKeys } from '@/utils/cache';
 
 async function listUsers(request: NextRequest, { auth }: any) {
   try {
-    const connection = await connectMongo();
-    const db = connection.connection.db;
-
-    // Get query parameters
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
     const limit = parseInt(url.searchParams.get('limit') || '20');
     const skip = (page - 1) * limit;
 
-    const users = await db
-      .collection('users')
-      .find({}, { projection: { password: 0 } })
-      .skip(skip)
-      .limit(limit)
-      .toArray();
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        omit: { passwordHash: true },
+        include: {
+          addresses: { select: { id: true } },
+          orders: { select: { id: true } }
+        },
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count()
+    ]);
 
-    const total = await db.collection('users').countDocuments();
+    const data = users.map(u => ({
+      id: u.id,
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+      role: u.role,
+      walletBalance: u.walletBalance,
+      rewardPoints: u.rewardPoints,
+      emailVerified: u.emailVerified,
+      mobileVerified: u.mobileVerified,
+      lastLoginAt: u.lastLoginAt?.toISOString() || null,
+      createdAt: u.createdAt.toISOString(),
+      addressCount: u.addresses.length,
+      orderCount: u.orders.length
+    }));
 
-    logger.info('Users listed', { adminId: auth.userId, count: users.length });
+    logger.info('Users listed', { adminId: auth.userId, count: data.length });
 
     return NextResponse.json(
       {
         success: true,
-        data: users,
+        data,
         pagination: { page, limit, total, pages: Math.ceil(total / limit) }
       },
       { status: 200 }
     );
   } catch (error) {
     logger.error('List users error', error as Error);
-    return NextResponse.json(
-      { error: 'Failed to fetch users' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
   }
 }
 
@@ -57,33 +67,18 @@ async function updateUser(request: NextRequest, { auth }: any) {
     const { userId, updates } = body;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 });
     }
 
-    const connection = await connectMongo();
-    const db = connection.connection.db;
+    // Strip fields that shouldn't be set via admin update
+    delete updates.passwordHash;
+    delete updates.id;
 
-    const result = await db.collection('users').updateOne(
-      { id: userId },
-      {
-        $set: {
-          ...updates,
-          updatedAt: new Date()
-        }
-      }
-    );
+    await prisma.user.update({
+      where: { id: userId },
+      data: updates
+    });
 
-    if (result.matchedCount === 0) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Invalidate cache
     cache.delete(CacheKeys.USER(userId));
 
     logger.info('User updated by admin', {
@@ -92,16 +87,10 @@ async function updateUser(request: NextRequest, { auth }: any) {
       updates: Object.keys(updates)
     });
 
-    return NextResponse.json(
-      { success: true, message: 'User updated' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: 'User updated' }, { status: 200 });
   } catch (error) {
     logger.error('Update user error', error as Error);
-    return NextResponse.json(
-      { error: 'Failed to update user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 });
   }
 }
 
@@ -111,33 +100,15 @@ async function deleteUser(request: NextRequest, { auth }: any) {
     const userId = url.searchParams.get('id');
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    const connection = await connectMongo();
-    const db = connection.connection.db;
-
-    // Prevent admin from deleting themselves
     if (userId === auth.userId) {
-      return NextResponse.json(
-        { error: 'Cannot delete your own account' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 403 });
     }
 
-    const result = await db.collection('users').deleteOne({ id: userId });
+    await prisma.user.delete({ where: { id: userId } });
 
-    if (result.deletedCount === 0) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
-    }
-
-    // Invalidate cache
     cache.delete(CacheKeys.USER(userId));
 
     logger.info('User deleted by admin', {
@@ -145,16 +116,10 @@ async function deleteUser(request: NextRequest, { auth }: any) {
       deletedUserId: userId
     });
 
-    return NextResponse.json(
-      { success: true, message: 'User deleted' },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true, message: 'User deleted' }, { status: 200 });
   } catch (error) {
     logger.error('Delete user error', error as Error);
-    return NextResponse.json(
-      { error: 'Failed to delete user' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete user' }, { status: 500 });
   }
 }
 

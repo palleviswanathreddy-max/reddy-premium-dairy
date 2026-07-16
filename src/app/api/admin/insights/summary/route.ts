@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
+
+type CustomerStat = { views: number; cartAdds: number; purchases: number; spent: number; lastActive: string };
+type UserOrderStat = { count: number; spent: number; lastAt: string };
+type ViewsEntry = { name: string; views: number; purchases: number };
+type UserSelect = { id: string; name: string; email: string | null };
+type ActivityLogRow = Awaited<ReturnType<typeof prisma.activityLog.findFirst>>;
+type OrderWithItems = Awaited<ReturnType<typeof prisma.order.findFirst>> & { items: { productId: string; name: string; quantity: number }[] };
 
 /**
  * GET /api/admin/insights/summary
@@ -12,212 +18,146 @@ import { db } from '@/db/db';
  */
 export async function GET() {
   try {
-    // ── Local-DB fallback (no MongoDB) ──────────────────────────────────────
-    if (!process.env.MONGODB_URI) {
-      const orders = db.orders.getAll();
-      const users = db.users.getAll();
-      const logs = db.activityLogs.getAll();
+    // Fetch all required data in parallel
+    const [users, activityLogs, orders] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: 'customer' },
+        select: { id: true, name: true, email: true }
+      }),
+      prisma.activityLog.findMany({
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.order.findMany({
+        include: { items: true }
+      })
+    ]);
 
-      // Aggregate local logs per customer
-      const customerMap: Record<string, { views: number; cartAdds: number; purchases: number; spent: number; lastActive: string }> = {};
-      
-      // Seed with users
-      users.forEach(u => {
-        customerMap[u.id] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: '' };
-      });
+    // Aggregate per-customer
+    const customerMap: Record<string, CustomerStat> = {};
 
-      // Aggregate event logs
-      logs.forEach(log => {
-        if (!customerMap[log.userId]) {
-          customerMap[log.userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: log.createdAt };
-        }
-        const u = customerMap[log.userId];
-        if (log.type === 'view_product') u.views++;
-        else if (log.type === 'add_to_cart') u.cartAdds++;
-        else if (log.type === 'order_placed') {
-          u.purchases++;
-          u.spent += Number(log.meta?.amount || 0);
-        }
-        if (!u.lastActive || log.createdAt > u.lastActive) {
-          u.lastActive = log.createdAt;
-        }
-      });
+    users.forEach((u: UserSelect) => {
+      customerMap[u.id] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: '' };
+    });
 
-      // Cross-check with actual orders database to be absolutely accurate
-      orders.forEach(order => {
-        if (!customerMap[order.userId]) {
-          customerMap[order.userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: order.createdAt };
-        }
-        const u = customerMap[order.userId];
-        u.purchases = orders.filter(o => o.userId === order.userId).length;
-        u.spent = orders.filter(o => o.userId === order.userId && o.status !== 'Cancelled').reduce((sum, o) => sum + o.grandTotal, 0);
-        if (!u.lastActive || order.createdAt > u.lastActive) {
-          u.lastActive = order.createdAt;
-        }
-      });
+    activityLogs.forEach((log: NonNullable<ActivityLogRow>) => {
+      if (!customerMap[log.userId]) {
+        customerMap[log.userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: log.createdAt.toISOString() };
+      }
+      const u = customerMap[log.userId];
+      const logTime = log.createdAt.toISOString();
+      const meta = log.meta as Record<string, unknown>;
+      if (log.type === 'view_product') u.views++;
+      else if (log.type === 'add_to_cart') u.cartAdds++;
+      else if (log.type === 'order_placed') {
+        u.purchases++;
+        u.spent += Number(meta?.grandTotal || 0);
+      }
+      if (!u.lastActive || logTime > u.lastActive) {
+        u.lastActive = logTime;
+      }
+    });
 
-      const perCustomer = Object.entries(customerMap).map(([userId, data]) => {
-        const uObj = users.find(u => u.id === userId);
-        return {
-          userId,
-          name: uObj?.name || 'Guest User',
-          email: uObj?.email || '',
-          views: data.views,
-          cartAdds: data.cartAdds,
-          purchases: data.purchases,
-          spent: data.spent,
-          lastActive: data.lastActive || null
-        };
-      }).sort((a, b) => b.spent - a.spent);
+    // Cross-check with actual orders for accuracy
+    const userOrderMap: Record<string, UserOrderStat> = {};
+    orders.forEach((order: NonNullable<OrderWithItems>) => {
+      if (!userOrderMap[order.userId]) {
+        userOrderMap[order.userId] = { count: 0, spent: 0, lastAt: '' };
+      }
+      userOrderMap[order.userId].count++;
+      if (order.status !== 'Cancelled') {
+        userOrderMap[order.userId].spent += order.grandTotal;
+      }
+      const t = order.createdAt.toISOString();
+      if (!userOrderMap[order.userId].lastAt || t > userOrderMap[order.userId].lastAt) {
+        userOrderMap[order.userId].lastAt = t;
+      }
+    });
 
-      // Event Totals
-      const eventTotals = {
-        view: logs.filter(l => l.type === 'view_product').length,
-        cart_add: logs.filter(l => l.type === 'add_to_cart').length,
-        wishlist_add: logs.filter(l => l.type === 'wishlist_add').length,
-        purchase: orders.length,
-        login: logs.filter(l => l.type === 'login').length
+    Object.entries(userOrderMap).forEach(([userId, data]: [string, UserOrderStat]) => {
+      if (!customerMap[userId]) {
+        customerMap[userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: data.lastAt };
+      }
+      customerMap[userId].purchases = data.count;
+      customerMap[userId].spent = data.spent;
+      if (!customerMap[userId].lastActive || data.lastAt > customerMap[userId].lastActive) {
+        customerMap[userId].lastActive = data.lastAt;
+      }
+    });
+
+    const userLookup = new Map<string, UserSelect>(users.map((u: UserSelect) => [u.id, u]));
+    const perCustomer = Object.entries(customerMap).map(([userId, data]: [string, CustomerStat]) => {
+      const uObj = userLookup.get(userId);
+      return {
+        userId,
+        name: uObj?.name ?? 'Guest User',
+        email: uObj?.email ?? '',
+        views: data.views,
+        cartAdds: data.cartAdds,
+        purchases: data.purchases,
+        spent: data.spent,
+        lastActive: data.lastActive || null
       };
+    }).sort((a, b) => b.spent - a.spent);
 
-      // Unique viewers vs unique purchasers
-      const uniqueViewers = new Set(logs.filter(l => l.type === 'view_product').map(l => l.userId)).size || 1;
-      const uniquePurchasers = new Set(orders.map(o => o.userId)).size;
-      const conversionRate = parseFloat(((uniquePurchasers / uniqueViewers) * 100).toFixed(1));
-
-      // viewed not purchased ratio
-      const viewsPerProduct: Record<string, { name: string; views: number; purchases: number }> = {};
-      logs.forEach(log => {
-        if (log.type === 'view_product' && log.meta?.productId) {
-          const prodId = String(log.meta.productId);
-          if (!viewsPerProduct[prodId]) {
-            viewsPerProduct[prodId] = { name: String(log.meta.productName || 'Unknown'), views: 0, purchases: 0 };
-          }
-          viewsPerProduct[prodId].views++;
-        }
-      });
-      orders.forEach(o => {
-        o.items.forEach(item => {
-          if (!viewsPerProduct[item.productId]) {
-            viewsPerProduct[item.productId] = { name: item.name, views: 0, purchases: 0 };
-          }
-          viewsPerProduct[item.productId].purchases += item.quantity;
-        });
-      });
-
-      const topViewedNotPurchased = Object.entries(viewsPerProduct)
-        .map(([productId, data]) => {
-          const rate = data.views > 0 ? (data.purchases / data.views) * 100 : 0;
-          return {
-            _id: productId,
-            productName: data.name,
-            views: data.views,
-            purchases: data.purchases,
-            conversionRate: rate
-          };
-        })
-        .sort((a, b) => a.conversionRate - b.conversionRate)
-        .slice(0, 10);
-
-      return NextResponse.json({
-        success: true,
-        source: 'localdb',
-        perCustomer,
-        topViewedNotPurchased,
-        conversionRate,
-        uniqueViewers,
-        uniquePurchasers,
-        eventTotals
-      });
-    }
-
-    // ── MongoDB aggregations ─────────────────────────────────────────────────
-    await connectMongo();
-
-    const [perCustomerRaw, topViewedRaw, eventTotalsRaw] = await Promise.all([
-      // Per-customer rollup
-      MongooseUserActivity.aggregate([
-        {
-          $group: {
-            _id: '$userId',
-            views: { $sum: { $cond: [{ $eq: ['$type', 'view'] }, 1, 0] } },
-            cartAdds: { $sum: { $cond: [{ $eq: ['$type', 'cart_add'] }, 1, 0] } },
-            wishlistAdds: { $sum: { $cond: [{ $eq: ['$type', 'wishlist_add'] }, 1, 0] } },
-            purchases: { $sum: { $cond: [{ $eq: ['$type', 'purchase'] }, '$quantity', 0] } },
-            spent: { $sum: { $cond: [{ $eq: ['$type', 'purchase'] }, '$amount', 0] } },
-            lastActive: { $max: '$createdAt' }
-          }
-        },
-        { $sort: { spent: -1 } },
-        { $limit: 200 }
-      ]),
-
-      // Top viewed products — views vs purchases ratio
-      MongooseUserActivity.aggregate([
-        { $match: { type: { $in: ['view', 'purchase'] } } },
-        {
-          $group: {
-            _id: '$productId',
-            productName: { $first: '$productName' },
-            views: { $sum: { $cond: [{ $eq: ['$type', 'view'] }, 1, 0] } },
-            purchases: { $sum: { $cond: [{ $eq: ['$type', 'purchase'] }, '$quantity', 0] } }
-          }
-        },
-        {
-          $addFields: {
-            conversionRate: {
-              $cond: [
-                { $gt: ['$views', 0] },
-                { $multiply: [{ $divide: ['$purchases', '$views'] }, 100] },
-                0
-              ]
-            }
-          }
-        },
-        { $sort: { views: -1 } },
-        { $limit: 20 }
-      ]),
-
-      // Event totals
-      MongooseUserActivity.aggregate([
-        { $group: { _id: '$type', count: { $sum: 1 } } }
-      ])
-    ]);
-
-    // Unique viewers vs unique purchasers for site-wide conversion rate
-    const [uniqueViewers, uniquePurchasers] = await Promise.all([
-      MongooseUserActivity.distinct('userId', { type: 'view' }),
-      MongooseUserActivity.distinct('userId', { type: 'purchase' })
-    ]);
-    const conversionRate =
-      uniqueViewers.length > 0
-        ? parseFloat(((uniquePurchasers.length / uniqueViewers.length) * 100).toFixed(1))
-        : 0;
-
-    // Top viewed with zero or low purchases
-    const topViewedNotPurchased = topViewedRaw
-      .filter(p => p.views > 0)
-      .sort((a, b) => a.conversionRate - b.conversionRate)
-      .slice(0, 10);
-
-    // Event totals map
-    const eventTotals: Record<string, number> = {
-      view: 0, cart_add: 0, wishlist_add: 0, purchase: 0, login: 0
+    // Event Totals
+    const eventTotals = {
+      view: activityLogs.filter((l: NonNullable<ActivityLogRow>) => l.type === 'view_product').length,
+      cart_add: activityLogs.filter((l: NonNullable<ActivityLogRow>) => l.type === 'add_to_cart').length,
+      wishlist_add: activityLogs.filter((l: NonNullable<ActivityLogRow>) => l.type === 'wishlist_add').length,
+      purchase: orders.length,
+      login: activityLogs.filter((l: NonNullable<ActivityLogRow>) => l.type === 'login').length
     };
-    eventTotalsRaw.forEach((e: any) => { eventTotals[e._id] = e.count; });
+
+    // Conversion rate
+    const uniqueViewers = new Set(
+      activityLogs.filter((l: NonNullable<ActivityLogRow>) => l.type === 'view_product').map((l: NonNullable<ActivityLogRow>) => l.userId)
+    ).size || 1;
+    const uniquePurchasers = new Set(orders.map((o: NonNullable<OrderWithItems>) => o.userId)).size;
+    const conversionRate = parseFloat(((uniquePurchasers / uniqueViewers) * 100).toFixed(1));
+
+    // Top viewed but not purchased products
+    const viewsPerProduct: Record<string, ViewsEntry> = {};
+    activityLogs.forEach((log: NonNullable<ActivityLogRow>) => {
+      const meta = log.meta as Record<string, unknown>;
+      if (log.type === 'view_product' && meta?.productId) {
+        const prodId = String(meta.productId);
+        if (!viewsPerProduct[prodId]) {
+          viewsPerProduct[prodId] = { name: String(meta.productName || 'Unknown'), views: 0, purchases: 0 };
+        }
+        viewsPerProduct[prodId].views++;
+      }
+    });
+
+    orders.forEach((o: NonNullable<OrderWithItems>) => {
+      o.items.forEach((item: { productId: string; name: string; quantity: number }) => {
+        if (!viewsPerProduct[item.productId]) {
+          viewsPerProduct[item.productId] = { name: item.name, views: 0, purchases: 0 };
+        }
+        viewsPerProduct[item.productId].purchases++;
+      });
+    });
+
+    const topViewedNotPurchased = Object.entries(viewsPerProduct)
+      .filter(([, d]) => d.views > 0)
+      .map(([productId, data]) => ({
+        productId,
+        name: data.name,
+        views: data.views,
+        purchases: data.purchases,
+        ratio: data.purchases > 0 ? (data.views / data.purchases).toFixed(1) : '∞'
+      }))
+      .sort((a, b) => b.views - a.views)
+      .slice(0, 10);
 
     return NextResponse.json({
       success: true,
-      source: 'mongodb',
-      perCustomer: perCustomerRaw.map(c => ({ userId: c._id, ...c, _id: undefined })),
+      perCustomer,
       topViewedNotPurchased,
-      topPurchasedProducts: topViewedRaw.sort((a, b) => b.purchases - a.purchases).slice(0, 10),
       conversionRate,
-      uniqueViewers: uniqueViewers.length,
-      uniquePurchasers: uniquePurchasers.length,
       eventTotals
     });
-  } catch (err: any) {
-    console.error('[admin/insights/summary]', err);
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Server error';
+    return NextResponse.json({ success: false, message: msg }, { status: 500 });
   }
 }

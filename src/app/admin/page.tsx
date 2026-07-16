@@ -17,6 +17,7 @@ import { Product, Order } from '@/db/db';
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, products, refreshProducts, updateOrderStatus, showToast } = useApp();
+  const redirecting = React.useRef(false);
 
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -377,8 +378,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     /* eslint-disable react-hooks/set-state-in-effect */
     if (!user || user.role !== 'admin') {
-      router.push('/');
-      showToast("Access Denied: Admin role required", "error");
+      if (!redirecting.current) {
+        redirecting.current = true;
+        router.push('/');
+        showToast("Access Denied: Admin role required", "error");
+      }
     } else {
       fetchAdminStats();
       fetchAdminOrders();
@@ -387,12 +391,30 @@ export default function AdminDashboard() {
       fetchAdminReviews();
       fetchAdminTickets();
 
+      // Establish EventSource for instant real-time order/stats updates
+      let eventSource: EventSource | null = null;
+      try {
+        eventSource = new EventSource('/api/events?userId=admin');
+        const handleLiveUpdate = () => {
+          fetchAdminOrders();
+          fetchAdminStats();
+        };
+        eventSource.addEventListener('order_created', handleLiveUpdate);
+        eventSource.addEventListener('order_updated', handleLiveUpdate);
+        eventSource.onmessage = handleLiveUpdate;
+      } catch (err) {
+        console.error('Failed to establish EventSource connection in Admin panel:', err);
+      }
+
       const interval = setInterval(() => {
         fetchAdminStats();
         fetchAdminOrders();
-      }, 4000);
+      }, 6000);
 
-      return () => clearInterval(interval);
+      return () => {
+        if (eventSource) eventSource.close();
+        clearInterval(interval);
+      };
     }
     /* eslint-enable react-hooks/set-state-in-effect */
      

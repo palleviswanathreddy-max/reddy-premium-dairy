@@ -25,7 +25,7 @@ export async function GET(request: Request) {
       const interval = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(': keep-alive\n\n'));
-        } catch (e) {
+        } catch {
           // Stream might be closed
           clearInterval(interval);
           sseManager.off('message', listener);
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
         sseManager.off('message', listener);
         try {
           controller.close();
-        } catch (e) {
+        } catch {
           // Silently handle double-close
         }
       });

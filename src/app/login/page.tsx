@@ -900,23 +900,6 @@ export default function Login() {
                     </button>
                   )}
 
-                  <div className="relative py-2">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-white/10"></div>
-                    </div>
-                    <div className="relative flex justify-center text-[10px]">
-                      <span className="bg-[#0f172a] px-2 text-slate-500 uppercase tracking-widest font-bold">Or</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => showToast('Google OAuth requires API keys. Please configure next-auth.', 'info')}
-                    className="w-full py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-xl shadow-md flex items-center justify-center gap-3 transition-all duration-200"
-                  >
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-4 w-4" />
-                    <span>Continue with Google</span>
-                  </button>
 
                   <div className="text-center pt-2">
                     <p className="text-[10px] text-slate-500">
@@ -1119,24 +1102,6 @@ export default function Login() {
                     </button>
                   </form>
                 )}
-
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-white/10"></div>
-                  </div>
-                  <div className="relative flex justify-center text-[10px]">
-                    <span className="bg-[#0f172a] px-2 text-slate-500 uppercase tracking-widest font-bold">Or</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => showToast('Google OAuth requires API keys. Please configure next-auth.', 'info')}
-                  className="w-full py-3 bg-white hover:bg-slate-50 text-slate-900 font-bold rounded-xl shadow-md flex items-center justify-center gap-3 transition-all duration-200"
-                >
-                  <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" className="h-4 w-4" />
-                  <span>Continue with Google</span>
-                </button>
 
 
                 {/* Bottom link */}

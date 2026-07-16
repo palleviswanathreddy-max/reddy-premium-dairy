@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { verifyRegistrationToken, hashPassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb, saveDb } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -15,9 +14,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Password must be at least 6 characters long' }, { status: 400 });
     }
 
-    // ──────────────────────────────────────────────
-    // VERIFY REGISTRATION TOKEN (proves OTP was verified)
-    // ──────────────────────────────────────────────
+    // Verify registration token (proves OTP was verified)
     const tokenData = verifyRegistrationToken(registrationToken);
     if (!tokenData) {
       return NextResponse.json({
@@ -28,105 +25,76 @@ export async function POST(request: Request) {
 
     const { identifier, identifierType } = tokenData;
 
-    // ──────────────────────────────────────────────
-    // RACE CONDITION GUARD: Double-check not already registered
-    // ──────────────────────────────────────────────
-    let alreadyExists = false;
+    // Duplicate check
+    const existingUser = await prisma.user.findFirst({
+      where: identifierType === 'email'
+        ? { email: { equals: identifier, mode: 'insensitive' } }
+        : { phone: { endsWith: identifier } }
+    });
 
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const query = identifierType === 'email'
-          ? { email: identifier }
-          : { phone: identifier };
-        const existing = await MongooseUser.findOne(query);
-        if (existing) alreadyExists = true;
-      } catch (err) {
-        console.warn('[MongoDB Check Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    if (!alreadyExists) {
-      const localData = getDb();
-      const existing = localData.users.find(u => {
-        if (identifierType === 'email') {
-          return u.email.toLowerCase() === identifier;
-        } else {
-          return u.phone.replace(/\D/g, '').slice(-10) === identifier;
-        }
-      });
-      if (existing) alreadyExists = true;
-    }
-
-    if (alreadyExists) {
+    if (existingUser) {
       return NextResponse.json({
         success: false,
         message: 'This email or mobile number is already registered. Please log in instead.'
       }, { status: 409 });
     }
 
-    // ──────────────────────────────────────────────
-    // CREATE USER ACCOUNT
-    // ──────────────────────────────────────────────
+    // Create user account
     const hashedPassword = await hashPassword(password);
     const cleanName = name.trim();
 
-    let newUserPayload: any = null;
-
-    if (process.env.MONGODB_URI) {
-      await connectMongo();
-      const userData: any = {
+    const dbUser = await prisma.user.create({
+      data: {
         name: cleanName,
         email: identifierType === 'email' ? identifier : `${identifier}@reddy-mobile.com`,
-        phone: identifierType === 'phone' ? identifier : '',
+        phone: identifierType === 'phone' ? identifier : null,
         passwordHash: hashedPassword,
         role: 'customer',
         walletBalance: 0,
         rewardPoints: 100,
-        addresses: [],
-        verifiedEmail: identifierType === 'email',
-        verifiedPhone: identifierType === 'phone',
-        isVerified: true
-      };
-      const mUser = new MongooseUser(userData);
-      await mUser.save();
-      newUserPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-    } else {
-      const localData = getDb();
-      const lUser = {
-        id: `user-${Date.now()}`,
-        name: cleanName,
-        email: identifierType === 'email' ? identifier : `${identifier}@reddy-mobile.com`,
-        phone: identifierType === 'phone' ? identifier : '',
-        password: password,
-        passwordHash: hashedPassword,
-        role: 'customer' as const,
-        avatar: null,
-        addresses: [] as any[],
-        rewardPoints: 100,
-        walletBalance: 0,
-        isVerified: true
-      };
-      localData.users.push(lUser);
-      saveDb(localData);
-      newUserPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
-    }
+        emailVerified: identifierType === 'email',
+        mobileVerified: identifierType === 'phone',
+        lastLoginAt: new Date()
+      }
+    });
 
-    // ──────────────────────────────────────────────
-    // ISSUE JWT TOKENS & AUTO-LOGIN
-    // ──────────────────────────────────────────────
-    const accessToken = generateAccessToken(newUserPayload);
-    const refreshToken = generateRefreshToken(newUserPayload);
+    const userPayload = {
+      id: dbUser.id,
+      email: dbUser.email || '',
+      role: dbUser.role,
+      name: dbUser.name
+    };
+
+    // Issue JWT tokens & Auto-login
+    const accessToken = generateAccessToken(userPayload);
+    const refreshToken = generateRefreshToken(userPayload);
+
+    // Save Refresh Token in PostgreSQL database
+    await prisma.refreshToken.create({
+      data: {
+        userId: dbUser.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Log Activity
+    await prisma.activityLog.create({
+      data: {
+        userId: dbUser.id,
+        type: 'register'
+      }
+    });
 
     const response = NextResponse.json({
       success: true,
       message: 'Registration successful! Welcome to Reddy Premium Dairy.',
       user: {
-        id: newUserPayload.id,
-        email: newUserPayload.email,
-        role: newUserPayload.role,
-        name: newUserPayload.name,
-        phone: identifierType === 'phone' ? identifier : '',
+        id: dbUser.id,
+        email: dbUser.email || '',
+        role: dbUser.role,
+        name: dbUser.name,
+        phone: dbUser.phone || '',
         walletBalance: 0,
         rewardPoints: 100,
         addresses: []

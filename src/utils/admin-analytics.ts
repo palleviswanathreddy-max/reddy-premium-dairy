@@ -1,9 +1,9 @@
 /**
  * Advanced Admin Dashboard Features
- * Analytics, reporting, and system management
+ * Analytics, reporting, and system management — backed by PostgreSQL/Prisma
  */
 
-import { connectMongo } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 
 export interface DashboardMetrics {
@@ -41,31 +41,15 @@ export interface OrderAnalytics {
 export class AdminAnalytics {
   async getDashboardMetrics(): Promise<DashboardMetrics | null> {
     try {
-      const connection = await connectMongo();
-      const db = connection.connection.db;
-
-      if (!db) return null;
-
-      const [
-        totalUsers,
-        totalOrders,
-        totalProducts,
-        orders,
-        lowStockProducts,
-        activeTickets
-      ] = await Promise.all([
-        db.collection('users').countDocuments(),
-        db.collection('orders').countDocuments(),
-        db.collection('products').countDocuments(),
-        db.collection('orders')
-          .find({})
-          .project({ total: 1 })
-          .toArray(),
-        db.collection('products').countDocuments({ stock: { $lt: 10 } }),
-        db.collection('tickets').countDocuments({ status: { $ne: 'closed' } })
+      const [totalUsers, totalOrders, totalProducts, lowStockItems, revenueAgg] = await Promise.all([
+        prisma.user.count({ where: { role: 'customer' } }),
+        prisma.order.count(),
+        prisma.product.count(),
+        prisma.product.count({ where: { stock: { lt: 10 } } }),
+        prisma.order.aggregate({ _sum: { grandTotal: true } })
       ]);
 
-      const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
+      const totalRevenue = revenueAgg._sum.grandTotal || 0;
       const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
       return {
@@ -74,8 +58,8 @@ export class AdminAnalytics {
         totalRevenue,
         avgOrderValue,
         totalProducts,
-        lowStockItems: lowStockProducts,
-        activeTickets,
+        lowStockItems,
+        activeTickets: 0, // tickets table not yet migrated
         conversionRate: totalUsers > 0 ? (totalOrders / totalUsers) * 100 : 0
       };
     } catch (error) {
@@ -86,50 +70,31 @@ export class AdminAnalytics {
 
   async getUserAnalytics(daysBack = 30): Promise<UserAnalytics | null> {
     try {
-      const connection = await connectMongo();
-      const db = connection.connection.db;
-
-      if (!db) return null;
-
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
-      const [
-        totalUsers,
-        newUsers,
-        activeUsers,
-        usersByRole,
-        topLocations
-      ] = await Promise.all([
-        db.collection('users').countDocuments(),
-        db.collection('users').countDocuments({ createdAt: { $gte: dateThreshold } }),
-        db.collection('users').countDocuments({ lastLogin: { $gte: dateThreshold } }),
-        db.collection('users').aggregate([
-          { $group: { _id: '$role', count: { $sum: 1 } } }
-        ]).toArray(),
-        db.collection('users').aggregate([
-          { $group: { _id: '$address.city', count: { $sum: 1 } } },
-          { $sort: { count: -1 } },
-          { $limit: 10 }
-        ]).toArray()
+      const [totalUsers, newUsers, activeUsers] = await Promise.all([
+        prisma.user.count(),
+        prisma.user.count({ where: { createdAt: { gte: dateThreshold } } }),
+        prisma.user.count({ where: { lastLoginAt: { gte: dateThreshold } } })
       ]);
 
-      const roleMap = usersByRole.reduce((acc: Record<string, number>, item: any) => {
-        acc[item._id || 'unknown'] = item.count;
+      const usersByRoleRaw = await prisma.user.groupBy({
+        by: ['role'],
+        _count: { role: true }
+      });
+
+      const usersByRole = usersByRoleRaw.reduce((acc: Record<string, number>, item) => {
+        acc[item.role] = item._count.role;
         return acc;
       }, {});
-
-      const locations = topLocations.map((item: any) => ({
-        location: item._id,
-        count: item.count
-      }));
 
       return {
         totalUsers,
         newUsersThisMonth: newUsers,
         activeUsers,
-        usersByRole: roleMap,
-        topLocations: locations
+        usersByRole,
+        topLocations: [] // Would need address join — skipped for now
       };
     } catch (error) {
       logger.error('Failed to get user analytics', error as Error);
@@ -139,73 +104,58 @@ export class AdminAnalytics {
 
   async getOrderAnalytics(daysBack = 30): Promise<OrderAnalytics | null> {
     try {
-      const connection = await connectMongo();
-      const db = connection.connection.db;
-
-      if (!db) return null;
-
       const dateThreshold = new Date();
       dateThreshold.setDate(dateThreshold.getDate() - daysBack);
 
-      const [
-        totalOrders,
-        thisMonthOrders,
-        revenue,
-        orderStatus,
-        topProducts,
-        paymentMethods
-      ] = await Promise.all([
-        db.collection('orders').countDocuments(),
-        db.collection('orders').countDocuments({ createdAt: { $gte: dateThreshold } }),
-        db.collection('orders')
-          .aggregate([
-            { $group: { _id: null, total: { $sum: '$total' } } }
-          ])
-          .toArray(),
-        db.collection('orders')
-          .aggregate([
-            { $group: { _id: '$status', count: { $sum: 1 } } }
-          ])
-          .toArray(),
-        db.collection('orders')
-          .aggregate([
-            { $unwind: '$items' },
-            { $group: { _id: '$items.productId', count: { $sum: 1 } } },
-            { $sort: { count: -1 } },
-            { $limit: 5 }
-          ])
-          .toArray(),
-        db.collection('orders')
-          .aggregate([
-            { $group: { _id: '$paymentMethod', count: { $sum: 1 } } }
-          ])
-          .toArray()
+      const [totalOrders, thisMonthOrders, revenueAgg] = await Promise.all([
+        prisma.order.count(),
+        prisma.order.count({ where: { createdAt: { gte: dateThreshold } } }),
+        prisma.order.aggregate({ _sum: { grandTotal: true } })
       ]);
 
-      const totalRevenue = revenue[0]?.total || 0;
-      const statusMap = orderStatus.reduce((acc: Record<string, number>, item: any) => {
-        acc[item._id] = item.count;
+      const totalRevenue = revenueAgg._sum.grandTotal || 0;
+
+      const statusGroupRaw = await prisma.order.groupBy({
+        by: ['status'],
+        _count: { status: true }
+      });
+
+      const orderStatus = statusGroupRaw.reduce((acc: Record<string, number>, item) => {
+        acc[item.status] = item._count.status;
         return acc;
       }, {});
 
-      const paymentMap = paymentMethods.reduce((acc: Record<string, number>, item: any) => {
-        acc[item._id] = item.count;
+      const paymentGroupRaw = await prisma.order.groupBy({
+        by: ['paymentMethod'],
+        _count: { paymentMethod: true }
+      });
+
+      const paymentMethods = paymentGroupRaw.reduce((acc: Record<string, number>, item) => {
+        acc[item.paymentMethod] = item._count.paymentMethod;
         return acc;
       }, {});
 
-      const top = topProducts.map((item: any) => ({
-        productId: item._id,
-        count: item.count
+      // Top products by number of order items
+      const topProductsRaw = await prisma.orderItem.groupBy({
+        by: ['productId'],
+        _count: { productId: true },
+        orderBy: { _count: { productId: 'desc' } },
+        take: 5
+      });
+
+      const topProducts = topProductsRaw.map(item => ({
+        productId: item.productId,
+        count: item._count.productId
       }));
 
       return {
         totalOrders,
         ordersThisMonth: thisMonthOrders,
-        averageOrderValue: thisMonthOrders > 0 ? totalRevenue / thisMonthOrders : 0,
+        averageOrderValue: totalOrders > 0 ? totalRevenue / totalOrders : 0,
         totalRevenue,
-        orderStatus: statusMap,
-        topProducts: top,
-        paymentMethods: paymentMap
+        orderStatus,
+        topProducts,
+        paymentMethods
       };
     } catch (error) {
       logger.error('Failed to get order analytics', error as Error);
@@ -215,23 +165,23 @@ export class AdminAnalytics {
 
   async getSystemHealth(): Promise<Record<string, any> | null> {
     try {
-      const connection = await connectMongo();
-      const db = connection.connection.db;
+      const [users, products, orders, coupons, reviews] = await Promise.all([
+        prisma.user.count(),
+        prisma.product.count(),
+        prisma.order.count(),
+        prisma.coupon.count(),
+        prisma.review.count()
+      ]);
 
-      if (!db) return null;
-
-      const collections = ['users', 'products', 'orders', 'coupons', 'tickets'];
-      const health: Record<string, any> = {
+      return {
         timestamp: new Date().toISOString(),
-        database: 'connected'
+        database: 'connected',
+        users,
+        products,
+        orders,
+        coupons,
+        reviews
       };
-
-      for (const collection of collections) {
-        const col = db.collection(collection);
-        health[collection] = await col.countDocuments();
-      }
-
-      return health;
     } catch (error) {
       logger.error('Failed to get system health', error as Error);
       return null;

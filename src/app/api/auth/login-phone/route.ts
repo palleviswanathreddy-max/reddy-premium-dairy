@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb, saveDb } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -16,82 +15,77 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid phone number format' }, { status: 400 });
     }
 
-    let fullUser: any = null;
-    let userPayload: any = null;
-
-    // 1. Check MongoDB
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        let mUser = await MongooseUser.findOne({ phone: normalizedPhone });
-        if (!mUser) {
-          // Auto-register in MongoDB
-          mUser = await MongooseUser.create({
-            name: `User ${normalizedPhone}`,
-            email: `${normalizedPhone}@reddy.com`,
-            phone: normalizedPhone,
-            role: 'customer',
-            passwordHash: 'otp-registered-account',
-            avatar: null,
-            addresses: [],
-            rewardPoints: 0,
-            walletBalance: 0,
-            createdAt: new Date().toISOString()
-          });
-        }
-        fullUser = mUser.toObject();
-        userPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-      } catch (err) {
-        console.warn('[MongoDB Auth Error] Falling back to LocalDB:', err);
+    // Find or auto-register in PostgreSQL
+    let dbUser = await prisma.user.findFirst({
+      where: { phone: { endsWith: normalizedPhone } },
+      include: {
+        addresses: true
       }
-    }
+    });
 
-    // 2. Local JSON DB check and auto-register
-    if (!userPayload) {
-      const localData = getDb();
-      let lUser = localData.users.find(u => u.phone.replace(/\D/g, '').slice(-10) === normalizedPhone);
-      
-      if (!lUser) {
-        // Auto-register in LocalDB
-        const newId = `usr-${Date.now()}`;
-        lUser = {
-          id: newId,
-          email: `${normalizedPhone}@reddy.com`,
+    if (!dbUser) {
+      dbUser = await prisma.user.create({
+        data: {
           name: `User ${normalizedPhone}`,
-          role: 'customer',
+          email: `${normalizedPhone}@reddy.com`,
           phone: normalizedPhone,
-          avatar: null,
-          addresses: [],
+          role: 'customer',
+          passwordHash: 'otp-registered-account',
           rewardPoints: 0,
-          walletBalance: 0,
-          password: 'otp-registered-account'
-        };
-        localData.users.push(lUser);
-        saveDb(localData);
-      }
-      fullUser = lUser;
-      userPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
+          walletBalance: 0
+        },
+        include: {
+          addresses: true
+        }
+      });
+    } else {
+      // Update lastLoginAt
+      await prisma.user.update({
+        where: { id: dbUser.id },
+        data: { lastLoginAt: new Date() }
+      });
     }
 
-    // Generate real JWT tokens
+    const userPayload = {
+      id: dbUser.id,
+      email: dbUser.email || '',
+      role: dbUser.role,
+      name: dbUser.name
+    };
+
+    // Generate JWT tokens
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
-    // Prepare response without sensitive fields
-    const { password: _, passwordHash: __, ...safeUser } = fullUser;
+    // Save Refresh Token in PostgreSQL database
+    await prisma.refreshToken.create({
+      data: {
+        userId: dbUser.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Log Activity
+    await prisma.activityLog.create({
+      data: {
+        userId: dbUser.id,
+        type: 'login'
+      }
+    });
 
     const response = NextResponse.json({
       success: true,
       user: {
-        id: userPayload.id,
-        email: userPayload.email,
-        role: userPayload.role,
-        name: userPayload.name,
-        phone: safeUser.phone,
-        walletBalance: safeUser.walletBalance || 0,
-        rewardPoints: safeUser.rewardPoints || 0,
-        addresses: safeUser.addresses || [],
-        avatar: safeUser.avatar || null
+        id: dbUser.id,
+        email: dbUser.email || '',
+        role: dbUser.role,
+        name: dbUser.name,
+        phone: dbUser.phone || '',
+        walletBalance: dbUser.walletBalance || 0,
+        rewardPoints: dbUser.rewardPoints || 0,
+        addresses: dbUser.addresses || [],
+        avatar: dbUser.avatar || null
       }
     });
 

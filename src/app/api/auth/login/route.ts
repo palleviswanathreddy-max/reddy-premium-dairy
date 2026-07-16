@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { comparePassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb, db, logActivity } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -22,101 +21,79 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Please enter a valid email address or 10-digit mobile number' }, { status: 400 });
     }
 
-    let userPayload: any = null;
-    let fullUser: any = null;
-
-    // 1. Try MongoDB Atlas connection
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const query = isEmail
-          ? { email: normalizedIdentifier }
-          : { phone: normalizedIdentifier };
-        const mUser = await MongooseUser.findOne(query);
-
-        if (mUser) {
-          // Check if user was registered via old OTP-only flow (no real password)
-          if (mUser.passwordHash === 'otp-registered-account' || mUser.passwordHash === 'email-otp-account') {
-            return NextResponse.json({
-              success: false,
-              message: 'This account was created before password setup was required. Please register again with a password.'
-            }, { status: 401 });
-          }
-
-          const isMatch = await comparePassword(password, mUser.passwordHash);
-          if (isMatch) {
-            mUser.lastLoginAt = new Date().toISOString();
-            await mUser.save();
-            fullUser = mUser.toObject();
-            userPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-          } else {
-            return NextResponse.json({ success: false, message: 'Incorrect password.' }, { status: 401 });
-          }
-        }
-      } catch (err) {
-        console.warn('[MongoDB Auth Error] Falling back to LocalDB:', err);
+    // Query user from PostgreSQL via Prisma Client
+    const dbUser = await prisma.user.findFirst({
+      where: isEmail
+        ? { email: { equals: normalizedIdentifier, mode: 'insensitive' } }
+        : { phone: { endsWith: normalizedIdentifier } },
+      include: {
+        addresses: true
       }
-    }
+    });
 
-    // 2. Fallback to Local JSON DB if not validated in MongoDB
-    if (!userPayload) {
-      const localData = getDb();
-      const lUser = localData.users.find(u => {
-        if (isEmail) {
-          return u.email.toLowerCase() === normalizedIdentifier;
-        } else {
-          return u.phone.replace(/\D/g, '').slice(-10) === normalizedIdentifier;
-        }
-      });
-
-      if (lUser) {
-        // Check multiple password formats (hashed, plaintext for seeded users, legacy defaults)
-        const isMatch =
-          lUser.password === password ||
-          ((lUser as any).passwordHash && await comparePassword(password, (lUser as any).passwordHash)) ||
-          password === 'user123' ||
-          password === 'admin123';
-
-        if (isMatch) {
-          db.users.update(lUser.id, { lastLoginAt: new Date().toISOString() });
-          fullUser = db.users.getById(lUser.id) || lUser;
-          userPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
-        } else {
-          return NextResponse.json({ success: false, message: 'Incorrect password.' }, { status: 401 });
-        }
-      }
-    }
-
-    if (!userPayload) {
+    if (!dbUser) {
       return NextResponse.json({
         success: false,
         message: 'No account found with this email/mobile number. Please register first.'
       }, { status: 404 });
     }
 
-    // Generate real JWT tokens
+    // Check password matches (seeded or hashed)
+    const passwordHash = dbUser.passwordHash || '';
+    const isMatch = await comparePassword(password, passwordHash);
+
+    if (!isMatch) {
+      return NextResponse.json({ success: false, message: 'Incorrect password.' }, { status: 401 });
+    }
+
+    // Update lastLoginAt
+    await prisma.user.update({
+      where: { id: dbUser.id },
+      data: { lastLoginAt: new Date() }
+    });
+
+    const userPayload = {
+      id: dbUser.id,
+      email: dbUser.email || '',
+      role: dbUser.role,
+      name: dbUser.name
+    };
+
+    // Generate JWT tokens
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
-    // Prepare response without sensitive fields
-    const { password: _, passwordHash: __, ...safeUser } = fullUser;
+    // Save Refresh Token in PostgreSQL database
+    await prisma.refreshToken.create({
+      data: {
+        userId: dbUser.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Log Activity
+    await prisma.activityLog.create({
+      data: {
+        userId: dbUser.id,
+        type: 'login'
+      }
+    });
 
     const response = NextResponse.json({
       success: true,
       user: {
-        id: userPayload.id,
-        email: userPayload.email,
-        role: userPayload.role,
-        name: userPayload.name,
-        phone: safeUser.phone,
-        walletBalance: safeUser.walletBalance || 0,
-        rewardPoints: safeUser.rewardPoints || 0,
-        addresses: safeUser.addresses || [],
-        avatar: safeUser.avatar || null
+        id: dbUser.id,
+        email: dbUser.email || '',
+        role: dbUser.role,
+        name: dbUser.name,
+        phone: dbUser.phone || '',
+        walletBalance: dbUser.walletBalance || 0,
+        rewardPoints: dbUser.rewardPoints || 0,
+        addresses: dbUser.addresses || [],
+        avatar: dbUser.avatar || null
       }
     });
-
-    logActivity(userPayload.id, 'login');
 
     // Set Secure HTTP-Only Cookie headers
     response.cookies.set('accessToken', accessToken, {

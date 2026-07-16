@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseOTP, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { sendRealSMS } from '@/db/auth-helper';
 import { sendEmailOTP } from '@/db/email-helper';
-import { getDb, saveDb } from '@/db/db';
 import { cache } from '@/utils/cache';
 
 // ──────────────────────────────────────────────
@@ -89,35 +88,13 @@ export async function POST(request: Request) {
     // ──────────────────────────────────────────────
     // DUPLICATE CHECK: Is this email/mobile already registered?
     // ──────────────────────────────────────────────
-    let alreadyRegistered = false;
+    const existingUser = await prisma.user.findFirst({
+      where: identifierType === 'email'
+        ? { email: { equals: normalizedIdentifier, mode: 'insensitive' } }
+        : { phone: { endsWith: normalizedIdentifier } }
+    });
 
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const query =
-          identifierType === 'email'
-            ? { email: normalizedIdentifier }
-            : { phone: normalizedIdentifier };
-        const existing = await MongooseUser.findOne(query);
-        if (existing) alreadyRegistered = true;
-      } catch (err) {
-        console.warn('[MongoDB Duplicate Check Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    if (!alreadyRegistered) {
-      const localData = getDb();
-      const existing = localData.users.find(u => {
-        if (identifierType === 'email') {
-          return u.email.toLowerCase() === normalizedIdentifier;
-        } else {
-          return u.phone.replace(/\D/g, '').slice(-10) === normalizedIdentifier;
-        }
-      });
-      if (existing) alreadyRegistered = true;
-    }
-
-    if (alreadyRegistered) {
+    if (existingUser) {
       return NextResponse.json(
         {
           success: false,
@@ -156,45 +133,17 @@ export async function POST(request: Request) {
     }
 
     // ──────────────────────────────────────────────
-    // GENERATE & SAVE OTP
+    // GENERATE & SAVE OTP to memory cache
     // ──────────────────────────────────────────────
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
-
-    let dbSaved = false;
-
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        await MongooseOTP.deleteMany({ identifier: normalizedIdentifier });
-        const otpRecord = new MongooseOTP({
-          identifier: normalizedIdentifier,
-          identifierType,
-          purpose: 'registration',
-          otpCode,
-          expiresAt
-        });
-        await otpRecord.save();
-        dbSaved = true;
-      } catch (err) {
-        console.warn('[MongoDB OTP Save Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    if (!dbSaved) {
-      const localData = getDb();
-      (localData as any).tempOtps = ((localData as any).tempOtps || []).filter(
-        (o: any) => o.identifier !== normalizedIdentifier
-      );
-      (localData as any).tempOtps.push({
-        identifier: normalizedIdentifier,
-        identifierType,
-        purpose: 'registration',
-        otpCode,
-        expiresAt: expiresAt.toISOString()
-      });
-      saveDb(localData);
-    }
+    const ttlMs = 5 * 60 * 1000; // 5 minutes
+    
+    // Save to memory cache (replaces existing if any)
+    cache.set(`otp:${normalizedIdentifier}`, {
+      otpCode,
+      identifierType,
+      expiresAt: Date.now() + ttlMs
+    }, ttlMs);
 
     // ──────────────────────────────────────────────
     // DEMO MODE — development only, never production

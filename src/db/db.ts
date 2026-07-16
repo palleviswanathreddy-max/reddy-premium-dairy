@@ -37,13 +37,14 @@ export interface Product {
   rating: number;
   images: string[];
   tags: string[];
-  reviews: Array<{
+  reviews?: Array<{
     username: string;
     rating: number;
     date: string;
     comment: string;
     photo: string | null;
   }>;
+  reviewCount?: number;
   faq?: Array<{ q: string; a: string }>;
   frequentlyBoughtTogether: string[];
   relatedProducts: string[];

@@ -62,6 +62,8 @@ const UserSchema = new mongoose.Schema({
   emergencyContact: { type: String, default: null },
   biometricsEnabled: { type: Boolean, default: false },
   biometricCredentialId: { type: String, default: null },
+  cart: { type: Array, default: [] },
+  wishlist: { type: Array, default: [] },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -254,7 +254,7 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
                 ))}
               </div>
               <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200">{product.rating} ★</span>
-              <span className="text-xs text-slate-400">({product.reviews.length} verified buyers)</span>
+              <span className="text-xs text-slate-400">({product.reviews?.length ?? product.reviewCount ?? 0} verified buyers)</span>
             </div>
 
             {/* Description */}

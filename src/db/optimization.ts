@@ -55,6 +55,34 @@ export async function createDatabaseIndexes() {
     await db.collection('tickets').createIndex({ createdAt: -1 });
     await db.collection('tickets').createIndex({ priority: 1 });
 
+    // Reviews Collection Indexes
+    await db.collection('reviews').createIndex({ productId: 1 });
+    await db.collection('reviews').createIndex({ userId: 1 });
+    await db.collection('reviews').createIndex({ status: 1 });
+    await db.collection('reviews').createIndex({ createdAt: -1 });
+
+    // Wallet Transactions Indexes
+    await db.collection('walletTransactions').createIndex({ userId: 1 });
+    await db.collection('walletTransactions').createIndex({ createdAt: -1 });
+
+    // Notifications Indexes
+    await db.collection('notifications').createIndex({ userId: 1 });
+    await db.collection('notifications').createIndex({ createdAt: -1 });
+    await db.collection('notifications').createIndex({ isRead: 1 });
+
+    // Delivery Partners Indexes
+    await db.collection('deliveryPartners').createIndex({ id: 1 }, { unique: true });
+    await db.collection('deliveryPartners').createIndex({ isActive: 1 });
+
+    // Activity Logs Indexes
+    await db.collection('activityLogs').createIndex({ userId: 1 });
+    await db.collection('activityLogs').createIndex({ type: 1 });
+    await db.collection('activityLogs').createIndex({ createdAt: -1 });
+
+    // Incoming Stock Indexes
+    await db.collection('incomingStock').createIndex({ productId: 1 });
+    await db.collection('incomingStock').createIndex({ createdAt: -1 });
+
     logger.info('Database indexes created successfully');
   } catch (error) {
     logger.error('Failed to create database indexes', error as Error);

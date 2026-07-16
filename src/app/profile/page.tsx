@@ -43,13 +43,15 @@ function ProfileContent() {
   const [editGender, setEditGender] = useState('');
   const [editDob, setEditDob] = useState('');
   const [editBloodGroup, setEditBloodGroup] = useState('');
-  const [isBiometricsActive, setIsBiometricsActive] = useState(false);
+  const [isBiometricsActive, setIsBiometricsActive] = useState(() => !!user?.biometricsEnabled);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    if (user) {
+    if (user && isBiometricsActive !== !!user.biometricsEnabled) {
       setIsBiometricsActive(!!user.biometricsEnabled);
     }
-  }, [user]);
+  }, [user, isBiometricsActive]);
+  /* eslint-enable react-hooks/set-state-in-effect */
   const [editEmergencyContact, setEditEmergencyContact] = useState('');
   
   const [passCurrent, setPassCurrent] = useState('');
@@ -998,7 +1000,7 @@ function ProfileContent() {
                     <div className="space-y-1">
                       <p className="text-xs font-bold text-slate-700 dark:text-slate-200">Android Fingerprint Authorization</p>
                       <p className="text-[10px] text-slate-400 font-semibold leading-normal max-w-sm">
-                        Use your device's fingerprint scanner or face unlock for instant secure access without typing passwords.
+                        Use your device&apos;s fingerprint scanner or face unlock for instant secure access without typing passwords.
                       </p>
                     </div>
                     <button 

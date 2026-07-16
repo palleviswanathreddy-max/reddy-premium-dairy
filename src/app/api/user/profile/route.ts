@@ -6,19 +6,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/middleware/auth';
 import { logger } from '@/utils/logger';
-import { connectMongo } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 
 async function handler(request: NextRequest, { auth }: any) {
   try {
     if (request.method === 'GET') {
       // Get user profile
-      const connection = await connectMongo();
-      const db = connection.connection.db;
-
-      const user = await db.collection('users').findOne(
-        { id: auth.userId },
-        { projection: { password: 0 } }
-      );
+      const user = await prisma.user.findUnique({
+        where: { id: auth.userId },
+        include: {
+          addresses: true
+        }
+      });
 
       if (!user) {
         return NextResponse.json(
@@ -29,27 +28,23 @@ async function handler(request: NextRequest, { auth }: any) {
 
       logger.info('User profile retrieved', { userId: auth.userId });
 
-      return NextResponse.json({ success: true, data: user }, { status: 200 });
+      const { passwordHash: _, ...safeUser } = user;
+      return NextResponse.json({ success: true, data: safeUser }, { status: 200 });
     }
 
     if (request.method === 'PUT') {
       // Update user profile
       const body = await request.json();
-      const connection = await connectMongo();
-      const db = connection.connection.db;
 
-      const result = await db.collection('users').updateOne(
-        { id: auth.userId },
-        {
-          $set: {
-            name: body.name,
-            phone: body.phone,
-            updatedAt: new Date()
-          }
+      const updatedUser = await prisma.user.update({
+        where: { id: auth.userId },
+        data: {
+          name: body.name,
+          phone: body.phone
         }
-      );
+      });
 
-      if (result.matchedCount === 0) {
+      if (!updatedUser) {
         return NextResponse.json(
           { error: 'User not found' },
           { status: 404 }

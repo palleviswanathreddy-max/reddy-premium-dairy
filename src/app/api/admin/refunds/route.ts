@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db, logActivity } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,29 +9,45 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status'); // 'Pending' | 'Completed' | 'Failed' | 'all'
 
-    const orders = db.orders.getAll();
-    let refundOrders = orders.filter(o =>
-      o.status === 'Cancelled' || o.refundStatus
-    );
+    const where: any = {
+      OR: [
+        { status: 'Cancelled' },
+        { refundStatus: { not: null } }
+      ]
+    };
 
     if (statusFilter && statusFilter !== 'all') {
-      refundOrders = refundOrders.filter(o => o.refundStatus === statusFilter);
+      where.refundStatus = statusFilter;
     }
 
-    const result = refundOrders.map(o => {
-      const user = db.users.getById(o.userId);
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        user: true,
+        items: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    const result = orders.map(o => {
+      const deliveryAddr = o.deliveryAddress as any;
       return {
         orderId: o.id,
         userId: o.userId,
-        customerName: user?.name || o.deliveryAddress.name,
-        customerPhone: user?.phone || o.deliveryAddress.phone,
+        customerName: o.user?.name || deliveryAddr?.name || '',
+        customerPhone: o.user?.phone || deliveryAddr?.phone || '',
         grandTotal: o.grandTotal,
         paymentMethod: o.paymentMethod,
         cancellationReason: o.cancellationReason || '',
         refundStatus: o.refundStatus || 'Pending',
         refundAmount: o.refundAmount ?? o.grandTotal,
-        createdAt: o.createdAt,
-        items: o.items
+        createdAt: o.createdAt.toISOString(),
+        items: o.items.map(item => ({
+          productId: item.productId,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity
+        }))
       };
     });
 
@@ -74,12 +90,15 @@ export async function POST(request: Request) {
       );
     }
 
-    const order = db.orders.getById(orderId);
+    const order = await prisma.order.findUnique({
+      where: { id: orderId }
+    });
+
     if (!order) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
 
-    const updates: Record<string, unknown> = {};
+    const updates: any = {};
 
     if (action === 'approve') {
       updates.refundStatus = 'Completed';
@@ -91,32 +110,39 @@ export async function POST(request: Request) {
 
     if (adminNote) updates.cancellationReason = adminNote;
 
-    const updatedOrder = db.orders.update(orderId, updates as Parameters<typeof db.orders.update>[1]);
-    if (!updatedOrder) {
-      return NextResponse.json({ success: false, message: 'Order update failed' }, { status: 500 });
-    }
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: updates
+    });
 
     // Notify customer
     try {
       const notifTitle = action === 'approve' ? 'Refund Approved' : 'Refund Rejected';
+      const refundAmt = refundAmount ?? order.grandTotal;
       const notifMsg = action === 'approve'
-        ? `Your refund of Rs. ${(refundAmount ?? order.grandTotal).toFixed(2)} for order ${orderId} has been approved.`
+        ? `Your refund of Rs. ${Number(refundAmt).toFixed(2)} for order ${orderId} has been approved.`
         : `Your refund request for order ${orderId} has been rejected. ${adminNote || ''}`;
 
-      db.notifications.create({
-        id: `NOT-${Date.now()}`,
-        userId: order.userId,
-        title: notifTitle,
-        message: notifMsg,
-        type: 'Payment Status',
-        isRead: false,
-        createdAt: new Date().toISOString()
+      await prisma.notification.create({
+        data: {
+          userId: order.userId,
+          title: notifTitle,
+          message: notifMsg,
+          type: 'Payment Status',
+          isRead: false
+        }
       });
     } catch (notifErr) {
       console.error('[Refund] Notification failed:', notifErr);
     }
 
-    logActivity(order.userId, 'payment', { orderId, event: `refund_${action}` });
+    await prisma.activityLog.create({
+      data: {
+        userId: order.userId,
+        type: 'payment',
+        meta: { orderId, event: `refund_${action}` }
+      }
+    });
 
     return NextResponse.json({ success: true, order: updatedOrder });
   } catch (err: unknown) {

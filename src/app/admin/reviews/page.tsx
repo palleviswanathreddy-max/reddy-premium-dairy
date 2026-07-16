@@ -6,15 +6,33 @@ import { useApp } from '@/context/AppContext';
 import { Star, ShieldCheck, CheckCircle, XCircle, AlertTriangle, Trash2, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 
+
+interface Review {
+  id: string;
+  userName: string;
+  userAvatar?: string;
+  productId: string;
+  rating: number;
+  title: string;
+  description: string;
+  status: string;
+  isVerifiedPurchase: boolean;
+  helpfulCount: number;
+  likeCount: number;
+  images: string[];
+  videos: string[];
+  helpfulVotes: string[];
+  likes: string[];
+  reports: { reason: string; userId: string }[];
+  adminReply?: string;
+  createdAt: string;
+}
+
 export default function AdminReviewsPage() {
   const { showToast } = useApp();
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState<{ [id: string]: string }>({});
-
-  useEffect(() => {
-    fetchReviews();
-  }, []);
 
   const fetchReviews = async () => {
     try {
@@ -23,12 +41,18 @@ export default function AdminReviewsPage() {
       if (data.success) {
         setReviews(data.reviews);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (_e) {
+      console.error(_e);
     } finally {
       setLoading(false);
     }
   };
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchReviews();
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
@@ -44,7 +68,7 @@ export default function AdminReviewsPage() {
       } else {
         showToast(data.message, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast('Failed to update status', 'error');
     }
   };
@@ -64,7 +88,7 @@ export default function AdminReviewsPage() {
         setReplyText(prev => ({ ...prev, [id]: '' }));
         fetchReviews();
       }
-    } catch (e) {
+    } catch {
       showToast('Failed to add reply', 'error');
     }
   };
@@ -78,7 +102,7 @@ export default function AdminReviewsPage() {
         showToast('Review deleted', 'success');
         fetchReviews();
       }
-    } catch (e) {
+    } catch {
       showToast('Failed to delete review', 'error');
     }
   };
@@ -152,7 +176,7 @@ export default function AdminReviewsPage() {
                     <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-100 dark:border-red-900/30">
                       <p className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider mb-2 flex items-center gap-1.5"><AlertTriangle className="h-3.5 w-3.5"/> Reports ({rev.reports.length})</p>
                       <ul className="text-xs text-slate-700 dark:text-slate-300 space-y-1 list-disc pl-4">
-                        {rev.reports.map((r: any, idx: number) => <li key={idx}>{r.reason} (by {r.userId})</li>)}
+                        {rev.reports.map((r: { reason: string; userId: string }, idx: number) => <li key={idx}>{r.reason} (by {r.userId})</li>)}
                       </ul>
                     </div>
                   )}
