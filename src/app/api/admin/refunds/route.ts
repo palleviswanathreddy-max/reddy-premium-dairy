@@ -29,7 +29,8 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
-    const result = orders.map(o => {
+    type DbRefundOrder = typeof orders[number];
+    const result = orders.map((o: DbRefundOrder) => {
       const deliveryAddr = o.deliveryAddress as any;
       return {
         orderId: o.id,
@@ -42,7 +43,7 @@ export async function GET(request: Request) {
         refundStatus: o.refundStatus || 'Pending',
         refundAmount: o.refundAmount ?? o.grandTotal,
         createdAt: o.createdAt.toISOString(),
-        items: o.items.map(item => ({
+        items: o.items.map((item: any) => ({
           productId: item.productId,
           name: item.name,
           price: item.price,
@@ -52,7 +53,7 @@ export async function GET(request: Request) {
     });
 
     // Sort: Pending first, then newest
-    result.sort((a, b) => {
+    result.sort((a: any, b: any) => {
       if (a.refundStatus === 'Pending' && b.refundStatus !== 'Pending') return -1;
       if (b.refundStatus === 'Pending' && a.refundStatus !== 'Pending') return 1;
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
       success: true,
       refunds: result,
       total: result.length,
-      pending: result.filter(r => r.refundStatus === 'Pending').length
+      pending: result.filter((r: any) => r.refundStatus === 'Pending').length
     });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';

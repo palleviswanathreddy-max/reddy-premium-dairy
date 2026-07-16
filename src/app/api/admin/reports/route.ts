@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     let cancelledCount = 0;
     let refundTotal = 0;
 
-    orders.forEach(o => {
+    orders.forEach((o: any) => {
       if (!['Cancelled', 'Returned'].includes(o.status)) {
         totalRevenue += o.grandTotal;
       }
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
       return String(date.getFullYear());
     };
 
-    orders.forEach(o => {
+    orders.forEach((o: any) => {
       const d = new Date(o.createdAt);
       const key = getKey(d);
       if (!buckets[key]) buckets[key] = { revenue: 0, orders: 0, label: buildLabel(d) };
@@ -88,12 +88,12 @@ export async function GET(request: Request) {
 
     const trend = Object.entries(buckets)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([, v]) => v);
+      .map(([, v]: [string, any]) => v);
 
     // Best-selling products
     const salesCount: Record<string, { name: string; qty: number; revenue: number; category: string }> = {};
-    orders.forEach(o => {
-      o.items.forEach(item => {
+    orders.forEach((o: any) => {
+      o.items.forEach((item: any) => {
         if (!salesCount[item.productId]) {
           salesCount[item.productId] = {
             name: item.name,
@@ -108,13 +108,13 @@ export async function GET(request: Request) {
     });
 
     const topProducts = Object.entries(salesCount)
-      .map(([id, v]) => ({ id, ...v }))
-      .sort((a, b) => b.revenue - a.revenue)
+      .map(([id, v]: [string, any]) => ({ id, ...v }))
+      .sort((a: any, b: any) => b.revenue - a.revenue)
       .slice(0, 10);
 
     // Top customers
     const customerSpend: Record<string, { name: string; email: string; orders: number; spent: number }> = {};
-    orders.forEach(o => {
+    orders.forEach((o: any) => {
       if (!customerSpend[o.userId]) {
         customerSpend[o.userId] = {
           name: o.user?.name || 'Guest',
@@ -128,22 +128,22 @@ export async function GET(request: Request) {
     });
 
     const topCustomers = Object.entries(customerSpend)
-      .map(([id, v]) => ({ id, ...v }))
-      .sort((a, b) => b.spent - a.spent)
+      .map(([id, v]: [string, any]) => ({ id, ...v }))
+      .sort((a: any, b: any) => b.spent - a.spent)
       .slice(0, 10);
 
     // Sales by category
     const categorySales: Record<string, number> = {};
-    orders.forEach(o => {
-      o.items.forEach(item => {
+    orders.forEach((o: any) => {
+      o.items.forEach((item: any) => {
         const cat = item.product?.category?.name || 'Other';
         categorySales[cat] = (categorySales[cat] || 0) + item.price * item.quantity;
       });
     });
 
     const salesByCategory = Object.entries(categorySales)
-      .map(([category, value]) => ({ category, value }))
-      .sort((a, b) => b.value - a.value);
+      .map(([category, value]: [string, number]) => ({ category, value }))
+      .sort((a: any, b: any) => b.value - a.value);
 
     return NextResponse.json({
       success: true,

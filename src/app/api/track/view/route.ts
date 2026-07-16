@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         type: 'view_product',
         meta: { productId, productName: productName || '' }
       }
-    }).catch(err => console.error('[track/view]', err));
+    }).catch((err: any) => console.error('[track/view]', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

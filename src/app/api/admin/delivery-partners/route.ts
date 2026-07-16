@@ -17,7 +17,8 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    const enriched = partners.map(p => ({
+    type DbPartner = typeof partners[number];
+    const enriched = partners.map((p: DbPartner) => ({
       id: p.id,
       name: p.name,
       phone: p.phone,

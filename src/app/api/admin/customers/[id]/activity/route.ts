@@ -25,8 +25,8 @@ export async function GET(
     // Fallback for local-DB setups (no activity data stored)
     if (!process.env.MONGODB_URI) {
       const localOrders = db.orders.getByUserId(id);
-      const syntheticActivity = localOrders.flatMap(order =>
-        order.items.map(item => ({
+      const syntheticActivity = localOrders.flatMap((order: any) =>
+        order.items.map((item: any) => ({
           _id: `${order.id}-${item.productId}`,
           userId: id,
           type: 'purchase',

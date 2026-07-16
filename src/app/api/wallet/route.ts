@@ -21,7 +21,7 @@ export async function GET(request: Request) {
   return NextResponse.json({
     success: true,
     balance: user?.walletBalance || 0,
-    transactions: transactions.map(t => ({
+    transactions: transactions.map((t: any) => ({
       id: t.id,
       userId: t.userId,
       type: t.type,

@@ -46,7 +46,8 @@ export async function GET(request: Request) {
       }
     });
 
-    const cart = dbCartItems.map(item => {
+    type DbCartItemRow = typeof dbCartItems[number];
+    const cart = dbCartItems.map((item: DbCartItemRow) => {
       const { category, categoryId: _categoryId, ...safeProduct } = item.product;
       return {
         productId: item.productId,

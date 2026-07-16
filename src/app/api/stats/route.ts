@@ -37,7 +37,7 @@ export async function GET() {
     let totalCollected = 0, totalPending = 0;
     let cancelledCount = 0, refundTotal = 0;
 
-    orders.forEach(order => {
+    orders.forEach((order: any) => {
       const isCancelled = order.status === 'Cancelled';
       if (isCancelled) cancelledCount++;
       if (order.refundStatus === 'Completed') refundTotal += Number(order.refundAmount) || order.grandTotal;
@@ -60,14 +60,14 @@ export async function GET() {
 
     // Low stock alerts
     const lowStockProducts = products
-      .filter(p => p.stock <= 15)
-      .map(p => ({ id: p.id, name: p.name, stock: p.stock, sku: p.sku, status: p.status }));
+      .filter((p: any) => p.stock <= 15)
+      .map((p: any) => ({ id: p.id, name: p.name, stock: p.stock, sku: p.sku, status: p.status }));
 
     // Best Sellers
     const salesCount: Record<string, { name: string; qty: number; revenue: number }> = {};
-    orders.forEach(order => {
+    orders.forEach((order: any) => {
       if (order.status === 'Cancelled') return;
-      order.items.forEach(item => {
+      order.items.forEach((item: any) => {
         if (!salesCount[item.productId]) salesCount[item.productId] = { name: item.name, qty: 0, revenue: 0 };
         salesCount[item.productId].qty += item.quantity;
         salesCount[item.productId].revenue += item.price * item.quantity;
@@ -80,7 +80,7 @@ export async function GET() {
 
     // Top Customers
     const customerSpend: Record<string, { name: string; orders: number; spent: number }> = {};
-    orders.forEach(o => {
+    orders.forEach((o: any) => {
       if (o.status === 'Cancelled') return;
       const deliveryAddr = o as any;
       if (!customerSpend[o.userId]) {
@@ -100,9 +100,9 @@ export async function GET() {
 
     // Sales by Category
     const categorySales: Record<string, number> = {};
-    orders.forEach(order => {
+    orders.forEach((order: any) => {
       if (order.status === 'Cancelled') return;
-      order.items.forEach(item => {
+      order.items.forEach((item: any) => {
         const cat = item.product?.category?.name || 'Other';
         categorySales[cat] = (categorySales[cat] || 0) + item.price * item.quantity;
       });
@@ -118,9 +118,9 @@ export async function GET() {
       d.setMonth(d.getMonth() - i);
       months.push(d.toISOString().slice(0, 7));
     }
-    const revenueHistory = months.map(m => {
+    const revenueHistory = months.map((m: any) => {
       let sales = 0;
-      orders.forEach(o => {
+      orders.forEach((o: any) => {
         if (o.status !== 'Cancelled' && o.createdAt.toISOString().slice(0, 7) === m) sales += o.grandTotal;
       });
       const label = new Date(m + '-02').toLocaleString('en-US', { month: 'short', year: 'numeric' });
@@ -138,7 +138,7 @@ export async function GET() {
       d.setDate(d.getDate() - i);
       const dateStr = d.toISOString().slice(0, 10);
       let daySales = 0, dayOrders = 0;
-      orders.forEach(o => {
+      orders.forEach((o: any) => {
         if (o.createdAt.toISOString().slice(0, 10) === dateStr) {
           if (o.status !== 'Cancelled') daySales += o.grandTotal;
           dayOrders++;
@@ -150,7 +150,7 @@ export async function GET() {
 
     // Payment method distribution
     const paymentMethodCounts: Record<string, { count: number; amount: number }> = {};
-    orders.forEach(order => {
+    orders.forEach((order: any) => {
       const method = order.paymentMethod || 'Unknown';
       if (!paymentMethodCounts[method]) paymentMethodCounts[method] = { count: 0, amount: 0 };
       paymentMethodCounts[method].count++;
@@ -161,7 +161,7 @@ export async function GET() {
 
     const paymentStatusCounts: Record<string, number> = {};
     const deliveryStatusCounts: Record<string, number> = {};
-    orders.forEach(order => {
+    orders.forEach((order: any) => {
       const ps = order.paymentStatus || 'Unknown';
       const ds = order.status || 'Unknown';
       paymentStatusCounts[ps] = (paymentStatusCounts[ps] || 0) + 1;
@@ -171,13 +171,13 @@ export async function GET() {
     const deliveryStatusBreakdown = Object.entries(deliveryStatusCounts).map(([status, count]) => ({ status, count }));
 
     // Customer acquisition trend (last 6 months)
-    const customerAcquisition = months.map(m => {
-      const count = users.filter(u => u.createdAt.toISOString().slice(0, 7) === m).length;
+    const customerAcquisition = months.map((m: any) => {
+      const count = users.filter((u: any) => u.createdAt.toISOString().slice(0, 7) === m).length;
       const label = new Date(m + '-02').toLocaleString('en-US', { month: 'short', year: 'numeric' });
       return { label, count };
     });
 
-    const pendingRefunds = orders.filter(o =>
+    const pendingRefunds = orders.filter((o: any) =>
       o.status === 'Cancelled' && (!o.refundStatus || o.refundStatus === 'Pending')
     ).length;
 

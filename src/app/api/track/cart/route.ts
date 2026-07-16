@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         type: logType,
         meta: { productId, productName: productName || '', quantity }
       }
-    }).catch(err => console.error('[track/cart]', err));
+    }).catch((err: any) => console.error('[track/cart]', err));
 
     return NextResponse.json({ success: true });
   } catch (err) {

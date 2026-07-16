@@ -46,14 +46,15 @@ export async function GET(request: Request) {
       });
 
       headers = ['Order ID', 'Date', 'Customer', 'Phone', 'Products', 'Subtotal', 'GST', 'Delivery', 'Discount', 'Grand Total', 'Payment Method', 'Payment Status', 'Delivery Status', 'Address'];
-      rows = orders.map(o => {
+      type OrderRow = typeof orders[number];
+      rows = orders.map((o: OrderRow) => {
         const addr = o.deliveryAddress as any;
         return [
           o.id,
           new Date(o.createdAt).toLocaleDateString('en-IN'),
           addr?.name || '',
           addr?.phone || '',
-          o.items.map(i => `${i.name} x${i.quantity}`).join('; '),
+          o.items.map((i: any) => `${i.name} x${i.quantity}`).join('; '),
           o.subtotal,
           o.gstTotal,
           o.deliveryCharges,
@@ -78,8 +79,9 @@ export async function GET(request: Request) {
       });
 
       headers = ['ID', 'Name', 'Email', 'Phone', 'Total Orders', 'Total Spending (Rs.)', 'Wallet Balance', 'Reward Points', 'Addresses', 'Registered On'];
-      rows = users.map(u => {
-        const spent = u.orders.reduce((s, o) => s + o.grandTotal, 0);
+      type UserRow = typeof users[number];
+      rows = users.map((u: UserRow) => {
+        const spent = u.orders.reduce((s: number, o: any) => s + o.grandTotal, 0);
         return [
           u.id, u.name, u.email || '', u.phone || '',
           u.orders.length, spent.toFixed(2),
@@ -97,7 +99,8 @@ export async function GET(request: Request) {
       });
 
       headers = ['ID', 'SKU', 'Name', 'Category', 'MRP (Rs.)', 'Price (Rs.)', 'Discount %', 'GST %', 'Stock', 'Status', 'Rating'];
-      rows = products.map(p => [
+      type ProductRow = typeof products[number];
+      rows = products.map((p: ProductRow) => [
         p.id, p.sku, p.name, p.category?.name || 'Other',
         p.mrp, p.price, p.discount, p.gst,
         p.stock, p.status, p.rating
@@ -114,9 +117,10 @@ export async function GET(request: Request) {
       });
 
       headers = ['SKU', 'Name', 'Category', 'Current Stock', 'Total Incoming', 'Total Sold', 'Stock Value (Rs.)', 'Status'];
-      rows = products.map(p => {
-        const incoming = p.inventoryLogs.filter(l => l.quantity > 0).reduce((s, l) => s + l.quantity, 0);
-        const sold = p.orderItems.filter(i => !['Cancelled', 'Returned'].includes(i.order.status)).reduce((s, i) => s + i.quantity, 0);
+      type InvProductRow = typeof products[number];
+      rows = products.map((p: InvProductRow) => {
+        const incoming = p.inventoryLogs.filter((l: any) => l.quantity > 0).reduce((s: number, l: any) => s + l.quantity, 0);
+        const sold = p.orderItems.filter((i: any) => !['Cancelled', 'Returned'].includes(i.order.status)).reduce((s: number, i: any) => s + i.quantity, 0);
         return [p.sku, p.name, p.category?.name || 'Other', p.stock, incoming, sold, (p.stock * p.price).toFixed(2), p.status];
       });
       filename = `inventory_${new Date().toISOString().slice(0, 10)}`;
@@ -132,7 +136,8 @@ export async function GET(request: Request) {
       });
 
       headers = ['Date', 'Order ID', 'Items', 'Revenue (Rs.)', 'GST (Rs.)', 'Payment Method'];
-      rows = orders.map(o => [
+      type SalesOrderRow = typeof orders[number];
+      rows = orders.map((o: SalesOrderRow) => [
         new Date(o.createdAt).toLocaleDateString('en-IN'),
         o.id,
         o.items.length,
@@ -154,7 +159,8 @@ export async function GET(request: Request) {
       });
 
       headers = ['Order ID', 'Date', 'Customer', 'Grand Total (Rs.)', 'Refund Amount (Rs.)', 'Refund Status', 'Reason', 'Payment Method'];
-      rows = orders.map(o => {
+      type RefundOrderRow = typeof orders[number];
+      rows = orders.map((o: RefundOrderRow) => {
         const addr = o.deliveryAddress as any;
         return [
           o.id,

@@ -66,7 +66,8 @@ export async function GET(request: Request) {
       prisma.order.count({ where })
     ]);
 
-    const mapped = orders.map(o => ({
+    type DbOrdersListRow = typeof orders[number];
+    const mapped = orders.map((o: DbOrdersListRow) => ({
       id: o.id,
       userId: o.userId,
       userName: o.user.name,
@@ -95,7 +96,7 @@ export async function GET(request: Request) {
       timeline: o.timeline,
       couponCode: o.couponCode,
       createdAt: o.createdAt.toISOString(),
-      items: o.items.map(item => ({
+      items: o.items.map((item: any) => ({
         productId: item.productId,
         sku: item.sku,
         name: item.name,
@@ -150,8 +151,8 @@ export async function POST(request: Request) {
       });
 
       const sameItemIds = body.items.map((i: { productId: string }) => i.productId).sort().join(',');
-      const duplicate = recentOrders.find(o => {
-        const existingItemIds = o.items.map(i => i.productId).sort().join(',');
+      const duplicate = recentOrders.find((o: any) => {
+        const existingItemIds = o.items.map((i: any) => i.productId).sort().join(',');
         return existingItemIds === sameItemIds;
       });
 
@@ -181,7 +182,8 @@ export async function POST(request: Request) {
     const products = await prisma.product.findMany({
       where: { id: { in: productIds } }
     });
-    const productMap = new Map(products.map(p => [p.id, p]));
+    type DbOrderProduct = typeof products[number];
+    const productMap = new Map<string, any>(products.map((p: DbOrderProduct) => [p.id, p]));
 
     // Create order with items in a transaction
     const newOrder = await prisma.order.create({
@@ -253,7 +255,7 @@ export async function POST(request: Request) {
       const adminUsers = await prisma.user.findMany({ where: { role: 'admin' } });
       if (adminUsers.length > 0) {
         await prisma.notification.createMany({
-          data: adminUsers.map(admin => ({
+          data: adminUsers.map((admin: any) => ({
             userId: admin.id,
             title: 'New Order Received',
             message: `Order ${orderId} placed for Rs. ${body.grandTotal?.toFixed(2) || '0.00'} via ${body.paymentMethod}.`,
@@ -288,7 +290,7 @@ export async function POST(request: Request) {
       timeline: newOrder.timeline,
       couponCode: newOrder.couponCode,
       createdAt: newOrder.createdAt.toISOString(),
-      items: newOrder.items.map(item => ({
+      items: newOrder.items.map((item: any) => ({
         productId: item.productId,
         sku: item.sku,
         name: item.name,

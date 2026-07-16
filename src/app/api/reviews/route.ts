@@ -18,7 +18,8 @@ export async function GET(request: Request) {
     });
 
 
-    const reviews = dbReviews.map(r => ({
+    type DbReviewRow = typeof dbReviews[number];
+    const reviews = dbReviews.map((r: DbReviewRow) => ({
       id: r.id,
       productId: r.productId,
       userId: r.userId,

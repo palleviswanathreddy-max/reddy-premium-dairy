@@ -39,7 +39,7 @@ export async function GET(request: Request) {
       where: { userId }
     });
 
-    const wishlist = dbWishlistItems.map(item => item.productId);
+    const wishlist = dbWishlistItems.map((item: any) => item.productId);
 
     return NextResponse.json({ success: true, wishlist });
   } catch (err: any) {

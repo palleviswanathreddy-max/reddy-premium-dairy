@@ -13,9 +13,10 @@ export async function GET(request: Request) {
       orderBy: { createdAt: 'desc' }
     });
 
+    type DbNotificationRow = typeof notifications[number];
     return NextResponse.json({
       success: true,
-      notifications: notifications.map(n => ({
+      notifications: notifications.map((n: DbNotificationRow) => ({
         id: n.id,
         userId: n.userId,
         title: n.title,

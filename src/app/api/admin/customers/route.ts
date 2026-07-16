@@ -12,7 +12,8 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     });
 
-    const customers = users.map(u => ({
+    type DbCustomer = typeof users[number];
+    const customers = users.map((u: DbCustomer) => ({
       id: u.id,
       name: u.name,
       email: u.email || '',

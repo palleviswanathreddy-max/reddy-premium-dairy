@@ -18,14 +18,15 @@ export async function GET() {
       }
     });
 
-    const inventory = products.map(p => {
+    type DbInventoryProduct = typeof products[number];
+    const inventory = products.map((p: DbInventoryProduct) => {
       const incoming = p.inventoryLogs
-        .filter(l => l.quantity > 0)
-        .reduce((sum, l) => sum + l.quantity, 0);
+        .filter((l: typeof p.inventoryLogs[number]) => l.quantity > 0)
+        .reduce((sum: number, l: typeof p.inventoryLogs[number]) => sum + l.quantity, 0);
 
       const sold = p.orderItems
-        .filter(item => !['Cancelled', 'Returned'].includes(item.order.status))
-        .reduce((sum, item) => sum + item.quantity, 0);
+        .filter((item: typeof p.orderItems[number]) => !['Cancelled', 'Returned'].includes(item.order.status))
+        .reduce((sum: number, item: typeof p.orderItems[number]) => sum + item.quantity, 0);
 
       return {
         id: p.id,
@@ -42,10 +43,10 @@ export async function GET() {
       };
     });
 
-    const totalStockValue = inventory.reduce((sum, p) => sum + p.stockValue, 0);
-    const lowStockCount = inventory.filter(p => p.isLowStock).length;
-    const outOfStockCount = inventory.filter(p => p.isOutOfStock).length;
-    const totalUnits = inventory.reduce((sum, p) => sum + p.currentStock, 0);
+    const totalStockValue = inventory.reduce((sum: number, p: any) => sum + p.stockValue, 0);
+    const lowStockCount = inventory.filter((p: any) => p.isLowStock).length;
+    const outOfStockCount = inventory.filter((p: any) => p.isOutOfStock).length;
+    const totalUnits = inventory.reduce((sum: number, p: any) => sum + p.currentStock, 0);
 
     return NextResponse.json({
       success: true,

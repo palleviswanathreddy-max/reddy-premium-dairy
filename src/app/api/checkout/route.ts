@@ -70,7 +70,8 @@ async function handler(request: NextRequest, { auth }: any) {
     // Resolve product details for items
     const productIds = (sanitized.items || []).map((i: any) => i.productId);
     const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
-    const productMap = new Map(products.map(p => [p.id, p]));
+    type DbCheckoutProduct = typeof products[number];
+    const productMap = new Map<string, any>(products.map((p: DbCheckoutProduct) => [p.id, p]));
 
     // Create order in PostgreSQL
     const newOrder = await prisma.order.create({

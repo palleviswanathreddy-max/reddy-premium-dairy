@@ -2,7 +2,7 @@
  * Validation Tests
  */
 
-import { validateInput, sanitizeInput, authSchema, productSchema } from '@/middleware/validation';
+import { validateInput, sanitizeInput, authSchema, productSchema } from '../middleware/validation';
 
 describe('Validation Middleware', () => {
   describe('validateInput', () => {

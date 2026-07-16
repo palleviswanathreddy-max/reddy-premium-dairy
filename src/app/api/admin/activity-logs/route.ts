@@ -24,7 +24,8 @@ export async function GET(request: Request) {
       prisma.activityLog.count({ where })
     ]);
 
-    const activity = logs.map(l => ({
+    type ActivityLogWithUser = typeof logs[number];
+    const activity = logs.map((l: ActivityLogWithUser) => ({
       id: l.id,
       userId: l.userId,
       userName: l.user.name,

@@ -49,7 +49,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       timeline: dbOrder.timeline,
       couponCode: dbOrder.couponCode,
       createdAt: dbOrder.createdAt.toISOString(),
-      items: dbOrder.items.map(item => ({
+      items: dbOrder.items.map((item: any) => ({
         productId: item.productId,
         sku: item.sku,
         name: item.name,

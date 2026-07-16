@@ -29,7 +29,8 @@ async function listUsers(request: NextRequest, { auth }: any) {
       prisma.user.count()
     ]);
 
-    const data = users.map(u => ({
+    type UserListItem = typeof users[number];
+    const data = users.map((u: UserListItem) => ({
       id: u.id,
       name: u.name,
       email: u.email,

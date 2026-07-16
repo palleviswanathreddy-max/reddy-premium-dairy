@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     if (status) {
       // Update timeline based on new status
       const existingTimeline = (order.timeline as any[]) || [];
-      const updatedTimeline = existingTimeline.map(step => {
+      const updatedTimeline = existingTimeline.map((step: any) => {
         if (step.status === status) {
           return { ...step, done: true, time: new Date().toISOString() };
         }
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       timeline: updatedOrder.timeline,
       couponCode: updatedOrder.couponCode,
       createdAt: updatedOrder.createdAt.toISOString(),
-      items: updatedOrder.items.map(item => ({
+      items: updatedOrder.items.map((item: any) => ({
         productId: item.productId,
         sku: item.sku,
         name: item.name,
@@ -196,7 +196,7 @@ export async function POST(request: Request) {
           const adminUsers = await prisma.user.findMany({ where: { role: 'admin' } });
           if (adminUsers.length > 0) {
             await prisma.notification.createMany({
-              data: adminUsers.map(admin => ({
+              data: adminUsers.map((admin: any) => ({
                 userId: admin.id,
                 title: 'Order Cancelled',
                 message: `Order ${orderId} was cancelled${cancellationReason ? ': ' + cancellationReason : ''}.`,

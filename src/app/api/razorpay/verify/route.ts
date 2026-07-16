@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     // Resolve product details
     const productIds = (orderData.items || []).map((i: any) => i.productId);
     const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
-    const productMap = new Map(products.map(p => [p.id, p]));
+    type DbVerifyProduct = typeof products[number];
+    const productMap = new Map<string, any>(products.map((p: DbVerifyProduct) => [p.id, p]));
 
     const newOrder = await prisma.order.create({
       data: {
@@ -142,7 +143,7 @@ export async function POST(request: Request) {
       invoiceNumber: newOrder.invoiceNumber,
       timeline: newOrder.timeline,
       createdAt: newOrder.createdAt.toISOString(),
-      items: newOrder.items.map(item => ({
+      items: newOrder.items.map((item: any) => ({
         productId: item.productId,
         name: item.name,
         price: item.price,
