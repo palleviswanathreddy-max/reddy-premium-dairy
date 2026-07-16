@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { db } from '@/db/db';
-import { sendOrderConfirmation } from '@/lib/notifications';
+import { sendOrderConfirmation, triggerWhatsApp } from '@/lib/notifications';
 
 export async function POST(request: Request) {
   try {
@@ -75,10 +75,9 @@ export async function POST(request: Request) {
     }
     
     // Fire and forget (don't block response)
-    sendOrderConfirmation(newOrder, userEmail).catch((e: any) => console.error("Notification failed:", e));
-    const { triggerWhatsApp } = require('@/lib/notifications');
-    triggerWhatsApp('Order Placed', newOrder).catch((e: any) => console.error("WhatsApp placement failed:", e));
-    triggerWhatsApp('Payment Successful', newOrder).catch((e: any) => console.error("WhatsApp payment status failed:", e));
+    sendOrderConfirmation(newOrder, userEmail).catch((e: unknown) => console.error("Notification failed:", e));
+    triggerWhatsApp('Order Placed', newOrder).catch((e: unknown) => console.error("WhatsApp placement failed:", e));
+    triggerWhatsApp('Payment Successful', newOrder).catch((e: unknown) => console.error("WhatsApp payment status failed:", e));
 
     return NextResponse.json({ success: true, order: newOrder });
   } catch (err: any) {

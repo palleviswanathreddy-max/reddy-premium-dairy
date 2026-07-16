@@ -93,6 +93,8 @@ export interface User {
   fcmToken?: string | null;
   biometricsEnabled?: boolean;
   biometricCredentialId?: string;
+  lastLoginAt?: string | null;
+  createdAt?: string;
 }
 
 export interface Notification {
@@ -243,6 +245,46 @@ export interface AppSettings {
   whatsappNotificationsEnabled: boolean;
 }
 
+export interface DeliveryPartner {
+  id: string;
+  name: string;
+  phone: string;
+  email?: string;
+  vehicle: string;
+  vehicleNumber?: string;
+  isActive: boolean;
+  currentOrderId?: string | null;
+  completedDeliveries: number;
+  rating: number;
+  createdAt: string;
+}
+
+export type ActivityLogType =
+  | 'login' | 'logout' | 'register'
+  | 'view_product' | 'add_to_cart' | 'remove_from_cart'
+  | 'wishlist_add' | 'wishlist_remove'
+  | 'order_placed' | 'payment' | 'cancel_order' | 'download_invoice';
+
+export interface ActivityLog {
+  id: string;
+  userId: string;
+  type: ActivityLogType;
+  meta?: Record<string, string | number | boolean | null>;
+  createdAt: string;
+}
+
+export interface IncomingStock {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  batchNumber?: string;
+  expiryDate?: string;
+  notes?: string;
+  addedBy: string;
+  createdAt: string;
+}
+
 export interface DatabaseSchema {
   products: Product[];
   users: User[];
@@ -255,32 +297,41 @@ export interface DatabaseSchema {
   walletTransactions: WalletTransaction[];
   whatsappLogs: WhatsAppLog[];
   settings: AppSettings;
+  deliveryPartners: DeliveryPartner[];
+  activityLogs: ActivityLog[];
+  incomingStock: IncomingStock[];
 }
 
 // In-memory fallback if file system is slow or locked
 let inMemoryDB: DatabaseSchema | null = null;
 
+const EMPTY_DB: DatabaseSchema = {
+  products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [],
+  notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [],
+  settings: { whatsappNotificationsEnabled: true },
+  deliveryPartners: [], activityLogs: [], incomingStock: []
+};
+
 // Read Database
 export function getDb(): DatabaseSchema {
   try {
-    if (!fs.existsSync(DB_PATH)) {
-      // Return empty schema if file doesn't exist
-      return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [], settings: { whatsappNotificationsEnabled: true } };
-    }
+    if (!fs.existsSync(DB_PATH)) return { ...EMPTY_DB };
     const rawData = fs.readFileSync(DB_PATH, 'utf-8');
     inMemoryDB = JSON.parse(rawData);
-    // Backward compatibility for notifications
-    // Backward compatibility for reviews
+    // Backwards-compat migrations
     if (!inMemoryDB!.reviews) inMemoryDB!.reviews = [];
     if (!inMemoryDB!.walletTransactions) inMemoryDB!.walletTransactions = [];
     if (!inMemoryDB!.coupons) inMemoryDB!.coupons = [];
     if (!inMemoryDB!.whatsappLogs) inMemoryDB!.whatsappLogs = [];
     if (!inMemoryDB!.settings) inMemoryDB!.settings = { whatsappNotificationsEnabled: true };
+    if (!inMemoryDB!.deliveryPartners) inMemoryDB!.deliveryPartners = [];
+    if (!inMemoryDB!.activityLogs) inMemoryDB!.activityLogs = [];
+    if (!inMemoryDB!.incomingStock) inMemoryDB!.incomingStock = [];
     return inMemoryDB!;
   } catch (error) {
     console.error('Error reading database file, using memory fallback:', error);
     if (inMemoryDB) return inMemoryDB;
-    return { products: [], users: [], orders: [], coupons: [], blogs: [], tickets: [], notifications: [], reviews: [], walletTransactions: [], whatsappLogs: [], settings: { whatsappNotificationsEnabled: true } };
+    return { ...EMPTY_DB };
   }
 }
 
@@ -537,5 +588,92 @@ export const db = {
       saveDb(current);
       return current.settings;
     }
+  },
+  deliveryPartners: {
+    getAll: () => getDb().deliveryPartners || [],
+    getById: (id: string) => (getDb().deliveryPartners || []).find(p => p.id === id),
+    create: (partner: DeliveryPartner) => {
+      const current = getDb();
+      if (!current.deliveryPartners) current.deliveryPartners = [];
+      current.deliveryPartners.push(partner);
+      saveDb(current);
+      return partner;
+    },
+    update: (id: string, updates: Partial<DeliveryPartner>) => {
+      const current = getDb();
+      if (!current.deliveryPartners) current.deliveryPartners = [];
+      const index = current.deliveryPartners.findIndex(p => p.id === id);
+      if (index === -1) return null;
+      current.deliveryPartners[index] = { ...current.deliveryPartners[index], ...updates };
+      saveDb(current);
+      return current.deliveryPartners[index];
+    },
+    delete: (id: string) => {
+      const current = getDb();
+      if (!current.deliveryPartners) return false;
+      const before = current.deliveryPartners.length;
+      current.deliveryPartners = current.deliveryPartners.filter(p => p.id !== id);
+      saveDb(current);
+      return current.deliveryPartners.length < before;
+    }
+  },
+  activityLogs: {
+    getAll: () => getDb().activityLogs || [],
+    getByUserId: (userId: string, limit = 100) =>
+      (getDb().activityLogs || [])
+        .filter(l => l.userId === userId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, limit),
+    create: (log: ActivityLog) => {
+      const current = getDb();
+      if (!current.activityLogs) current.activityLogs = [];
+      current.activityLogs.unshift(log);
+      // Keep only last 10000 logs total to prevent unbounded growth
+      if (current.activityLogs.length > 10000) current.activityLogs = current.activityLogs.slice(0, 10000);
+      saveDb(current);
+      return log;
+    }
+  },
+  incomingStock: {
+    getAll: () => (getDb().incomingStock || []).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    getByProductId: (productId: string) => (getDb().incomingStock || []).filter(s => s.productId === productId),
+    create: (entry: IncomingStock) => {
+      const current = getDb();
+      if (!current.incomingStock) current.incomingStock = [];
+      current.incomingStock.unshift(entry);
+      saveDb(current);
+      return entry;
+    }
   }
 };
+
+/**
+ * Lightweight admin-only guard for API routes.
+ * Reads the x-user-role header set by the client from the logged-in user object.
+ */
+export function requireAdmin(request: Request): boolean {
+  const role = request.headers.get('x-user-role');
+  return role === 'admin';
+}
+
+/**
+ * Log an activity event (fire-and-forget safe).
+ */
+export function logActivity(
+  userId: string,
+  type: ActivityLogType,
+  meta?: Record<string, string | number | boolean | null>
+): void {
+  try {
+    const log: ActivityLog = {
+      id: `ACT-${Date.now()}-${Math.floor(Math.random() * 9999)}`,
+      userId,
+      type,
+      meta,
+      createdAt: new Date().toISOString()
+    };
+    db.activityLogs.create(log);
+  } catch (e) {
+    console.error('[logActivity] failed:', e);
+  }
+}

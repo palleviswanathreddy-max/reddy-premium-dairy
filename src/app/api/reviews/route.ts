@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user bought this product (Verified Purchase logic)
-    const userOrders = db.orders.getAll().filter(o => o.userId === userId && o.status === 'Delivered');
+    const userOrders = (await db.orders.getAll()).filter(o => o.userId === userId && o.status === 'Delivered');
     let isVerifiedPurchase = false;
     for (const order of userOrders) {
       if (order.items.some(item => item.productId === productId)) {

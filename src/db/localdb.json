@@ -1063,7 +1063,9 @@
       "addresses": [],
       "rewardPoints": 0,
       "walletBalance": 0,
-      "isVerified": true
+      "isVerified": true,
+      "cart": [],
+      "wishlist": []
     },
     {
       "id": "user-1783717014629",
@@ -1108,7 +1110,109 @@
       "gender": "Male",
       "dob": "2004-05-04",
       "bloodGroup": "O+",
-      "emergencyContact": "6300928511"
+      "emergencyContact": "6300928511",
+      "cart": [
+        {
+          "product": {
+            "id": "prod-fresh-milk",
+            "sku": "REDDY-FRSH-500",
+            "name": "REDDY PREMIUM Fresh Milk – Pasteurised & Homogenised (500ml)",
+            "category": "Fresh Milk",
+            "brand": "REDDY PREMIUM DAIRY",
+            "description": "Pure farm-fresh milk, pasteurised and homogenised for consistent creamy texture. 100% natural with no preservatives. Rich source of calcium and protein for daily health.",
+            "ingredients": "100% Pasteurised Homogenised Whole Milk",
+            "storage": "Refrigerate between 1°C–4°C. Consume within 3 days of opening.",
+            "nutrition": {
+              "calories": "61 kcal",
+              "fat": "3.3g",
+              "saturatedFat": "2.1g",
+              "protein": "3.2g",
+              "carbohydrates": "4.6g",
+              "calcium": "115mg"
+            },
+            "weight": "500 ml",
+            "volume": "500 ml",
+            "mrp": 35,
+            "price": 32,
+            "discount": 8,
+            "gst": 0,
+            "stock": 244,
+            "status": "Available",
+            "expiryDays": 3,
+            "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+            "rating": 4.8,
+            "images": [
+              "/images/products/1_fresh_milk.png"
+            ],
+            "tags": [
+              "Fresh Milk",
+              "Homogenised",
+              "Daily Fresh"
+            ],
+            "reviews": [
+              {
+                "username": "Anil P.",
+                "rating": 5,
+                "date": "2026-07-01",
+                "comment": "Tastes very fresh. Great for daily use.",
+                "photo": null
+              }
+            ],
+            "faq": [
+              {
+                "q": "Do I need to boil this milk?",
+                "a": "Yes, we recommend boiling before consumption for safety."
+              }
+            ],
+            "frequentlyBoughtTogether": [
+              "prod-curd",
+              "prod-paneer"
+            ],
+            "relatedProducts": [
+              "prod-cow-milk",
+              "prod-buffalo-milk"
+            ],
+            "variants": [
+              {
+                "id": "v1",
+                "label": "500ml",
+                "price": 32,
+                "mrp": 35,
+                "stock": 249
+              },
+              {
+                "id": "v2",
+                "label": "1L",
+                "price": 62,
+                "mrp": 70,
+                "stock": 100
+              },
+              {
+                "id": "v3",
+                "label": "2L",
+                "price": 120,
+                "mrp": 140,
+                "stock": 50
+              }
+            ]
+          },
+          "quantity": 1
+        }
+      ],
+      "wishlist": []
+    },
+    {
+      "id": "user-guest",
+      "email": "guest@reddypremiumdairy.com",
+      "name": "Guest User",
+      "role": "customer",
+      "phone": "",
+      "avatar": null,
+      "addresses": [],
+      "rewardPoints": 0,
+      "walletBalance": 0,
+      "cart": [],
+      "wishlist": []
     }
   ],
   "orders": [
@@ -1143,7 +1247,7 @@
       "deliveryInstructions": "",
       "deliverySlot": "Morning 6:00 AM - 9:00 AM",
       "id": "ORD-20260715-6306",
-      "status": "Pending",
+      "status": "Cancelled",
       "paymentStatus": "Paid",
       "createdAt": "2026-07-15T13:49:47.795Z",
       "timeline": [
@@ -1760,5 +1864,29 @@
     }
   ],
   "reviews": [],
-  "walletTransactions": []
+  "walletTransactions": [],
+  "whatsappLogs": [],
+  "settings": {
+    "whatsappNotificationsEnabled": true
+  },
+  "notifications": [
+    {
+      "id": "notif-1784138958623-7080",
+      "userId": "admin-001",
+      "title": "Login Notification",
+      "message": "Hello palle viswanath reddy, you have successfully signed into REDDY PREMIUM DAIRY.",
+      "type": "email",
+      "isRead": false,
+      "createdAt": "2026-07-15T18:09:18.623Z"
+    },
+    {
+      "id": "notif-1784138958573-9164",
+      "userId": "admin-001",
+      "title": "Login Successful",
+      "message": "Welcome back, palle viswanath reddy!",
+      "type": "inapp",
+      "isRead": false,
+      "createdAt": "2026-07-15T18:09:18.574Z"
+    }
+  ]
 }

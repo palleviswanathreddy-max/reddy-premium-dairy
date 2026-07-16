@@ -32,8 +32,8 @@ function initFirebaseAdmin() {
   }
 
   try {
-    (admin as any).initializeApp({
-      credential: (admin as any).credential.cert({
+    (admin as unknown as { initializeApp: (opts: Record<string, unknown>) => void }).initializeApp({
+      credential: (admin as unknown as { credential: { cert: (opts: Record<string, unknown>) => unknown } }).credential.cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
@@ -146,7 +146,7 @@ export async function sendOrderConfirmation(order: Order, userEmail?: string) {
 /**
  * Send an FCM Push Notification
  */
-export async function sendPushNotification(userId: string, title: string, body: string, data?: any) {
+export async function sendPushNotification(userId: string, title: string, body: string, data?: Record<string, string>) {
   // Save Notification in Local DB as well to keep dashboard lists in sync
   try {
     const notifId = `NOT-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
@@ -182,7 +182,7 @@ export async function sendPushNotification(userId: string, title: string, body: 
       token: user.fcmToken,
     };
 
-    const response = await (admin as any).messaging().send(message);
+    const response = await (admin as unknown as { messaging: () => { send: (msg: Record<string, unknown>) => Promise<string> } }).messaging().send(message);
     console.log("Successfully sent push notification:", response);
     return { success: true, messageId: response };
   } catch (error) {

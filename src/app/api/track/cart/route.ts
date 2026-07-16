@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
+import { logActivity } from '@/db/db';
 
 /**
  * POST /api/track/cart
@@ -20,8 +21,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Invalid type' }, { status: 400 });
     }
 
+    // Always log to local JSON DB first
+    const localType = type === 'cart_add' ? 'add_to_cart' : 'wishlist_add';
+    logActivity(userId, localType, { productId, productName: productName || '', quantity });
+
     if (!process.env.MONGODB_URI) {
-      return NextResponse.json({ success: true, skipped: true });
+      return NextResponse.json({ success: true, localOnly: true });
     }
 
     await connectMongo();

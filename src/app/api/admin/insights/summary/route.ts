@@ -16,59 +16,117 @@ export async function GET() {
     if (!process.env.MONGODB_URI) {
       const orders = db.orders.getAll();
       const users = db.users.getAll();
+      const logs = db.activityLogs.getAll();
 
-      // Build per-customer rollup from orders
-      const customerMap: Record<string, { views: number; purchases: number; spent: number; lastActive: string }> = {};
+      // Aggregate local logs per customer
+      const customerMap: Record<string, { views: number; cartAdds: number; purchases: number; spent: number; lastActive: string }> = {};
+      
+      // Seed with users
+      users.forEach(u => {
+        customerMap[u.id] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: '' };
+      });
+
+      // Aggregate event logs
+      logs.forEach(log => {
+        if (!customerMap[log.userId]) {
+          customerMap[log.userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: log.createdAt };
+        }
+        const u = customerMap[log.userId];
+        if (log.type === 'view_product') u.views++;
+        else if (log.type === 'add_to_cart') u.cartAdds++;
+        else if (log.type === 'order_placed') {
+          u.purchases++;
+          u.spent += Number(log.meta?.amount || 0);
+        }
+        if (!u.lastActive || log.createdAt > u.lastActive) {
+          u.lastActive = log.createdAt;
+        }
+      });
+
+      // Cross-check with actual orders database to be absolutely accurate
       orders.forEach(order => {
         if (!customerMap[order.userId]) {
-          customerMap[order.userId] = { views: 0, purchases: 0, spent: 0, lastActive: order.createdAt };
+          customerMap[order.userId] = { views: 0, cartAdds: 0, purchases: 0, spent: 0, lastActive: order.createdAt };
         }
-        customerMap[order.userId].purchases += order.items.reduce((s, i) => s + i.quantity, 0);
-        customerMap[order.userId].spent += order.grandTotal;
-        if (order.createdAt > customerMap[order.userId].lastActive) {
-          customerMap[order.userId].lastActive = order.createdAt;
+        const u = customerMap[order.userId];
+        u.purchases = orders.filter(o => o.userId === order.userId).length;
+        u.spent = orders.filter(o => o.userId === order.userId && o.status !== 'Cancelled').reduce((sum, o) => sum + o.grandTotal, 0);
+        if (!u.lastActive || order.createdAt > u.lastActive) {
+          u.lastActive = order.createdAt;
         }
       });
 
-      const perCustomer = users.map(u => ({
-        userId: u.id,
-        name: u.name,
-        email: u.email,
-        views: customerMap[u.id]?.views || 0,
-        purchases: customerMap[u.id]?.purchases || 0,
-        spent: customerMap[u.id]?.spent || 0,
-        lastActive: customerMap[u.id]?.lastActive || null
-      }));
+      const perCustomer = Object.entries(customerMap).map(([userId, data]) => {
+        const uObj = users.find(u => u.id === userId);
+        return {
+          userId,
+          name: uObj?.name || 'Guest User',
+          email: uObj?.email || '',
+          views: data.views,
+          cartAdds: data.cartAdds,
+          purchases: data.purchases,
+          spent: data.spent,
+          lastActive: data.lastActive || null
+        };
+      }).sort((a, b) => b.spent - a.spent);
 
-      // Top products by purchase count (from orders)
-      const productPurchases: Record<string, { name: string; count: number; revenue: number }> = {};
-      orders.forEach(order => {
-        order.items.forEach(item => {
-          if (!productPurchases[item.productId]) {
-            productPurchases[item.productId] = { name: item.name, count: 0, revenue: 0 };
+      // Event Totals
+      const eventTotals = {
+        view: logs.filter(l => l.type === 'view_product').length,
+        cart_add: logs.filter(l => l.type === 'add_to_cart').length,
+        wishlist_add: logs.filter(l => l.type === 'wishlist_add').length,
+        purchase: orders.length,
+        login: logs.filter(l => l.type === 'login').length
+      };
+
+      // Unique viewers vs unique purchasers
+      const uniqueViewers = new Set(logs.filter(l => l.type === 'view_product').map(l => l.userId)).size || 1;
+      const uniquePurchasers = new Set(orders.map(o => o.userId)).size;
+      const conversionRate = parseFloat(((uniquePurchasers / uniqueViewers) * 100).toFixed(1));
+
+      // viewed not purchased ratio
+      const viewsPerProduct: Record<string, { name: string; views: number; purchases: number }> = {};
+      logs.forEach(log => {
+        if (log.type === 'view_product' && log.meta?.productId) {
+          const prodId = String(log.meta.productId);
+          if (!viewsPerProduct[prodId]) {
+            viewsPerProduct[prodId] = { name: String(log.meta.productName || 'Unknown'), views: 0, purchases: 0 };
           }
-          productPurchases[item.productId].count += item.quantity;
-          productPurchases[item.productId].revenue += item.price * item.quantity;
+          viewsPerProduct[prodId].views++;
+        }
+      });
+      orders.forEach(o => {
+        o.items.forEach(item => {
+          if (!viewsPerProduct[item.productId]) {
+            viewsPerProduct[item.productId] = { name: item.name, views: 0, purchases: 0 };
+          }
+          viewsPerProduct[item.productId].purchases += item.quantity;
         });
       });
-      const topPurchased = Object.entries(productPurchases)
-        .map(([productId, v]) => ({ productId, ...v, views: 0 }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 10);
 
-      const uniquePurchasers = new Set(orders.map(o => o.userId)).size;
-      const totalUsers = users.filter(u => u.role === 'customer').length;
-      const conversionRate = totalUsers > 0 ? ((uniquePurchasers / totalUsers) * 100).toFixed(1) : '0.0';
+      const topViewedNotPurchased = Object.entries(viewsPerProduct)
+        .map(([productId, data]) => {
+          const rate = data.views > 0 ? (data.purchases / data.views) * 100 : 0;
+          return {
+            _id: productId,
+            productName: data.name,
+            views: data.views,
+            purchases: data.purchases,
+            conversionRate: rate
+          };
+        })
+        .sort((a, b) => a.conversionRate - b.conversionRate)
+        .slice(0, 10);
 
       return NextResponse.json({
         success: true,
         source: 'localdb',
-        note: 'MongoDB not connected — view/wishlist/cart tracking unavailable',
         perCustomer,
-        topViewedNotPurchased: [],
-        topPurchasedProducts: topPurchased,
-        conversionRate: parseFloat(conversionRate),
-        eventTotals: { view: 0, cart_add: 0, wishlist_add: 0, purchase: 0, login: 0 }
+        topViewedNotPurchased,
+        conversionRate,
+        uniqueViewers,
+        uniquePurchasers,
+        eventTotals
       });
     }
 

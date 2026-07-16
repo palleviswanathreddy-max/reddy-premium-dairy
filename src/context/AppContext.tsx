@@ -163,7 +163,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const res = await fetch(`/api/notifications?userId=${userId}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success) {
-        const msgs = data.notifications.map((n: any) => ({
+        const msgs = data.notifications.map((n: { id: string; type: string; title: string; message: string; createdAt: string; isRead: boolean }) => ({
           id: n.id,
           type: n.type === 'email' || n.type === 'sms' || n.type === 'whatsapp' ? n.type : 'inapp',
           title: n.title,
@@ -207,17 +207,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchNotifications(activeId);
   }, []);
 
-  // Poll orders & notifications if user is logged in
+  // Live Order & Notification Updates via Server-Sent Events (SSE) + resilient polling fallback
   useEffect(() => {
-    if (!user?.id) return;
-    
-    const interval = setInterval(() => {
-      fetchOrders(user.id, user.role);
-      fetchNotifications(user.id);
-    }, 4000);
-    
-    return () => clearInterval(interval);
-  }, [user?.id, user?.role]);
+    const activeId = user ? user.id : 'user-guest';
+    const activeRole = user ? user.role : 'customer';
+
+    // Start SSE stream
+    const eventSource = new EventSource(`/api/events?userId=${activeId}`);
+
+    const handleMessage = () => {
+      fetchOrders(activeId, activeRole);
+      fetchNotifications(activeId);
+    };
+
+    eventSource.addEventListener('order_created', handleMessage);
+    eventSource.addEventListener('order_updated', handleMessage);
+    eventSource.addEventListener('notification_created', handleMessage);
+    eventSource.onmessage = handleMessage;
+
+    // Resilient fallback poll (slightly slower to conserve battery/resources, as SSE handles the main events)
+    const interval = setInterval(handleMessage, 6000);
+
+    return () => {
+      eventSource.close();
+      clearInterval(interval);
+    };
+  }, [user]);
 
   // Register Firebase Cloud Messaging (FCM) Token
   const registerFCMToken = async (userId: string) => {
@@ -259,7 +274,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     };
     syncCart();
-  }, [cart, user?.id]);
+  }, [cart, user]);
 
   // Sync Wishlist to database
   useEffect(() => {
@@ -276,7 +291,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     };
     syncWishlist();
-  }, [wishlist, user?.id]);
+  }, [wishlist, user]);
 
   // Theme Toggler
   const toggleTheme = () => {

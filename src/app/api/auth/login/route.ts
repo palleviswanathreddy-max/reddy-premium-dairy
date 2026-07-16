@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectMongo, MongooseUser } from '@/db/mongodb';
 import { comparePassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb } from '@/db/db';
+import { getDb, db, logActivity } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -45,6 +45,8 @@ export async function POST(request: Request) {
 
           const isMatch = await comparePassword(password, mUser.passwordHash);
           if (isMatch) {
+            mUser.lastLoginAt = new Date().toISOString();
+            await mUser.save();
             fullUser = mUser.toObject();
             userPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
           } else {
@@ -76,7 +78,8 @@ export async function POST(request: Request) {
           password === 'admin123';
 
         if (isMatch) {
-          fullUser = lUser;
+          db.users.update(lUser.id, { lastLoginAt: new Date().toISOString() });
+          fullUser = db.users.getById(lUser.id) || lUser;
           userPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
         } else {
           return NextResponse.json({ success: false, message: 'Incorrect password.' }, { status: 401 });
@@ -112,6 +115,8 @@ export async function POST(request: Request) {
         avatar: safeUser.avatar || null
       }
     });
+
+    logActivity(userPayload.id, 'login');
 
     // Set Secure HTTP-Only Cookie headers
     response.cookies.set('accessToken', accessToken, {

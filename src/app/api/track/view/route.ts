@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
+import { logActivity } from '@/db/db';
 
 /**
  * POST /api/track/view
@@ -16,9 +17,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false }, { status: 400 });
     }
 
+    // Always log to local JSON DB first
+    logActivity(userId, 'view_product', {
+      productId,
+      productName: productName || '',
+      meta: meta ? JSON.stringify(meta) : ''
+    });
+
     if (!process.env.MONGODB_URI) {
-      // Activity tracking requires MongoDB — silently skip for local-DB setups
-      return NextResponse.json({ success: true, skipped: true });
+      return NextResponse.json({ success: true, localOnly: true });
     }
 
     await connectMongo();

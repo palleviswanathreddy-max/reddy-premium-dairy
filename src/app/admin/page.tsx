@@ -9,7 +9,7 @@ import {
   Users, ShoppingBag, DollarSign, Package, TrendingUp, AlertTriangle,
   Plus, Edit2, Trash2, Download, Check, X, ShieldAlert, BarChart3,
   CreditCard, Truck, FileBarChart, IndianRupee, Clock, CheckCircle2,
-  Receipt, PieChart, Activity, Ticket, Star, MessageSquare
+  Receipt, PieChart, Activity, Ticket, Star, MessageSquare, RotateCcw
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Product, Order } from '@/db/db';
@@ -40,6 +40,39 @@ export default function AdminDashboard() {
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
+  // New tabs states
+  const [inventoryList, setInventoryList] = useState<any[]>([]);
+  const [inventorySummary, setInventorySummary] = useState<any>(null);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [quickAddQty, setQuickAddQty] = useState<Record<string, string>>({});
+
+  const [deliveryPartnersList, setDeliveryPartnersList] = useState<any[]>([]);
+  const [deliveryPartnersLoading, setDeliveryPartnersLoading] = useState(false);
+  const [isAddingPartner, setIsAddingPartner] = useState(false);
+  const [partnerName, setPartnerName] = useState('');
+  const [partnerPhone, setPartnerPhone] = useState('');
+  const [partnerEmail, setPartnerEmail] = useState('');
+  const [partnerVehicle, setPartnerVehicle] = useState('Hero Electric');
+  const [partnerVehicleNumber, setPartnerVehicleNumber] = useState('');
+
+  const [refundsList, setRefundsList] = useState<any[]>([]);
+  const [refundsLoading, setRefundsLoading] = useState(false);
+  const [refundActionNote, setRefundActionNote] = useState('');
+
+  const [customerSearchQuery, setCustomerSearchQuery] = useState('');
+  const [customerSearchResults, setCustomerSearchResults] = useState<any[]>([]);
+  const [customerSearchLoading, setCustomerSearchLoading] = useState(false);
+  const [selectedCustomerProfile, setSelectedCustomerProfile] = useState<any | null>(null);
+
+  const [exportDateFrom, setExportDateFrom] = useState('');
+  const [exportDateTo, setExportDateTo] = useState('');
+
+  const [activitySearchQuery, setActivitySearchQuery] = useState('');
+  const [activityLogsList, setActivityLogsList] = useState<any[]>([]);
+  const [activityLogsLoading, setActivityLogsLoading] = useState(false);
+  const [activityLogsPage, setActivityLogsPage] = useState(1);
+  const [activityLogsTotal, setActivityLogsTotal] = useState(0);
+
   // Product Form state
   const [prodName, setProdName] = useState('');
   const [prodCategory, setProdCategory] = useState('Fresh Milk');
@@ -58,6 +91,180 @@ export default function AdminDashboard() {
   const [deliveryFilter, setDeliveryFilter] = useState<string>('all');
   // Reports period
   const [reportPeriod, setReportPeriod] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  // New admin data fetching functions
+  const fetchInventory = async () => {
+    setInventoryLoading(true);
+    try {
+      const res = await fetch('/api/admin/inventory');
+      const data = await res.json();
+      if (data.success) {
+        setInventoryList(data.inventory || []);
+        setInventorySummary(data.summary || null);
+      }
+    } catch (err) {
+      console.error('[fetchInventory]', err);
+    } finally {
+      setInventoryLoading(false);
+    }
+  };
+
+  const fetchDeliveryPartners = async () => {
+    setDeliveryPartnersLoading(true);
+    try {
+      const res = await fetch('/api/admin/delivery-partners');
+      const data = await res.json();
+      if (data.success) setDeliveryPartnersList(data.partners || []);
+    } catch (err) {
+      console.error('[fetchDeliveryPartners]', err);
+    } finally {
+      setDeliveryPartnersLoading(false);
+    }
+  };
+
+  const fetchRefunds = async () => {
+    setRefundsLoading(true);
+    try {
+      const res = await fetch('/api/admin/refunds');
+      const data = await res.json();
+      if (data.success) setRefundsList(data.refunds || []);
+    } catch (err) {
+      console.error('[fetchRefunds]', err);
+    } finally {
+      setRefundsLoading(false);
+    }
+  };
+
+  const handleCustomerSearch = async (query: string) => {
+    if (!query || query.trim().length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    setCustomerSearchLoading(true);
+    try {
+      const res = await fetch(`/api/admin/customers/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      if (data.success) setCustomerSearchResults(data.results || []);
+    } catch (err) {
+      console.error('[handleCustomerSearch]', err);
+    } finally {
+      setCustomerSearchLoading(false);
+    }
+  };
+
+  const fetchActivityLogs = async (userId = '', page = 1) => {
+    setActivityLogsLoading(true);
+    try {
+      const url = userId 
+        ? `/api/admin/activity-logs?userId=${userId}&page=${page}&limit=25`
+        : `/api/admin/activity-logs?page=${page}&limit=25`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success) {
+        setActivityLogsList(data.activity || []);
+        setActivityLogsTotal(data.total || 0);
+      }
+    } catch (err) {
+      console.error('[fetchActivityLogs]', err);
+    } finally {
+      setActivityLogsLoading(false);
+    }
+  };
+
+  const submitIncomingStock = async (productId: string, qty: number, notes = '') => {
+    try {
+      const res = await fetch('/api/admin/inventory', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-role': 'admin'
+        },
+        body: JSON.stringify({ productId, quantity: qty, notes, addedBy: user?.name || 'Admin' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Stock added successfully!', 'success');
+        fetchInventory();
+        refreshProducts();
+      } else {
+        showToast(data.message || 'Failed to add stock', 'error');
+      }
+    } catch (err) {
+      console.error('[submitIncomingStock]', err);
+    }
+  };
+
+  const submitDeliveryPartner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!partnerName || !partnerPhone) return;
+    try {
+      const res = await fetch('/api/admin/delivery-partners', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-role': 'admin'
+        },
+        body: JSON.stringify({ name: partnerName, phone: partnerPhone, email: partnerEmail, vehicle: partnerVehicle, vehicleNumber: partnerVehicleNumber })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Delivery partner registered!', 'success');
+        setIsAddingPartner(false);
+        setPartnerName('');
+        setPartnerPhone('');
+        setPartnerEmail('');
+        setPartnerVehicle('Hero Electric');
+        setPartnerVehicleNumber('');
+        fetchDeliveryPartners();
+      }
+    } catch (err) {
+      console.error('[submitDeliveryPartner]', err);
+    }
+  };
+
+  const handleRefundAction = async (orderId: string, action: 'approve' | 'reject', refundAmt?: number) => {
+    try {
+      const res = await fetch('/api/admin/refunds', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-role': 'admin'
+        },
+        body: JSON.stringify({ orderId, action, refundAmount: refundAmt, adminNote: refundActionNote })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Refund request ${action === 'approve' ? 'approved' : 'rejected'} successfully`, 'success');
+        setRefundActionNote('');
+        fetchRefunds();
+        fetchAdminOrders();
+      }
+    } catch (err) {
+      console.error('[handleRefundAction]', err);
+    }
+  };
+
+  const assignDeliveryPartner = async (orderId: string, partnerId: string) => {
+    if (!partnerId) return;
+    try {
+      const res = await fetch('/api/admin/delivery-partners/assign', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-user-role': 'admin'
+        },
+        body: JSON.stringify({ orderId, partnerId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast('Delivery partner assigned successfully!', 'success');
+        fetchAdminOrders();
+        fetchDeliveryPartners();
+      }
+    } catch (err) {
+      console.error('[assignDeliveryPartner]', err);
+    }
+  };
 
   // Fetch functions declared BEFORE the useEffects that call them
   const fetchAdminStats = async () => {
@@ -200,6 +407,16 @@ export default function AdminDashboard() {
     /* eslint-enable react-hooks/set-state-in-effect */
      
   }, [activeTab, insightsSummary]);
+
+  // Load data for active tab
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (activeTab === 'inventory') fetchInventory();
+    else if (activeTab === 'delivery-partners') fetchDeliveryPartners();
+    else if (activeTab === 'refunds') fetchRefunds();
+    else if (activeTab === 'activity') fetchActivityLogs('', activityLogsPage);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [activeTab, activityLogsPage]);
 
   // Submit Product CRUD form
   const handleProductSubmit = async (e: React.FormEvent) => {
@@ -449,20 +666,24 @@ export default function AdminDashboard() {
             <span className="text-[9px] text-accent uppercase font-bold tracking-widest leading-none mt-0.5">Control Center</span>
           </div>
         </Link>
-
-        <div className="flex-1 flex flex-col gap-1.5 text-xs font-bold text-slate-350 text-left">
+        <div className="flex-1 flex flex-col gap-1.5 text-xs font-bold text-slate-350 text-left overflow-y-auto pr-1">
           {[
             { id: 'overview', label: 'Dashboard Analytics', icon: <BarChart3 className="h-4.5 w-4.5" /> },
             { id: 'products', label: 'Product Control', icon: <Package className="h-4.5 w-4.5" /> },
+            { id: 'inventory', label: 'Inventory Control', icon: <Package className="h-4.5 w-4.5" /> },
             { id: 'orders', label: 'Order Statuses', icon: <ShoppingBag className="h-4.5 w-4.5" /> },
+            { id: 'delivery-partners', label: 'Delivery Partners', icon: <Truck className="h-4.5 w-4.5" /> },
+            { id: 'refunds', label: 'Refund Manager', icon: <RotateCcw className="h-4.5 w-4.5" /> },
             { id: 'customers', label: 'Customer Lists', icon: <Users className="h-4.5 w-4.5" /> },
             { id: 'coupons', label: 'Coupons & Offers', icon: <Ticket className="h-4.5 w-4.5" /> },
             { id: 'reviews', label: 'User Reviews', icon: <Star className="h-4.5 w-4.5" /> },
             { id: 'tickets', label: 'Support Tickets', icon: <MessageSquare className="h-4.5 w-4.5" /> },
             { id: 'payments', label: 'Payment Details', icon: <CreditCard className="h-4.5 w-4.5" /> },
             { id: 'delivery', label: 'Delivery Status', icon: <Truck className="h-4.5 w-4.5" /> },
-            { id: 'reports', label: 'Reports', icon: <FileBarChart className="h-4.5 w-4.5" /> },
+            { id: 'reports', label: 'Reports & Analytics', icon: <FileBarChart className="h-4.5 w-4.5" /> },
             { id: 'insights', label: 'Customer Insights', icon: <Activity className="h-4.5 w-4.5" /> },
+            { id: 'activity', label: 'Customer Activities', icon: <Activity className="h-4.5 w-4.5" /> },
+            { id: 'export', label: 'Export Reports', icon: <Download className="h-4.5 w-4.5" /> },
             { id: 'whatsapp', label: 'WhatsApp Settings', icon: <MessageSquare className="h-4.5 w-4.5" /> },
           ].map(tab => (
             <button
@@ -475,7 +696,7 @@ export default function AdminDashboard() {
                   setIsAddingProduct(false);
                 }
               }}
-              className={`flex items-center gap-2.5 px-4 py-3 rounded-xl transition-all ${
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl transition-all ${
                 activeTab === tab.id 
                   ? 'bg-accent text-slate-900 shadow-md font-extrabold' 
                   : 'hover:bg-slate-800 hover:text-white'
@@ -500,7 +721,10 @@ export default function AdminDashboard() {
         {[
           { id: 'overview', icon: <BarChart3 className="h-4 w-4" />, label: 'Dashboard' },
           { id: 'products', icon: <Package className="h-4 w-4" />, label: 'Products' },
+          { id: 'inventory', icon: <Package className="h-4 w-4" />, label: 'Inventory' },
           { id: 'orders', icon: <ShoppingBag className="h-4 w-4" />, label: 'Orders' },
+          { id: 'delivery-partners', icon: <Truck className="h-4 w-4" />, label: 'Partners' },
+          { id: 'refunds', icon: <RotateCcw className="h-4 w-4" />, label: 'Refunds' },
           { id: 'customers', icon: <Users className="h-4 w-4" />, label: 'Customers' },
           { id: 'coupons', icon: <Ticket className="h-4 w-4" />, label: 'Coupons' },
           { id: 'reviews', icon: <Star className="h-4 w-4" />, label: 'Reviews' },
@@ -509,6 +733,8 @@ export default function AdminDashboard() {
           { id: 'delivery', icon: <Truck className="h-4 w-4" />, label: 'Delivery' },
           { id: 'reports', icon: <FileBarChart className="h-4 w-4" />, label: 'Reports' },
           { id: 'insights', icon: <Activity className="h-4 w-4" />, label: 'Insights' },
+          { id: 'activity', icon: <Activity className="h-4 w-4" />, label: 'Activities' },
+          { id: 'export', icon: <Download className="h-4 w-4" />, label: 'Export' },
           { id: 'whatsapp', icon: <MessageSquare className="h-4 w-4" />, label: 'WhatsApp' },
         ].map(tab => (
           <button
@@ -521,7 +747,7 @@ export default function AdminDashboard() {
                 setIsAddingProduct(false);
               }
             }}
-            className={`flex-1 min-w-[60px] flex flex-col items-center gap-0.5 py-2.5 text-[9px] font-bold transition-all ${
+            className={`flex-grow min-w-[60px] flex flex-col items-center gap-0.5 py-2.5 text-[9px] font-bold transition-all ${
               activeTab === tab.id ? 'text-accent' : 'text-slate-500'
             }`}
           >
@@ -540,15 +766,20 @@ export default function AdminDashboard() {
             <h1 className="text-2xl font-bold font-display text-primary dark:text-white leading-none">
               {activeTab === 'overview' && 'Dashboard Analytics'}
               {activeTab === 'products' && 'Product Database Management'}
-              { activeTab === 'orders' && 'Real-Time Order Logistics' }
-              { activeTab === 'coupons' && 'Coupons & Offers Management' }
-              { activeTab === 'reviews' && 'Customer Reviews Moderation' }
-              { activeTab === 'tickets' && 'Customer Support Tickets' }
-              { activeTab === 'customers' && 'Active Customer Database' }
+              {activeTab === 'inventory' && 'Inventory Control & Logs'}
+              {activeTab === 'orders' && 'Real-Time Order Logistics'}
+              {activeTab === 'delivery-partners' && 'Delivery Partners Directory'}
+              {activeTab === 'refunds' && 'Customer Refund Requests'}
+              {activeTab === 'coupons' && 'Coupons & Offers Management'}
+              {activeTab === 'reviews' && 'Customer Reviews Moderation'}
+              {activeTab === 'tickets' && 'Customer Support Tickets'}
+              {activeTab === 'customers' && 'Active Customer Database'}
               {activeTab === 'payments' && 'Payment Details & Collection'}
               {activeTab === 'delivery' && 'Delivery Status Tracker'}
               {activeTab === 'reports' && 'Business Reports & Analytics'}
               {activeTab === 'insights' && 'Customer Behaviour Insights'}
+              {activeTab === 'activity' && 'Real-Time Activity Auditing'}
+              {activeTab === 'export' && 'Universal Data Exporters'}
             </h1>
             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">
               Reddy Premium Dairy Control Desk • Chiyyedu Farm
@@ -908,6 +1139,7 @@ export default function AdminDashboard() {
                       <th className="px-4 py-4">Payment</th>
                       <th className="px-4 py-4">Status</th>
                       <th className="px-4 py-4">Date & Time</th>
+                      <th className="px-4 py-4">Delivery Partner</th>
                       <th className="px-4 py-4 text-center">Action</th>
                     </tr>
                   </thead>
@@ -955,6 +1187,18 @@ export default function AdminDashboard() {
                         </td>
                         <td className="px-4 py-4">
                           <select
+                            value={(o as any).deliveryPartnerId || ''}
+                            onChange={(e) => assignDeliveryPartner(o.id, e.target.value)}
+                            className="bg-slate-50 dark:bg-slate-950 border text-[11px] rounded-lg px-2 py-1 outline-none font-semibold focus:border-accent"
+                          >
+                            <option value="">Unassigned</option>
+                            {deliveryPartnersList.map((p: any) => (
+                              <option key={p.id} value={p.id}>{p.name} ({p.vehicle})</option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="px-4 py-4">
+                          <select
                             value={o.status}
                             onChange={(e) => handleStatusChange(o.id, e.target.value)}
                             className="bg-slate-50 dark:bg-slate-950 border text-[11px] rounded-lg px-2 py-1 outline-none font-semibold focus:border-accent"
@@ -982,14 +1226,79 @@ export default function AdminDashboard() {
         {/* ═══════════════════════════════════════════════════════ */}
         {activeTab === 'customers' && (
           <div className="space-y-4 animate-splash">
-            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">Registered Customers • {customersList.length} Users</p>
+            {/* Search Input Bar */}
+            <div className="flex flex-wrap justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm gap-3">
+              <div className="flex items-center gap-2 flex-grow max-w-md">
+                <input 
+                  type="text" 
+                  placeholder="Advanced search by name, phone, email, or order ID..." 
+                  value={customerSearchQuery}
+                  onChange={e => {
+                    setCustomerSearchQuery(e.target.value);
+                    handleCustomerSearch(e.target.value);
+                  }}
+                  className="w-full text-xs px-4 py-2 border rounded-xl bg-transparent outline-none focus:border-accent"
+                />
+              </div>
               <button onClick={() => exportToCSV('customers')} className="text-xs font-bold text-primary dark:text-accent flex items-center gap-1">
                 <Download className="h-4 w-4" /> Export CSV
               </button>
             </div>
 
-            {customersList.length === 0 ? (
+            {customerSearchLoading ? (
+              <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>
+            ) : customerSearchQuery.trim().length >= 2 ? (
+              /* ADVANCED SEARCH RESULTS */
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2 font-bold">Search Results ({customerSearchResults.length})</h3>
+                {customerSearchResults.length === 0 ? (
+                  <p className="text-xs text-slate-400">No matching customers found</p>
+                ) : (
+                  <div className="overflow-x-auto border border-slate-100 dark:border-slate-900 rounded-3xl bg-white dark:bg-slate-900 shadow-sm">
+                    <table className="min-w-full divide-y divide-slate-100 dark:divide-slate-900 text-left text-xs font-semibold">
+                      <thead className="bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                        <tr>
+                          <th className="px-4 py-4">Name</th>
+                          <th className="px-4 py-4">Contact</th>
+                          <th className="px-4 py-4">Role</th>
+                          <th className="px-4 py-4">Wallet</th>
+                          <th className="px-4 py-4">Reward Pts</th>
+                          <th className="px-4 py-4">Total Orders</th>
+                          <th className="px-4 py-4">Spending</th>
+                          <th className="px-4 py-4">Last Active</th>
+                          <th className="px-4 py-4 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-slate-650">
+                        {customerSearchResults.map(c => (
+                          <tr key={c.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-950/20">
+                            <td className="px-4 py-4 font-bold text-slate-800 dark:text-white truncate max-w-[150px]">{c.name}</td>
+                            <td className="px-4 py-4 text-[11px]">
+                              <p>{c.email}</p>
+                              <p className="font-mono text-[10px] text-slate-400">{c.phone}</p>
+                            </td>
+                            <td className="px-4 py-4 capitalize">{c.role}</td>
+                            <td className="px-4 py-4">₹{c.walletBalance}</td>
+                            <td className="px-4 py-4">{c.rewardPoints} pts</td>
+                            <td className="px-4 py-4">{c.totalOrders}</td>
+                            <td className="px-4 py-4 font-bold">₹{c.totalSpending.toFixed(2)}</td>
+                            <td className="px-4 py-4 text-[10px] text-slate-450">{c.lastLoginAt ? new Date(c.lastLoginAt).toLocaleString('en-IN') : 'N/A'}</td>
+                            <td className="px-4 py-4 text-center">
+                              <button 
+                                onClick={() => setSelectedCustomerProfile(c)}
+                                className="px-3 py-1.5 bg-accent text-slate-900 font-bold rounded-lg text-[10px] shadow"
+                              >
+                                View Profile
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            ) : customersList.length === 0 ? (
               <div className="bg-white dark:bg-slate-900 border rounded-3xl p-12 text-center shadow-sm">
                 <Users className="h-10 w-10 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
                 <p className="text-sm font-bold text-slate-400">No registered customers yet</p>
@@ -1048,6 +1357,94 @@ export default function AdminDashboard() {
                     })}
                   </tbody>
                 </table>
+              </div>
+            )}
+
+            {/* Customer Profile Details Modal */}
+            {selectedCustomerProfile && (
+              <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelectedCustomerProfile(null)}>
+                <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                    <div>
+                      <h3 className="font-bold text-sm text-slate-800 dark:text-white">{selectedCustomerProfile.name}</h3>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Customer Profile Details</p>
+                    </div>
+                    <button onClick={() => setSelectedCustomerProfile(null)} className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  
+                  <div className="overflow-y-auto flex-1 p-6 space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      {/* Left: Quick facts */}
+                      <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border space-y-3 text-xs">
+                        <h4 className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Quick Stats</h4>
+                        <div className="space-y-2">
+                          <p><span className="text-slate-400">User ID:</span> <span className="font-mono">{selectedCustomerProfile.id}</span></p>
+                          <p><span className="text-slate-400">Email:</span> {selectedCustomerProfile.email}</p>
+                          <p><span className="text-slate-400">Phone:</span> {selectedCustomerProfile.phone || 'N/A'}</p>
+                          <p><span className="text-slate-400">Loyalty Balance:</span> <span className="font-bold text-amber-500">{selectedCustomerProfile.rewardPoints} pts</span></p>
+                          <p><span className="text-slate-400">Wallet:</span> <span className="font-bold text-emerald-600">₹{selectedCustomerProfile.walletBalance}</span></p>
+                          <p><span className="text-slate-400">Total Spent:</span> <span className="font-bold text-slate-800 dark:text-white">₹{selectedCustomerProfile.totalSpending.toFixed(2)}</span></p>
+                          <p><span className="text-slate-400">Registered:</span> {selectedCustomerProfile.createdAt ? new Date(selectedCustomerProfile.createdAt).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                      </div>
+
+                      {/* Middle: Addresses */}
+                      <div className="bg-slate-50 dark:bg-slate-950 p-5 rounded-2xl border space-y-3 text-xs md:col-span-2">
+                        <h4 className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Shipping Addresses</h4>
+                        {!selectedCustomerProfile.addresses || selectedCustomerProfile.addresses.length === 0 ? (
+                          <p className="text-slate-450 italic">No addresses saved</p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {selectedCustomerProfile.addresses.map((addr: any, idx: number) => (
+                              <div key={idx} className="bg-white dark:bg-slate-900 p-3 rounded-xl border">
+                                <p className="font-bold">{addr.name}</p>
+                                <p className="text-[11px] text-slate-450 mt-1">{addr.street}, {addr.village || ''}, {addr.district}</p>
+                                <p className="text-[10px] text-slate-400 font-mono mt-0.5">PIN: {addr.pincode}</p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Order History */}
+                    <div className="space-y-3">
+                      <h4 className="font-bold text-[10px] uppercase tracking-wider text-slate-400">Recent Orders ({selectedCustomerProfile.orderHistory?.length || 0})</h4>
+                      {!selectedCustomerProfile.orderHistory || selectedCustomerProfile.orderHistory.length === 0 ? (
+                        <p className="text-xs text-slate-455 italic">No orders placed yet</p>
+                      ) : (
+                        <div className="border rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                          <table className="w-full text-left text-xs">
+                            <thead>
+                              <tr className="bg-slate-50 dark:bg-slate-955 border-b text-[10px] text-slate-400 font-bold GTM uppercase">
+                                <th className="p-3">Order ID</th>
+                                <th className="p-3">Date</th>
+                                <th className="p-3">Items</th>
+                                <th className="p-3">Amount</th>
+                                <th className="p-3">Status</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y">
+                              {selectedCustomerProfile.orderHistory.map((ord: any) => (
+                                <tr key={ord.id} className="hover:bg-slate-50/50">
+                                  <td className="p-3 font-mono font-bold">#{ord.id.slice(4)}</td>
+                                  <td className="p-3">{new Date(ord.createdAt).toLocaleDateString()}</td>
+                                  <td className="p-3 truncate max-w-[200px]">{ord.items.map((i: any) => `${i.name} x${i.quantity}`).join(', ')}</td>
+                                  <td className="p-3 font-bold">₹{ord.grandTotal.toFixed(2)}</td>
+                                  <td className="p-3">
+                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${getStatusColor(ord.status)}`}>{ord.status}</span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -1949,6 +2346,536 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 9. INVENTORY MANAGEMENT TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'inventory' && (
+          <div className="space-y-6 animate-splash">
+            {/* Inventory Summary Cards */}
+            {inventorySummary && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total SKUs</span>
+                  <h3 className="text-xl font-bold font-display">{inventorySummary.totalSKUs}</h3>
+                </div>
+                <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-red-500">Out of Stock</span>
+                  <h3 className="text-xl font-bold font-display text-red-500">{inventorySummary.outOfStockCount}</h3>
+                </div>
+                <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-amber-500">Low Stock Alerts</span>
+                  <h3 className="text-xl font-bold font-display text-amber-500">{inventorySummary.lowStockCount}</h3>
+                </div>
+                <div className="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm space-y-2">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total Stock Value</span>
+                  <h3 className="text-xl font-bold font-display text-emerald-600">₹{inventorySummary.totalStockValue.toFixed(2)}</h3>
+                </div>
+              </div>
+            )}
+
+            {/* Alert banner */}
+            {inventorySummary?.lowStockCount > 0 && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 rounded-3xl flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 shrink-0 mt-0.5" />
+                <div className="text-xs">
+                  <p className="font-bold">Low Inventory Refill Required</p>
+                  <p className="text-[10px] opacity-80 mt-0.5">There are {inventorySummary.lowStockCount} items running low. Restock them below.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Inventory table */}
+            <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Product Catalog Stocking</h3>
+                <button onClick={() => fetchInventory()} className="text-[11px] font-bold text-accent">↻ Refresh</button>
+              </div>
+
+              {inventoryLoading ? (
+                <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                        <th className="p-3">Product Name</th>
+                        <th className="p-3">SKU</th>
+                        <th className="p-3">Category</th>
+                        <th className="p-3">In Stock</th>
+                        <th className="p-3">Sold</th>
+                        <th className="p-3">Stock Value</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-center">Quick Stock Addition</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y text-slate-650">
+                      {inventoryList.map(item => (
+                        <tr key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-950/20">
+                          <td className="p-3 font-bold text-slate-800 dark:text-white">{item.name}</td>
+                          <td className="p-3 font-mono">{item.sku}</td>
+                          <td className="p-3">{item.category}</td>
+                          <td className={`p-3 font-bold ${item.isOutOfStock ? 'text-red-500' : item.isLowStock ? 'text-amber-500' : ''}`}>{item.currentStock}</td>
+                          <td className="p-3">{item.totalSold}</td>
+                          <td className="p-3">₹{item.stockValue.toFixed(2)}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              item.isOutOfStock ? 'bg-red-500/10 text-red-500' :
+                              item.isLowStock ? 'bg-amber-500/10 text-amber-500' :
+                              'bg-emerald-500/10 text-emerald-600'
+                            }`}>{item.status}</span>
+                          </td>
+                          <td className="p-3">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <input 
+                                type="number" 
+                                placeholder="Qty" 
+                                value={quickAddQty[item.id] || ''}
+                                onChange={e => setQuickAddQty(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                className="w-16 px-2 py-1 border rounded-lg text-center bg-transparent outline-none focus:border-accent text-xs"
+                              />
+                              <button 
+                                onClick={() => {
+                                  const qty = parseInt(quickAddQty[item.id] || '0');
+                                  if (qty > 0) {
+                                    submitIncomingStock(item.id, qty, 'Quick stock adjustment from inventory controller');
+                                    setQuickAddQty(prev => ({ ...prev, [item.id]: '' }));
+                                  } else {
+                                    showToast('Please enter a valid positive quantity', 'error');
+                                  }
+                                }}
+                                className="px-2.5 py-1 bg-accent text-slate-900 rounded-lg font-bold text-[10px] shadow"
+                              >
+                                Add
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 10. DELIVERY PARTNER MANAGEMENT TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'delivery-partners' && (
+          <div className="space-y-6 animate-splash">
+            {/* Action Bar */}
+            <div className="flex justify-between items-center bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-sm">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider font-bold">Delivery Personnel Desk</p>
+              <button 
+                onClick={() => setIsAddingPartner(!isAddingPartner)} 
+                className="px-4 py-2 bg-accent text-slate-900 font-bold rounded-xl flex items-center gap-1.5 shadow-md text-xs transition-all"
+              >
+                <Plus className="h-4 w-4" /> {isAddingPartner ? 'Show Partners List' : 'Register New Partner'}
+              </button>
+            </div>
+
+            {isAddingPartner ? (
+              /* ADD NEW PARTNER FORM */
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-md max-w-xl">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">Register Delivery Partner</h3>
+                <form onSubmit={submitDeliveryPartner} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Full Name *</label>
+                    <input 
+                      type="text" required value={partnerName} onChange={e => setPartnerName(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Mobile Phone *</label>
+                    <input 
+                      type="tel" required value={partnerPhone} onChange={e => setPartnerPhone(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Email Address (Optional)</label>
+                    <input 
+                      type="email" value={partnerEmail} onChange={e => setPartnerEmail(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Vehicle Description *</label>
+                    <input 
+                      type="text" required placeholder="Hero Electric / TVS King / Auto" value={partnerVehicle} onChange={e => setPartnerVehicle(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                    />
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-[10px] uppercase font-bold text-slate-400">Vehicle Registration Number</label>
+                    <input 
+                      type="text" placeholder="AP 39 AB 1234" value={partnerVehicleNumber} onChange={e => setPartnerVehicleNumber(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                    />
+                  </div>
+                  <button 
+                    type="submit" 
+                    className="sm:col-span-2 py-3 bg-secondary text-white font-bold rounded-xl mt-4 hover:shadow-lg transition-all"
+                  >
+                    Save & Register Partner
+                  </button>
+                </form>
+              </div>
+            ) : (
+              /* PARTNERS DIRECTORY */
+              <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2">Active Logistical Fleet</h3>
+                {deliveryPartnersLoading ? (
+                  <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>
+                ) : deliveryPartnersList.length === 0 ? (
+                  <div className="text-center py-12 text-slate-400">
+                    <Truck className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                    <p className="text-xs font-semibold">No delivery partners registered yet</p>
+                    <p className="text-[10px] mt-1">Register drivers to assign orders manually.</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="border-b bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                          <th className="p-3">Driver Name</th>
+                          <th className="p-3">Phone</th>
+                          <th className="p-3">Vehicle</th>
+                          <th className="p-3">Rating</th>
+                          <th className="p-3">Current Assignment</th>
+                          <th className="p-3">Deliveries</th>
+                          <th className="p-3">Status</th>
+                          <th className="p-3 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y text-slate-650">
+                        {deliveryPartnersList.map(p => (
+                          <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-slate-950/20">
+                            <td className="p-3 font-bold text-slate-800 dark:text-white">{p.name}</td>
+                            <td className="p-3 font-mono">{p.phone}</td>
+                            <td className="p-3">{p.vehicle} {p.vehicleNumber ? `(${p.vehicleNumber})` : ''}</td>
+                            <td className="p-3 font-bold text-yellow-500 flex items-center gap-1">{p.rating} ⭐</td>
+                            <td className="p-3 font-mono text-[10px] text-slate-500">
+                              {p.currentOrderId ? (
+                                <span className="text-accent font-bold">Active: #{p.currentOrderId.slice(4, 12)}</span>
+                              ) : (
+                                'Idle (Awaiting assignment)'
+                              )}
+                            </td>
+                            <td className="p-3 font-bold">{p.completedDeliveries} completed</td>
+                            <td className="p-3">
+                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${p.isActive ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-500'}`}>
+                                {p.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="p-3 text-center">
+                              <button 
+                                onClick={async () => {
+                                  if (confirm(`Remove driver ${p.name}?`)) {
+                                    await fetch(`/api/admin/delivery-partners?id=${p.id}`, { method: 'DELETE' });
+                                    showToast('Partner removed', 'info');
+                                    fetchDeliveryPartners();
+                                  }
+                                }}
+                                className="p-1 hover:text-red-500"
+                                title="Remove Driver"
+                              >
+                                <Trash2 className="h-4 w-4 mx-auto" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 11. REFUND MANAGEMENT TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'refunds' && (
+          <div className="space-y-6 animate-splash">
+            {/* Refunds Overview Card */}
+            <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex justify-between items-center pb-2 border-b">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Cancelled Order Refund Queue</h3>
+                <button onClick={() => fetchRefunds()} className="text-[11px] font-bold text-accent">↻ Refresh</button>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] uppercase font-bold text-slate-400">Resolution Note (Shared with Customer)</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Refunded back to UPI source wallet / COD cancellation approved"
+                  value={refundActionNote}
+                  onChange={e => setRefundActionNote(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2 text-xs font-semibold outline-none focus:border-accent"
+                />
+              </div>
+
+              {refundsLoading ? (
+                <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>
+              ) : refundsList.length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <RotateCcw className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-xs font-semibold">No refund requests in the queue</p>
+                  <p className="text-[10px] mt-1">Paid online orders that get cancelled will flow here for admin clearance.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left">
+                    <thead>
+                      <tr className="border-b bg-slate-50 dark:bg-slate-950 font-bold text-slate-400 uppercase tracking-wider">
+                        <th className="p-3">Order ID</th>
+                        <th className="p-3">Customer</th>
+                        <th className="p-3">Method</th>
+                        <th className="p-3">Order Value</th>
+                        <th className="p-3">Refund Value</th>
+                        <th className="p-3">Reason</th>
+                        <th className="p-3">Status</th>
+                        <th className="p-3 text-center">Settlement Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y text-slate-650">
+                      {refundsList.map(r => (
+                        <tr key={r.orderId} className="hover:bg-slate-50 dark:hover:bg-slate-950/20">
+                          <td className="p-3 font-mono font-bold text-slate-800 dark:text-white">#{r.orderId.slice(4)}</td>
+                          <td className="p-3">
+                            <p className="font-bold text-slate-800 dark:text-white">{r.customerName}</p>
+                            <p className="text-[9px] text-slate-400 font-mono">{r.customerPhone}</p>
+                          </td>
+                          <td className="p-3">{r.paymentMethod}</td>
+                          <td className="p-3">₹{r.grandTotal.toFixed(2)}</td>
+                          <td className="p-3 font-bold text-slate-850">₹{r.refundAmount.toFixed(2)}</td>
+                          <td className="p-3 italic text-slate-500 truncate max-w-[150px]">{r.cancellationReason || 'Admin cancellation'}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                              r.refundStatus === 'Completed' ? 'bg-emerald-500/10 text-emerald-600' :
+                              r.refundStatus === 'Failed' ? 'bg-red-500/10 text-red-500' :
+                              'bg-amber-500/10 text-amber-600'
+                            }`}>{r.refundStatus}</span>
+                          </td>
+                          <td className="p-3 text-center">
+                            {r.refundStatus === 'Pending' ? (
+                              <div className="flex gap-2 justify-center">
+                                <button 
+                                  onClick={() => handleRefundAction(r.orderId, 'approve', r.refundAmount)}
+                                  className="px-2.5 py-1.5 bg-emerald-500 text-white rounded-lg font-bold text-[10px] shadow hover:bg-emerald-600 transition-colors"
+                                >
+                                  Approve
+                                </button>
+                                <button 
+                                  onClick={() => handleRefundAction(r.orderId, 'reject')}
+                                  className="px-2.5 py-1.5 bg-red-500 text-white rounded-lg font-bold text-[10px] shadow hover:bg-red-600 transition-colors"
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <span className="text-[10px] font-bold text-slate-400">Resolved</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 12. CUSTOMER ACTIVITIES TAB */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'activity' && (
+          <div className="space-y-6 animate-splash">
+            <div className="bg-white dark:bg-slate-900 border rounded-3xl p-6 shadow-sm space-y-4">
+              <div className="flex flex-wrap justify-between items-center gap-3 border-b pb-2">
+                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Real-Time User Operations Logs</h3>
+                <div className="flex items-center gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Search by User ID..." 
+                    value={activitySearchQuery} 
+                    onChange={e => setActivitySearchQuery(e.target.value)}
+                    className="text-[11px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-transparent outline-none focus:border-accent w-48"
+                  />
+                  <button 
+                    onClick={() => fetchActivityLogs(activitySearchQuery, 1)}
+                    className="px-3 py-1.5 bg-accent text-slate-900 font-bold rounded-xl text-[11px]"
+                  >
+                    Query
+                  </button>
+                  <button 
+                    onClick={() => { setActivitySearchQuery(''); fetchActivityLogs('', 1); }}
+                    className="px-3 py-1.5 border rounded-xl text-[11px] font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {activityLogsLoading ? (
+                <div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div></div>
+              ) : activityLogsList.length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <p className="text-xs font-semibold">No activity logs returned</p>
+                  <p className="text-[10px] mt-1">Actions are logged in real-time as users browse, checkout, and authenticate.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    {activityLogsList.map((log: any) => {
+                      const icons: Record<string, string> = { 
+                        login: '🔑', logout: '🚪', register: '📝', 
+                        view_product: '👁️', add_to_cart: '🛒', remove_from_cart: '🗑️', 
+                        wishlist_add: '❤️', wishlist_remove: '💔',
+                        order_placed: '📦', payment: '💳', cancel_order: '🚫', download_invoice: '📄'
+                      };
+                      const colors: Record<string, string> = {
+                        login: 'border-blue-400 bg-blue-50/50 dark:bg-blue-900/10',
+                        logout: 'border-slate-350 bg-slate-50/50 dark:bg-slate-900/10',
+                        register: 'border-purple-400 bg-purple-50/50 dark:bg-purple-900/10',
+                        view_product: 'border-sky-400 bg-sky-50/50 dark:bg-sky-900/10',
+                        add_to_cart: 'border-amber-400 bg-amber-50/50 dark:bg-amber-900/10',
+                        remove_from_cart: 'border-orange-400 bg-orange-50/50 dark:bg-orange-900/10',
+                        wishlist_add: 'border-pink-400 bg-pink-50/50 dark:bg-pink-900/10',
+                        wishlist_remove: 'border-gray-400 bg-gray-50/50 dark:bg-gray-900/10',
+                        order_placed: 'border-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/10',
+                        payment: 'border-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/10',
+                        cancel_order: 'border-red-400 bg-red-50/50 dark:bg-red-900/10',
+                        download_invoice: 'border-teal-400 bg-teal-50/50 dark:bg-teal-900/10'
+                      };
+                      return (
+                        <div key={log.id} className={`flex items-start justify-between gap-3 p-3 rounded-xl border-l-4 ${colors[log.type] || 'border-slate-300'} transition-all`}>
+                          <div className="flex items-start gap-2.5">
+                            <span className="text-base leading-none">{icons[log.type] || '●'}</span>
+                            <div>
+                              <p className="font-bold text-slate-800 dark:text-white capitalize text-[11px]">
+                                {log.type.replace(/_/g, ' ')}
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-mono">User ID: {log.userId}</p>
+                              {log.meta && Object.keys(log.meta).length > 0 && (
+                                <div className="text-[9px] text-slate-500 font-mono mt-1 bg-slate-100 dark:bg-slate-950 p-1.5 rounded border">
+                                  {Object.entries(log.meta).map(([k, v]) => (
+                                    <span key={k} className="block">{k}: {String(v)}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <p className="text-[9px] text-slate-400 font-bold whitespace-nowrap">
+                            {new Date(log.createdAt).toLocaleString('en-IN')}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Pagination control */}
+                  {activityLogsTotal > 25 && (
+                    <div className="flex items-center justify-between pt-4 border-t text-xs font-semibold">
+                      <button 
+                        disabled={activityLogsPage <= 1} 
+                        onClick={() => setActivityLogsPage(p => p - 1)}
+                        className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Previous
+                      </button>
+                      <span className="text-slate-500 font-mono">Page {activityLogsPage} of {Math.ceil(activityLogsTotal / 25)}</span>
+                      <button 
+                        disabled={activityLogsPage >= Math.ceil(activityLogsTotal / 25)} 
+                        onClick={() => setActivityLogsPage(p => p + 1)}
+                        className="px-3 py-1.5 border rounded-lg hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Next
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════ */}
+        {/* 13. DATA EXPORT TAB PANEL */}
+        {/* ═══════════════════════════════════════════════════════ */}
+        {activeTab === 'export' && (
+          <div className="space-y-6 animate-splash">
+            {/* Range Pickers */}
+            <div className="bg-white dark:bg-slate-900 border rounded-3xl p-5 shadow-sm space-y-4">
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2">Filter Parameters</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">From Date</label>
+                  <input 
+                    type="date" value={exportDateFrom} onChange={e => setExportDateFrom(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2 outline-none focus:border-accent"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold text-slate-400">To Date</label>
+                  <input 
+                    type="date" value={exportDateTo} onChange={e => setExportDateTo(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2 outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Export options grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { type: 'orders', title: 'Orders Registry', desc: 'Lists every order, details, addresses, totals, dates.' },
+                { type: 'customers', title: 'Customer Rolodex', desc: 'Active customers with orders count, registration date, wallet spends.' },
+                { type: 'products', title: 'Products Catalog', desc: 'Current active pricing, brand names, discount rate parameters.' },
+                { type: 'inventory', title: 'Inventory Levels', desc: 'Units in-stock, sold quantities, replenishment flows, stock value.' },
+                { type: 'sales', title: 'Sales Revenues', desc: 'Revenue rollups, tax breakdowns, payment modes time-series.' },
+                { type: 'refunds', title: 'Refund Log', desc: 'Resolutions database, cancellation reasoning, amounts refunded.' }
+              ].map(card => {
+                const getURL = (fmt: 'csv' | 'xlsx') => {
+                  let path = `/api/admin/export?type=${card.type}&format=${fmt}`;
+                  if (exportDateFrom) path += `&from=${exportDateFrom}`;
+                  if (exportDateTo) path += `&to=${exportDateTo}`;
+                  return path;
+                };
+                return (
+                  <div key={card.type} className="bg-white dark:bg-slate-900 border rounded-3xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+                    <div>
+                      <h4 className="font-bold text-slate-800 dark:text-white text-xs uppercase tracking-wider">{card.title}</h4>
+                      <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-relaxed">{card.desc}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-center text-[10px] font-bold">
+                      <a 
+                        href={getURL('csv')}
+                        download
+                        className="py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-950 dark:hover:bg-slate-900 rounded-lg text-slate-700 dark:text-slate-300 shadow-sm"
+                      >
+                        Download CSV
+                      </a>
+                      <a 
+                        href={getURL('xlsx')}
+                        download
+                        className="py-2 bg-accent hover:bg-accent-light rounded-lg text-slate-900 shadow-sm"
+                      >
+                        Download Excel
+                      </a>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </main>
 
     </div>

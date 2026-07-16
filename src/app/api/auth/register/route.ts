@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { connectMongo, MongooseUser } from '@/db/mongodb';
 import { hashPassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb, saveDb } from '@/db/db';
+import { getDb, saveDb, db, logActivity } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -59,7 +59,8 @@ export async function POST(request: Request) {
         walletBalance: 0,
         rewardPoints: 100, // starting loyalty bonus
         addresses: [],
-        verifiedPhone: true // set verified if signing up
+        verifiedPhone: true, // set verified if signing up
+        lastLoginAt: new Date().toISOString()
       });
       await mUser.save();
       newUserPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
@@ -77,7 +78,9 @@ export async function POST(request: Request) {
         avatar: null,
         addresses: [],
         rewardPoints: 100,
-        walletBalance: 0
+        walletBalance: 0,
+        lastLoginAt: new Date().toISOString(),
+        createdAt: new Date().toISOString()
       };
       localData.users.push(lUser);
       saveDb(localData);
@@ -101,6 +104,26 @@ export async function POST(request: Request) {
         addresses: []
       }
     });
+
+    logActivity(newUserPayload.id, 'register');
+
+    // Admin notification for new registration
+    try {
+      const adminUsers = db.users.getAll().filter(u => u.role === 'admin');
+      for (const admin of adminUsers) {
+        db.notifications.create({
+          id: `NOT-ADM-REG-${Date.now()}-${Math.floor(Math.random() * 999)}`,
+          userId: admin.id,
+          title: 'New Customer Registered',
+          message: `${name} (${cleanEmail}) has signed up.`,
+          type: 'Admin Messages',
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (e) {
+      console.error('[Admin registration notification failed]', e);
+    }
 
     // Set secure HTTP Only cookie headers
     response.cookies.set('accessToken', accessToken, {
