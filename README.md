@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🥛 Reddy Premium Dairy — Enterprise Edition
 
 > **Pure • Fresh • Healthy** — A production-ready enterprise dairy e-commerce platform built with Next.js 16, TypeScript, PostgreSQL, and Prisma ORM.
@@ -150,3 +151,6 @@ npm run build -- --webpack
 
 ---
 *© 2026 Reddy Premium Dairy. All rights reserved.*
+=======
+# reddy-premium-dairy
+>>>>>>> 85c22bdce19353af88679fb98a8934664d3efe75
