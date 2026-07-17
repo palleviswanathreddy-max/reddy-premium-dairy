@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { translations, LanguageType, TranslationKey } from '@/utils/translations';
 import { Product, User, Order, Coupon, Address } from '@/db/db';
+import { useSession, signOut } from 'next-auth/react';
 
 interface CartItem {
   product: Product;
@@ -87,6 +88,7 @@ interface AppContextProps {
 const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
+  const { data: session, status } = useSession();
   // Lazy initializer — reads localStorage once on mount, no setState-in-effect needed
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window === 'undefined') return 'light';
@@ -214,6 +216,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchCartAndWishlist(activeId);
     fetchNotifications(activeId);
   }, []);
+
+  // Sync Google session with database and custom JWT session
+  useEffect(() => {
+    const syncGoogleSession = async () => {
+      if (status === 'authenticated' && session?.user && !user) {
+        try {
+          const res = await fetch('/api/auth/google-sync');
+          const data = await res.json();
+          if (data.success) {
+            setUser(data.user);
+            localStorage.setItem('reddy-user', JSON.stringify(data.user));
+            fetchOrders(data.user.id, data.user.role);
+            fetchCartAndWishlist(data.user.id);
+            fetchNotifications(data.user.id);
+            showToast(`Logged in as ${data.user.name}`, 'success');
+            trackEvent('/api/track/cart', { userId: data.user.id, type: 'login' });
+          } else {
+            console.error('Google session sync failed:', data.message);
+          }
+        } catch (err) {
+          console.error('Error syncing Google session:', err);
+        }
+      }
+    };
+    syncGoogleSession();
+  }, [status, session, user]);
 
   // Live Order & Notification Updates via Server-Sent Events (SSE)
   // Polling is intentionally removed — SSE events handle real-time updates.
@@ -481,6 +509,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = () => {
+    signOut({ redirect: false });
     setUser(null);
     setOrders([]);
     setCart([]);

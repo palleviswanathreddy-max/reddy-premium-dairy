@@ -3,6 +3,7 @@ import "./globals.css";
 import { AppProvider } from "@/context/AppContext";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import SupportChatbot from "@/components/SupportChatbot";
+import NextAuthWrapper from "@/components/NextAuthWrapper";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://reddy-premium-dairy.vercel.app"),
@@ -82,11 +83,13 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full flex flex-col antialiased">
-        <AppProvider>
-          {children}
-          <PWAInstallPrompt />
-          <SupportChatbot />
-        </AppProvider>
+        <NextAuthWrapper>
+          <AppProvider>
+            {children}
+            <PWAInstallPrompt />
+            <SupportChatbot />
+          </AppProvider>
+        </NextAuthWrapper>
       </body>
     </html>
   );

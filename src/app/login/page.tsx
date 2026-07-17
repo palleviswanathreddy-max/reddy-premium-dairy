@@ -11,6 +11,7 @@ import {
   Eye, EyeOff, ArrowRight, Loader2, Fingerprint
 } from 'lucide-react';
 import Link from 'next/link';
+import { signIn } from 'next-auth/react';
 
 type AuthTab = 'login' | 'register' | 'forgot-password';
 type RegisterStep = 1 | 2 | 3;
@@ -125,6 +126,11 @@ export default function Login() {
     if (emailRegex.test(val)) return 'email';
     if (phoneDigits.length === 10) return 'phone';
     return null;
+  };
+
+  const handleGoogleSignIn = () => {
+    setIsLoading(true);
+    signIn('google', { callbackUrl: '/profile' });
   };
 
   // ──────────────────────────────────────────────
@@ -872,6 +878,27 @@ export default function Login() {
                   >
                     {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowRight className="h-4 w-4" />}
                     <span>Sign In</span>
+                  </button>
+
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-white/10"></div>
+                    <span className="flex-shrink mx-4 text-[10px] text-slate-500 uppercase font-bold tracking-wider">or</span>
+                    <div className="flex-grow border-t border-white/10"></div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                    className="w-full py-3.5 border border-white/10 bg-slate-900 text-white hover:bg-slate-800 font-bold rounded-xl shadow-md flex items-center justify-center gap-2.5 transition-all duration-200 hover:border-white/20 active:scale-[0.98]"
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.58h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.4C21.68,11.89 21.56,11.47 21.35,11.1z" fill="#4285F4" />
+                      <path d="M12,20.82c2.48,0 4.56,-0.82 6.08,-2.24l-3.3,-2.58c-0.91,0.61 -2.08,0.98 -3.37,0.98 -2.48,0 -4.58,-1.68 -5.33,-3.93H2.66v2.66C4.18,18.73 7.82,20.82 12,20.82z" fill="#34A853" />
+                      <path d="M6.67,13.05c-0.19,-0.57 -0.3,-1.18 -0.3,-1.8s0.11,-1.23 0.3,-1.8V6.78H2.66c-0.81,1.62 -1.27,3.44 -1.27,5.37s0.46,3.75 1.27,5.37L6.67,13.05z" fill="#FBBC05" />
+                      <path d="M12,5.92c1.35,0 2.56,0.46 3.51,1.37l2.63,-2.63c-1.52,-1.42 -3.6,-2.28 -6.14,-2.28 -4.18,0 -7.82,2.09 -9.34,5.4L6.67,9.45C7.42,7.2 9.52,5.92 12,5.92z" fill="#EA4335" />
+                    </svg>
+                    <span>Continue with Google</span>
                   </button>
 
                   <button
