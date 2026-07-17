@@ -2167,7 +2167,7 @@ export default function AdminDashboard() {
                       <div className="text-center py-12 text-slate-400">
                         <Activity className="h-10 w-10 mx-auto mb-3 opacity-30" />
                         <p className="text-xs font-semibold">No activity recorded yet</p>
-                        <p className="text-[10px] mt-1">Requires MongoDB to be connected</p>
+                        <p className="text-[10px] mt-1">Activity logs are saved in PostgreSQL</p>
                       </div>
                     ) : (
                       customerActivity.map((event: any, i: number) => {

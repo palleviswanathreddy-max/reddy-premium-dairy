@@ -215,30 +215,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchNotifications(activeId);
   }, []);
 
-  // Live Order & Notification Updates via Server-Sent Events (SSE) + resilient polling fallback
+  // Live Order & Notification Updates via Server-Sent Events (SSE)
+  // Polling is intentionally removed — SSE events handle real-time updates.
+  // Polling was causing excessive API requests and race conditions.
   useEffect(() => {
     const activeId = user ? user.id : 'user-guest';
     const activeRole = user ? user.role : 'customer';
 
-    // Start SSE stream
     const eventSource = new EventSource(`/api/events?userId=${activeId}`);
 
-    const handleMessage = () => {
+    const handleSSEMessage = () => {
       fetchOrders(activeId, activeRole);
       fetchNotifications(activeId);
     };
 
-    eventSource.addEventListener('order_created', handleMessage);
-    eventSource.addEventListener('order_updated', handleMessage);
-    eventSource.addEventListener('notification_created', handleMessage);
-    eventSource.onmessage = handleMessage;
+    eventSource.addEventListener('order_created', handleSSEMessage);
+    eventSource.addEventListener('order_updated', handleSSEMessage);
+    eventSource.addEventListener('notification_created', handleSSEMessage);
+    eventSource.onmessage = handleSSEMessage;
 
-    // Resilient fallback poll (slightly slower to conserve battery/resources, as SSE handles the main events)
-    const interval = setInterval(handleMessage, 6000);
+    // On SSE error, close and let the effect re-run if user changes
+    eventSource.onerror = () => {
+      eventSource.close();
+    };
 
     return () => {
       eventSource.close();
-      clearInterval(interval);
     };
   }, [user]);
 
@@ -267,15 +269,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]);
 
 
-  // Sync Cart to database
+  // Sync Cart to database — skip on first mount to avoid wiping DB cart before it loads
+  const cartMountedRef = React.useRef(false);
   useEffect(() => {
+    if (!cartMountedRef.current) {
+      cartMountedRef.current = true;
+      return; // Skip the initial render — data comes FROM the DB, not TO it
+    }
     const syncCart = async () => {
       const activeId = user ? user.id : 'user-guest';
       try {
+        // Map CartItem[] -> {productId, quantity}[] that the API expects
+        const cartPayload = cart.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        }));
         await fetch('/api/cart', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: activeId, cart })
+          body: JSON.stringify({ userId: activeId, cart: cartPayload })
         });
       } catch (err) {
         console.error('Failed to sync cart to db:', err);
@@ -284,8 +296,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     syncCart();
   }, [cart, user]);
 
-  // Sync Wishlist to database
+  // Sync Wishlist to database — skip on first mount
+  const wishlistMountedRef = React.useRef(false);
   useEffect(() => {
+    if (!wishlistMountedRef.current) {
+      wishlistMountedRef.current = true;
+      return;
+    }
     const syncWishlist = async () => {
       const activeId = user ? user.id : 'user-guest';
       try {

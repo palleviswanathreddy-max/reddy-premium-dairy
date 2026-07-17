@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUser } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
-import { getDb } from '@/db/db';
 
 export async function POST(request: Request) {
   try {
@@ -10,63 +9,59 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Credential ID is required' }, { status: 400 });
     }
 
-    let fullUser: any = null;
-    let userPayload: any = null;
+    // Find user by biometric credential in PostgreSQL
+    const user = await prisma.user.findFirst({
+      where: {
+        biometricCredentialId: credentialId,
+        biometricsEnabled: true
+      },
+      include: { addresses: true }
+    });
 
-    // 1. Search MongoDB
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        const mUser = await MongooseUser.findOne({ biometricCredentialId: credentialId, biometricsEnabled: true });
-        if (mUser) {
-          fullUser = mUser.toObject();
-          userPayload = { id: mUser._id.toString(), email: mUser.email, role: mUser.role, name: mUser.name };
-        }
-      } catch (err) {
-        console.warn('[MongoDB Biometrics Login Error] Falling back to LocalDB:', err);
-      }
-    }
-
-    // 2. Search Local JSON DB
-    if (!userPayload) {
-      const localData = getDb();
-      const lUser = localData.users.find(u => u.biometricCredentialId === credentialId && u.biometricsEnabled === true);
-      if (lUser) {
-        fullUser = lUser;
-        userPayload = { id: lUser.id, email: lUser.email, role: lUser.role, name: lUser.name };
-      }
-    }
-
-    if (!userPayload) {
+    if (!user) {
       return NextResponse.json({
         success: false,
-        message: 'No account is linked to this biometric key. Please enable biometrics inside account security settings first.'
+        message: 'No account is linked to this biometric key. Please enable biometrics in account security settings first.'
       }, { status: 404 });
     }
 
-    // Generate real JWT tokens
+    const userPayload = { id: user.id, email: user.email || '', role: user.role, name: user.name };
+
+    // Generate JWT tokens
     const accessToken = generateAccessToken(userPayload);
     const refreshToken = generateRefreshToken(userPayload);
 
-    // Prepare response without sensitive fields
-    const { password: _, passwordHash: __, ...safeUser } = fullUser;
+    // Save refresh token
+    await prisma.refreshToken.deleteMany({ where: { userId: user.id } });
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // Log activity
+    prisma.activityLog.create({
+      data: { userId: user.id, type: 'login' }
+    }).catch(e => console.error('[biometrics login activityLog]', e));
 
     const response = NextResponse.json({
       success: true,
       user: {
-        id: userPayload.id,
-        email: userPayload.email,
-        role: userPayload.role,
-        name: userPayload.name,
-        phone: safeUser.phone,
-        walletBalance: safeUser.walletBalance || 0,
-        rewardPoints: safeUser.rewardPoints || 0,
-        addresses: safeUser.addresses || [],
-        avatar: safeUser.avatar || null
+        id: user.id,
+        email: user.email || '',
+        role: user.role,
+        name: user.name,
+        phone: user.phone || '',
+        walletBalance: user.walletBalance || 0,
+        rewardPoints: user.rewardPoints || 0,
+        addresses: user.addresses || [],
+        avatar: user.avatar || null,
+        biometricsEnabled: user.biometricsEnabled
       }
     });
 
-    // Set Secure HTTP-Only Cookie headers
     response.cookies.set('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

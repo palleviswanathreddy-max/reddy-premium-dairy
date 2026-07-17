@@ -1,20 +1,61 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(_request: Request) {
   try {
-    // In a real app, you would authenticate the delivery executive via session.
-    // Here we'll just return all orders that are active.
-    
-    let orders = db.orders.getAll();
-    
-    // Filter for orders that are not fully delivered or cancelled
-    orders = orders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled');
-    
-    // Sort by createdAt descending
-    orders.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const orders = await prisma.order.findMany({
+      where: {
+        status: {
+          notIn: ['Delivered', 'Cancelled']
+        }
+      },
+      include: {
+        items: { include: { product: true } },
+        user: true,
+        deliveryPartner: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
 
-    return NextResponse.json({ success: true, orders });
+    type DbDeliveryOrder = typeof orders[number];
+    const mapped = orders.map((o: DbDeliveryOrder) => ({
+      id: o.id,
+      userId: o.userId,
+      userName: o.user.name,
+      userPhone: o.user.phone,
+      subtotal: o.subtotal,
+      gstTotal: o.gstTotal,
+      deliveryCharges: o.deliveryCharges,
+      discount: o.discount,
+      grandTotal: o.grandTotal,
+      status: o.status,
+      paymentMethod: o.paymentMethod,
+      paymentStatus: o.paymentStatus,
+      deliverySlot: o.deliverySlot,
+      deliveryAddress: o.deliveryAddress,
+      deliveryOtp: o.deliveryOtp,
+      expectedDelivery: o.expectedDelivery?.toISOString() || null,
+      timeline: o.timeline,
+      createdAt: o.createdAt.toISOString(),
+      items: o.items.map((item: any) => ({
+        productId: item.productId,
+        sku: item.sku,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        gst: item.gst
+      })),
+      deliveryPartner: o.deliveryPartner ? {
+        id: o.deliveryPartner.id,
+        name: o.deliveryPartner.name,
+        phone: o.deliveryPartner.phone,
+        vehicle: o.deliveryPartner.vehicle
+      } : null
+    }));
+
+    return NextResponse.json({ success: true, orders: mapped });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -23,44 +64,52 @@ export async function GET(_request: Request) {
 export async function POST(request: Request) {
   try {
     const { orderId, action } = await request.json();
-    
-    const order = db.orders.getById(orderId);
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { items: true }
+    });
+
     if (!order) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
     }
 
-    // Process actions
+    const updates: any = {};
+
     if (action === 'MARK_DELIVERED') {
-      order.status = 'Delivered';
-      order.paymentStatus = 'Paid'; // Assuming cash collected if COD
-      
+      updates.status = 'Delivered';
+      updates.paymentStatus = 'Paid';
+      updates.deliveredAt = new Date();
+
       // Update timeline
-      for (const step of order.timeline) {
-        if (!step.done) {
-          step.done = true;
-          step.time = new Date().toISOString();
+      const timeline = (order.timeline as any[]) || [];
+      updates.timeline = timeline.map((step: any) => ({
+        ...step,
+        done: true,
+        time: step.time || new Date().toISOString()
+      }));
+    } else if (action === 'MARK_OUT_FOR_DELIVERY') {
+      updates.status = 'Out for Delivery';
+      updates.expectedDelivery = new Date(Date.now() + 30 * 60 * 1000);
+
+      // Update timeline
+      const timeline = (order.timeline as any[]) || [];
+      updates.timeline = timeline.map((step: any) => {
+        if (step.status === 'Out for Delivery') {
+          return { ...step, done: true, time: new Date().toISOString() };
         }
-      }
-
-      db.orders.update(orderId, order);
-      return NextResponse.json({ success: true, order });
+        return step;
+      });
+    } else {
+      return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
     }
 
-    if (action === 'MARK_OUT_FOR_DELIVERY') {
-      order.status = 'Out for Delivery';
-      
-      // Update timeline
-      const stepIndex = order.timeline.findIndex(s => s.status === 'Out for Delivery');
-      if (stepIndex !== -1) {
-        order.timeline[stepIndex].done = true;
-        order.timeline[stepIndex].time = new Date().toISOString();
-      }
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: updates
+    });
 
-      db.orders.update(orderId, order);
-      return NextResponse.json({ success: true, order });
-    }
-
-    return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
+    return NextResponse.json({ success: true, order: updatedOrder });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

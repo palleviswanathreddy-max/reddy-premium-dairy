@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';
-import { Order, db } from '@/db/db';
+import { Order } from '@/db/db';
 import admin from 'firebase-admin';
 
 // Initialize Nodemailer Transport
@@ -147,20 +147,20 @@ export async function sendOrderConfirmation(order: Order, userEmail?: string) {
  * Send an FCM Push Notification
  */
 export async function sendPushNotification(userId: string, title: string, body: string, data?: Record<string, string>) {
-  // Save Notification in Local DB as well to keep dashboard lists in sync
+  // Save Notification in PostgreSQL via Prisma
   try {
-    const notifId = `NOT-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    db.notifications.create({
-      id: notifId,
-      userId,
-      title,
-      message: body,
-      type: 'Order Updates',
-      isRead: false,
-      createdAt: new Date().toISOString()
+    const { prisma } = await import('@/lib/prisma');
+    await prisma.notification.create({
+      data: {
+        userId,
+        title,
+        message: body,
+        type: 'Order Updates',
+        isRead: false
+      }
     });
   } catch (e) {
-    console.error("Failed to save local DB notification:", e);
+    console.error("Failed to save Prisma notification:", e);
   }
 
   const initialized = initFirebaseAdmin();
@@ -170,8 +170,9 @@ export async function sendPushNotification(userId: string, title: string, body: 
   }
 
   try {
-    const user = db.users.getById(userId);
-    if (!user || !user.fcmToken) {
+    const { fcmRegistry } = await import('@/utils/fcm-registry');
+    const fcmToken = fcmRegistry.get(userId);
+    if (!fcmToken) {
       console.log(`Push skipped for User ${userId}: No registered FCM token.`);
       return { success: false, reason: 'No FCM token' };
     }
@@ -179,7 +180,7 @@ export async function sendPushNotification(userId: string, title: string, body: 
     const message = {
       notification: { title, body },
       data: data || {},
-      token: user.fcmToken,
+      token: fcmToken,
     };
 
     const response = await (admin as unknown as { messaging: () => { send: (msg: Record<string, unknown>) => Promise<string> } }).messaging().send(message);

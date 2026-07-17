@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db, logActivity } from '@/db/db';
-import { connectMongo } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
+import { sseManager } from '@/utils/events';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,34 +16,13 @@ export async function POST(request: Request) {
       );
     }
 
-    let order: any = null;
-    let partner: any = null;
-
-    if (process.env.MONGODB_URI) {
-      try {
-        const connection = await connectMongo();
-        const mongoDb = connection.connection.db;
-        const dbOrder = await mongoDb.collection('orders').findOne({ id: orderId });
-        if (dbOrder) {
-          const { _id, ...rest } = dbOrder;
-          order = { id: dbOrder.id, ...rest };
-        }
-        const dbPartner = await mongoDb.collection('deliveryPartners').findOne({ id: partnerId });
-        if (dbPartner) {
-          const { _id, ...rest } = dbPartner;
-          partner = { id: dbPartner.id, ...rest };
-        }
-      } catch (mongoErr) {
-        console.warn('MongoDB partner assign fetch failed, using localdb fallback:', mongoErr);
-      }
-    }
-
-    if (!order) {
-      order = db.orders.getById(orderId);
-    }
-    if (!partner) {
-      partner = db.deliveryPartners.getById(partnerId);
-    }
+    const [order, partner] = await Promise.all([
+      prisma.order.findUnique({
+        where: { id: orderId },
+        include: { items: true, user: true }
+      }),
+      prisma.deliveryPartner.findUnique({ where: { id: partnerId } })
+    ]);
 
     if (!order) {
       return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
@@ -51,32 +30,22 @@ export async function POST(request: Request) {
     if (!partner) {
       return NextResponse.json({ success: false, message: 'Delivery partner not found' }, { status: 404 });
     }
-
     if (!partner.isActive) {
       return NextResponse.json({ success: false, message: 'Delivery partner is inactive' }, { status: 400 });
     }
 
-    // Update order with partner details + set status to Out for Delivery if not already further along
-    const partnerEmbed = {
-      name: partner.name,
-      phone: partner.phone,
-      vehicle: `${partner.vehicle}${partner.vehicleNumber ? ` – ${partner.vehicleNumber}` : ''}`,
-      eta: '30 mins'
-    };
-
-    const orderUpdates: Record<string, unknown> = {
-      deliveryPartner: partnerEmbed,
-      deliveryPartnerId: partnerId
-    };
-
+    // Determine new status
     const statusOrder = ['Pending', 'Confirmed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered'];
     const currentIdx = statusOrder.indexOf(order.status);
+    const updates: any = { deliveryPartnerId: partnerId };
+
     if (currentIdx < statusOrder.indexOf('Out for Delivery')) {
-      orderUpdates.status = 'Out for Delivery';
-      orderUpdates.expectedDelivery = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      updates.status = 'Out for Delivery';
+      updates.expectedDelivery = new Date(Date.now() + 30 * 60 * 1000);
 
       // Update timeline
-      const updatedTimeline = order.timeline.map((step: any) => {
+      const timeline = (order.timeline as any[]) || [];
+      updates.timeline = timeline.map((step: any) => {
         const stepIdx = statusOrder.indexOf(step.status);
         const targetIdx = statusOrder.indexOf('Out for Delivery');
         if (stepIdx <= targetIdx && !step.done) {
@@ -84,30 +53,32 @@ export async function POST(request: Request) {
         }
         return step;
       });
-      orderUpdates.timeline = updatedTimeline;
     }
 
-    if (process.env.MONGODB_URI) {
-      try {
-        const connection = await connectMongo();
-        const mongoDb = connection.connection.db;
-        await mongoDb.collection('orders').updateOne({ id: orderId }, { $set: orderUpdates });
-        await mongoDb.collection('deliveryPartners').updateOne({ id: partnerId }, { $set: { currentOrderId: orderId } });
-      } catch (mongoErr) {
-        console.warn('MongoDB partner assignment updates failed, using localdb fallback:', mongoErr);
-      }
-    }
-
-    const updatedOrder = db.orders.update(orderId, orderUpdates as any);
-    if (!updatedOrder) {
-      return NextResponse.json({ success: false, message: 'Failed to update order' }, { status: 500 });
-    }
-
-    // Mark partner as busy
-    db.deliveryPartners.update(partnerId, { currentOrderId: orderId });
+    // Update order and delivery partner in a transaction
+    const [updatedOrder] = await prisma.$transaction([
+      prisma.order.update({
+        where: { id: orderId },
+        data: updates,
+        include: { items: true, user: true, deliveryPartner: true }
+      }),
+      prisma.deliveryPartner.update({
+        where: { id: partnerId },
+        data: { currentOrderId: orderId }
+      })
+    ]);
 
     // Log activity
-    logActivity(order.userId, 'order_placed', { orderId, event: 'partner_assigned', partnerId });
+    prisma.activityLog.create({
+      data: {
+        userId: order.userId,
+        type: 'order_placed',
+        meta: { orderId, event: 'partner_assigned', partnerId }
+      }
+    }).catch(e => console.error('[activityLog partner_assigned]', e));
+
+    // Broadcast SSE event
+    sseManager.broadcast('order_updated', { orderId, status: updates.status || order.status });
 
     return NextResponse.json({ success: true, order: updatedOrder, partner });
   } catch (err: unknown) {

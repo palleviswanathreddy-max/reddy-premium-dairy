@@ -1,11 +1,9 @@
 import { NextResponse } from 'next/server';
-import { connectMongo, MongooseUserActivity } from '@/db/mongodb';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 /**
  * GET /api/admin/customers/[id]/activity
- * Returns the full activity timeline for one customer.
- * Query params: ?limit=50&page=1&type=view|cart_add|purchase
+ * Returns the full activity timeline for one customer using Prisma.
  */
 export async function GET(
   request: Request,
@@ -22,45 +20,30 @@ export async function GET(
       return NextResponse.json({ success: false, message: 'Customer ID required' }, { status: 400 });
     }
 
-    // Fallback for local-DB setups (no activity data stored)
-    if (!process.env.MONGODB_URI) {
-      const localOrders = db.orders.getByUserId(id);
-      const syntheticActivity = localOrders.flatMap((order: any) =>
-        order.items.map((item: any) => ({
-          _id: `${order.id}-${item.productId}`,
-          userId: id,
-          type: 'purchase',
-          productId: item.productId,
-          productName: item.name,
-          orderId: order.id,
-          quantity: item.quantity,
-          amount: item.price * item.quantity,
-          createdAt: order.createdAt
-        }))
-      );
-      return NextResponse.json({
-        success: true,
-        activity: syntheticActivity,
-        total: syntheticActivity.length,
-        note: 'MongoDB not connected — showing order history only'
-      });
+    // Build where clause
+    const where: any = { userId: id };
+    if (typeFilter && ['view_product', 'add_to_cart', 'remove_from_cart', 'wishlist_add', 'wishlist_remove', 'order_placed', 'payment', 'cancel_order', 'login', 'logout', 'register'].includes(typeFilter)) {
+      where.type = typeFilter;
     }
 
-    await connectMongo();
-
-    const query: any = { userId: id };
-    if (typeFilter && ['view', 'cart_add', 'wishlist_add', 'purchase', 'login'].includes(typeFilter)) {
-      query.type = typeFilter;
-    }
-
-    const [activity, total] = await Promise.all([
-      MongooseUserActivity.find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      MongooseUserActivity.countDocuments(query)
+    const [activityLogs, total] = await Promise.all([
+      prisma.activityLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit
+      }),
+      prisma.activityLog.count({ where })
     ]);
+
+    type DbActivityLog = typeof activityLogs[number];
+    const activity = activityLogs.map((log: DbActivityLog) => ({
+      id: log.id,
+      userId: log.userId,
+      type: log.type,
+      meta: log.meta,
+      createdAt: log.createdAt.toISOString()
+    }));
 
     return NextResponse.json({ success: true, activity, total, page, limit });
   } catch (err: any) {

@@ -64,6 +64,9 @@ export async function POST(request: Request) {
     const refreshToken = generateRefreshToken(userPayload);
 
     // Save Refresh Token in PostgreSQL database
+    // Delete any existing tokens for this user first to avoid unique constraint
+    // violations when the same user logs in multiple times rapidly.
+    await prisma.refreshToken.deleteMany({ where: { userId: dbUser.id } });
     await prisma.refreshToken.create({
       data: {
         userId: dbUser.id,

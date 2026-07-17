@@ -16,4 +16,10 @@ afterAll(() => {
 // Mock environment variables
 process.env.JWT_SECRET = 'test-secret';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret';
-process.env.MONGODB_URI = 'mongodb://localhost:27017/test-db';
+
+describe('Jest Setup', () => {
+  it('should load environment variables and execute configuration', () => {
+    expect(process.env.JWT_SECRET).toBe('test-secret');
+  });
+});
+

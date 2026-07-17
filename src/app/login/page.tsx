@@ -138,28 +138,21 @@ export default function Login() {
     }
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: loginIdentifier, password: loginPassword })
-      });
-      const data = await res.json();
+      // Use context login() — it calls the API, sets state, and returns result.
+      // Do NOT call the API a second time here; that causes a race condition.
+      const result = await login(loginIdentifier, loginPassword);
       setIsLoading(false);
-      if (data.success) {
-        // Sync local context
-        await login(data.user.email, loginPassword);
-        showToast('Login successful! Welcome back.', 'success');
-        if (data.user.role === 'admin') {
-          router.push('/admin');
-        } else {
-          router.push('/profile');
-        }
+      if (result.success) {
+        // Read role from localStorage which was just written by login()
+        const storedUser = localStorage.getItem('reddy-user');
+        const role = storedUser ? JSON.parse(storedUser).role : 'customer';
+        router.push(role === 'admin' ? '/admin' : '/profile');
       } else {
-        showToast(data.message || 'Login failed', 'error');
+        showToast(result.error || 'Login failed', 'error');
       }
     } catch (err: any) {
       setIsLoading(false);
-      showToast(err.message, 'error');
+      showToast(err.message || 'Login error', 'error');
     }
   };
 

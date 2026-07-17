@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export async function POST(request: Request) {
   try {
@@ -10,18 +10,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = db.users.getById(userId);
-    if (!user || user.deletedAt) {
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    // In a real app, upload base64Image to Cloudinary/S3 and get URL.
-    // For local dev, we just save the base64 string to the DB.
-    const updatedUser = db.users.update(userId, { avatar: base64Image });
+    // Save base64 avatar to database (in production, upload to Cloudinary/S3)
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { avatar: base64Image },
+      include: { addresses: true }
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, passwordHash, ...safeUser } = updatedUser!;
-
+    const { passwordHash: _, ...safeUser } = updatedUser;
     return NextResponse.json({ success: true, user: safeUser });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

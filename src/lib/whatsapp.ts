@@ -1,33 +1,20 @@
-import { db, Order } from '@/db/db';
-import { connectMongo, MongooseWhatsAppLog, MongooseAppSettings } from '@/db/mongodb';
+import { Order } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 // Helper to check if WhatsApp notifications are enabled
 export async function isWhatsAppEnabled(): Promise<boolean> {
-  // Check local JSON DB first
   try {
-    const localSettings = db.settings.get();
-    if (localSettings && !localSettings.whatsappNotificationsEnabled) {
-      return false;
+    const dbSettings = await prisma.appSettings.findFirst();
+    if (dbSettings) {
+      return dbSettings.whatsappNotificationsEnabled;
     }
-  } catch {}
-
-  // Check MongoDB settings if enabled
-  if (process.env.MONGODB_URI) {
-    try {
-      await connectMongo();
-      const dbSettings = await MongooseAppSettings.findOne({});
-      if (dbSettings) {
-        return dbSettings.whatsappNotificationsEnabled;
-      }
-    } catch (err) {
-      console.warn('[MongoDB Settings Read Error] Using local DB settings fallback:', err);
-    }
+  } catch (err) {
+    console.warn('[Prisma Settings Read Error] Using fallback settings:', err);
   }
-  
   return true; // enabled by default
 }
 
-// Log a WhatsApp message status in DB (MongoDB and Local JSON DB)
+// Log a WhatsApp message status in DB
 export async function logWhatsAppMessage(logData: {
   orderId: string;
   recipient: string;
@@ -36,31 +23,9 @@ export async function logWhatsAppMessage(logData: {
   status: 'Sent' | 'Failed';
   error?: string | null;
 }) {
-  const logId = `WAL-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-  const logObj = {
-    id: logId,
-    orderId: logData.orderId,
-    recipient: logData.recipient,
-    event: logData.event,
-    message: logData.message,
-    status: logData.status,
-    attempts: 1,
-    error: logData.error || null,
-    createdAt: new Date().toISOString()
-  };
-
-  // 1. Save in local JSON DB
   try {
-    db.whatsappLogs.create(logObj);
-  } catch (err) {
-    console.error('[LocalDB WhatsApp Log Error]', err);
-  }
-
-  // 2. Save in MongoDB
-  if (process.env.MONGODB_URI) {
-    try {
-      await connectMongo();
-      await MongooseWhatsAppLog.create({
+    const log = await prisma.whatsAppLog.create({
+      data: {
         orderId: logData.orderId,
         recipient: logData.recipient,
         event: logData.event,
@@ -68,14 +33,23 @@ export async function logWhatsAppMessage(logData: {
         status: logData.status,
         attempts: 1,
         error: logData.error || null,
-        createdAt: new Date()
-      });
-    } catch (err) {
-      console.warn('[MongoDB WhatsApp Log Error] Parity saved locally:', err);
-    }
+      }
+    });
+    return log;
+  } catch (err) {
+    console.error('[Prisma WhatsApp Log Error] Falling back to memory return:', err);
+    return {
+      id: `WAL-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      orderId: logData.orderId,
+      recipient: logData.recipient,
+      event: logData.event,
+      message: logData.message,
+      status: logData.status,
+      attempts: 1,
+      error: logData.error || null,
+      createdAt: new Date()
+    };
   }
-
-  return logObj;
 }
 
 // Format message for WhatsApp Business API templates/text payload
@@ -202,68 +176,31 @@ export async function sendWhatsAppMessage(recipientPhone: string, messageText: s
     return { success: false, error: errMsg };
   }
 }
-
-// Background scheduler tool / API call to retry failed messages
+// Background scheduler tool retry failed messages
 export async function retryFailedWhatsAppMessages() {
   const token = process.env.WHATSAPP_ACCESS_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   const isMock = !phoneId || !token || token.includes('DummyToken');
 
-  // 1. Fetch failed logs from JSON DB
-  const currentDb = db.whatsappLogs.getAll();
-  const failedLocalLogs = currentDb.filter(l => l.status === 'Failed' && l.attempts < 3);
-
-  for (const log of failedLocalLogs) {
-    const updatedAttempts = log.attempts + 1;
-    console.log(`[Retrying WhatsApp Log ${log.id}] Attempt ${updatedAttempts}`);
-
-    if (isMock) {
-      db.whatsappLogs.update(log.id, { status: 'Sent', attempts: updatedAttempts, error: null });
-      continue;
-    }
-
-    const apiUrl = process.env.WHATSAPP_API_URL || `https://graph.facebook.com/v17.0/${phoneId}/messages`;
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: log.recipient,
-          type: 'text',
-          text: { body: log.message }
-        })
-      });
-
-      if (response.ok) {
-        db.whatsappLogs.update(log.id, { status: 'Sent', attempts: updatedAttempts, error: null });
-      } else {
-        const data = await response.json();
-        db.whatsappLogs.update(log.id, { attempts: updatedAttempts, error: JSON.stringify(data.error || data) });
+  try {
+    const failedLogs = await prisma.whatsAppLog.findMany({
+      where: {
+        status: 'Failed',
+        attempts: { lt: 3 }
       }
-    } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : String(err);
-      db.whatsappLogs.update(log.id, { attempts: updatedAttempts, error: errMsg });
-    }
-  }
+    });
 
-  // 2. Fetch failed logs from MongoDB if applicable
-  if (process.env.MONGODB_URI) {
-    try {
-      await connectMongo();
-      const failedMongoLogs = await MongooseWhatsAppLog.find({ status: 'Failed', attempts: { $lt: 3 } });
-      for (const log of failedMongoLogs) {
-        log.attempts += 1;
-        if (isMock) {
-          log.status = 'Sent';
-          log.error = null;
-          await log.save();
-          continue;
-        }
+    for (const log of failedLogs) {
+      const attempts = log.attempts + 1;
+      console.log(`[Retrying WhatsApp Log ${log.id}] Attempt ${attempts}`);
 
+      let status = log.status;
+      let error = log.error;
+
+      if (isMock) {
+        status = 'Sent';
+        error = null;
+      } else {
         const apiUrl = process.env.WHATSAPP_API_URL || `https://graph.facebook.com/v17.0/${phoneId}/messages`;
         try {
           const response = await fetch(apiUrl, {
@@ -281,19 +218,27 @@ export async function retryFailedWhatsAppMessages() {
           });
 
           if (response.ok) {
-            log.status = 'Sent';
-            log.error = null;
+            status = 'Sent';
+            error = null;
           } else {
             const data = await response.json();
-            log.error = JSON.stringify(data.error || data);
+            error = JSON.stringify(data.error || data);
           }
         } catch (err: unknown) {
-          log.error = err instanceof Error ? err.message : String(err);
+          error = err instanceof Error ? err.message : String(err);
         }
-        await log.save();
       }
-    } catch (err) {
-      console.warn('[MongoDB Retries Error] Local DB logs processed:', err);
+
+      await prisma.whatsAppLog.update({
+        where: { id: log.id },
+        data: {
+          attempts,
+          status,
+          error
+        }
+      });
     }
+  } catch (err) {
+    console.warn('[Prisma Retries Error]', err);
   }
 }

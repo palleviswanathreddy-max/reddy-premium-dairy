@@ -1,15 +1,10 @@
-datasource db {
-  provider = "postgresql"
-}
-
 generator client {
   provider   = "prisma-client-js"
   engineType = "library"
 }
 
-enum Role {
-  admin
-  customer
+datasource db {
+  provider = "postgresql"
 }
 
 model User {
@@ -33,47 +28,44 @@ model User {
   lastLoginAt           DateTime?
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
-
-  addresses             Address[]
-  orders                Order[]
-  walletTransactions    WalletTransaction[]
-  notifications         Notification[]
-  reviews               Review[]
   activityLogs          ActivityLog[]
+  addresses             Address[]
   cartItems             CartItem[]
-  wishlistItems         WishlistItem[]
+  notifications         Notification[]
+  orders                Order[]
   refreshTokens         RefreshToken[]
+  reviews               Review[]
+  walletTransactions    WalletTransaction[]
+  wishlistItems         WishlistItem[]
 }
 
 model Address {
-  id          String   @id @default(uuid())
-  userId      String
-  name        String
-  phone       String
-  street      String
-  village     String?
-  city        String?
-  mandal      String?
-  district    String
-  state       String
-  pincode     String
-  landmark    String?
-  type        String   @default("Home") // Home, Office, Farm
-  latitude    Float?
-  longitude   Float?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  phone     String
+  street    String
+  village   String?
+  city      String?
+  mandal    String?
+  district  String
+  state     String
+  pincode   String
+  landmark  String?
+  type      String   @default("Home")
+  latitude  Float?
+  longitude Float?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Category {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  createdAt   DateTime  @default(now())
-
-  products    Product[]
+  id        String    @id @default(uuid())
+  name      String    @unique
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  products  Product[]
 }
 
 model Product {
@@ -85,7 +77,7 @@ model Product {
   description              String
   ingredients              String
   storage                  String
-  nutrition                Json // calories, fat, saturatedFat, protein, carbohydrates, calcium, vitaminD, sodium
+  nutrition                Json
   weight                   String
   volume                   String
   mrp                      Float
@@ -101,31 +93,29 @@ model Product {
   tags                     String[]
   frequentlyBoughtTogether String[]
   relatedProducts          String[]
-  variants                 Json? // variants array
-  faq                      Json? // faq array
+  variants                 Json?
+  faq                      Json?
   createdAt                DateTime       @default(now())
-
-  category                 Category       @relation(fields: [categoryId], references: [id])
-  orderItems               OrderItem[]
-  reviews                  Review[]
-  inventoryLogs            InventoryLog[]
   cartItems                CartItem[]
+  inventoryLogs            InventoryLog[]
+  orderItems               OrderItem[]
+  category                 Category       @relation(fields: [categoryId], references: [id])
+  reviews                  Review[]
   wishlistItems            WishlistItem[]
 }
 
 model Order {
-  id                   String            @id
+  id                   String           @id
   userId               String
   subtotal             Float
   gstTotal             Float
   deliveryCharges      Float
   discount             Float
   grandTotal           Float
-  status               String            @default("Pending")
+  status               String           @default("Pending")
   paymentMethod        String
-  paymentStatus        String            @default("Pending")
+  paymentStatus        String           @default("Pending")
   deliverySlot         String?
-  deliveryAddress      Json?             // address snapshot
   giftMessage          String?
   deliveryInstructions String?
   deliveryOtp          String?
@@ -134,18 +124,18 @@ model Order {
   cancellationReason   String?
   refundStatus         String?
   refundAmount         Float?
-  subscriptionType     String            @default("One Time Order")
+  subscriptionType     String           @default("One Time Order")
   invoiceNumber        String?
-  timeline             Json?             // status timeline snapshots
+  createdAt            DateTime         @default(now())
+  deliveryPartnerId    String?
   couponCode           String?
-  createdAt            DateTime          @default(now())
-
-  user                 User              @relation(fields: [userId], references: [id])
+  deliveryAddress      Json?
+  timeline             Json?
+  deliveryPartner      DeliveryPartner? @relation(fields: [deliveryPartnerId], references: [id])
+  user                 User             @relation(fields: [userId], references: [id])
   items                OrderItem[]
   payments             Payment[]
   refunds              Refund[]
-  deliveryPartnerId    String?
-  deliveryPartner      DeliveryPartner?  @relation(fields: [deliveryPartnerId], references: [id])
 }
 
 model OrderItem {
@@ -157,43 +147,39 @@ model OrderItem {
   price     Float
   quantity  Int
   gst       Float
-
   order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product @relation(fields: [productId], references: [id])
 }
 
 model Payment {
-  id            String   @id @default(uuid())
-  orderId       String
-  paymentId     String   @unique // razorpay_payment_id etc.
-  method        String
-  status        String
-  amount        Float
-  createdAt     DateTime @default(now())
-
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  orderId   String
+  paymentId String   @unique
+  method    String
+  status    String
+  amount    Float
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model Refund {
-  id          String   @id @default(uuid())
-  orderId     String
-  amount      Float
-  status      String   @default("Pending")
-  note        String?
-  createdAt   DateTime @default(now())
-
-  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  orderId   String
+  amount    Float
+  status    String   @default("Pending")
+  note      String?
+  createdAt DateTime @default(now())
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 model InventoryLog {
-  id          String   @id @default(uuid())
-  productId   String
-  quantity    Int
-  notes       String?
-  addedBy     String   @default("Admin")
-  createdAt   DateTime @default(now())
-
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id        String   @id @default(uuid())
+  productId String
+  quantity  Int
+  notes     String?
+  addedBy   String   @default("Admin")
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
@@ -204,7 +190,6 @@ model Notification {
   type      String   @default("Order Updates")
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -223,28 +208,27 @@ model Review {
   status             String   @default("pending")
   helpfulCount       Int      @default(0)
   likeCount          Int      @default(0)
-  helpfulVotes       Json?    // list of user ids who voted helpful
-  likes              Json?    // list of user ids who liked
-  reports            Json?    // list of reports { userId, reason }
+  helpfulVotes       Json?
+  likes              Json?
+  reports            Json?
   adminReply         String?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-
   product            Product  @relation(fields: [productId], references: [id])
   user               User     @relation(fields: [userId], references: [id])
 }
 
 model Coupon {
-  id           String    @id @default(uuid())
-  code         String    @unique
-  description  String
-  type         String    @default("flat") // flat, percentage
-  value        Float
-  minPurchase  Float
-  maxDiscount  Float?
-  expiryDate   DateTime?
-  isActive     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(uuid())
+  code        String    @unique
+  description String
+  type        String    @default("flat")
+  value       Float
+  minPurchase Float
+  maxDiscount Float?
+  expiryDate  DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
 }
 
 model DeliveryPartner {
@@ -259,17 +243,15 @@ model DeliveryPartner {
   completedDeliveries Int      @default(0)
   rating              Float    @default(5.0)
   createdAt           DateTime @default(now())
-
   orders              Order[]
 }
 
 model ActivityLog {
   id        String   @id @default(uuid())
   userId    String
-  type      String   // login, logout, password_change, address_update, profile_update
+  type      String
   meta      Json?
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -279,9 +261,8 @@ model CartItem {
   productId String
   quantity  Int      @default(1)
   createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }
@@ -291,23 +272,21 @@ model WishlistItem {
   userId    String
   productId String
   createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
 }
 
 model WalletTransaction {
-  id             String   @id @default(uuid())
-  userId         String
-  type           String   // credit, debit
-  amount         Float
-  balanceAfter   Float
-  description    String
-  createdAt      DateTime @default(now())
-
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  userId       String
+  type         String
+  amount       Float
+  balanceAfter Float
+  description  String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RefreshToken {
@@ -316,21 +295,43 @@ model RefreshToken {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model SupportTicket {
-  id          String   @id @default(uuid())
-  userId      String?
-  name        String
-  email       String
-  phone       String?
-  subject     String
-  message     String
-  status      String   @default("Pending") // Pending, In Progress, Resolved, Closed
-  priority    String   @default("Normal")  // Low, Normal, High, Urgent
-  adminReply  String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  userId     String?
+  name       String
+  email      String
+  phone      String?
+  subject    String
+  message    String
+  status     String   @default("Pending")
+  priority   String   @default("Normal")
+  adminReply String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
+
+enum Role {
+  admin
+  customer
+}
+
+model WhatsAppLog {
+  id        String   @id @default(uuid())
+  orderId   String
+  recipient String
+  event     String
+  message   String
+  status    String   @default("Sent")
+  attempts  Int      @default(1)
+  error     String?
+  createdAt DateTime @default(now())
+}
+
+model AppSettings {
+  id                           String  @id @default(uuid())
+  whatsappNotificationsEnabled Boolean @default(true)
+}
+

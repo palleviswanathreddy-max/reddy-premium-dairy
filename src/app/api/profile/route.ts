@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
@@ -10,15 +12,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = db.users.getById(userId);
-    if (!user || user.deletedAt) {
-      return NextResponse.json({ success: false, message: 'User not found or deleted' }, { status: 404 });
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { addresses: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    // Omit sensitive data
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, passwordHash, ...safeUser } = user;
-    
+    const { passwordHash: _, ...safeUser } = user;
     return NextResponse.json({ success: true, user: safeUser });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
@@ -34,16 +37,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = db.users.getById(userId);
-    if (!user || user.deletedAt) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
-    }
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { name, gender, dob, bloodGroup, emergencyContact },
+      include: { addresses: true }
+    });
 
-    const updatedUser = db.users.update(userId, { name, gender, dob, bloodGroup, emergencyContact });
-    
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, passwordHash, ...safeUser } = updatedUser!;
-
+    const { passwordHash: _, ...safeUser } = updatedUser;
     return NextResponse.json({ success: true, user: safeUser });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

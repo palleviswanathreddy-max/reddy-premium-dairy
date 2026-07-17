@@ -144,6 +144,17 @@ async function seedPostgresFromLocalJSON() {
       }
     }
 
+    // 5. AppSettings
+    const settingsCount = await prisma.appSettings.count();
+    if (settingsCount === 0) {
+      logger.info('🌱 Seeding AppSettings in PostgreSQL...');
+      await prisma.appSettings.create({
+        data: {
+          whatsappNotificationsEnabled: true,
+        },
+      });
+    }
+
   } catch (err) {
     logger.error('Error seeding PostgreSQL from LocalDB', err as Error);
   }
@@ -228,8 +239,7 @@ export async function gracefulShutdown() {
     cache.clear();
     logger.info('Cache cleared');
 
-    // Close database connections (if using mongoose)
-    // await mongoose.disconnect();
+    // Close database connections
 
     logger.info('✅ Application shutdown complete');
   } catch (error) {

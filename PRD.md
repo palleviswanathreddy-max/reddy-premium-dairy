@@ -3,7 +3,7 @@
 ## Complete Product Requirements Document (PRD)
 
 **Version:** 1.0
-**Platform:** Web (Next.js + MongoDB)
+**Platform:** Web (Next.js + PostgreSQL + Prisma)
 
 ### 1. Project Overview
 
@@ -187,7 +187,7 @@ Search, Filters, Sorting, Compare, Wishlist, Share, Recently Viewed
 ### 31. Tech Stack
 
 **Frontend:** Next.js 16, React, TypeScript, Tailwind CSS
-**Backend:** Next.js API, MongoDB
+**Backend:** Next.js API, PostgreSQL (Prisma ORM)
 **Authentication:** JWT, OTP, Google OAuth
 **Storage:** Cloudinary
 **Deployment:** Vercel

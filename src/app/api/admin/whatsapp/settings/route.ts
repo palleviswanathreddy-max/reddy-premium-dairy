@@ -1,11 +1,15 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
-import { connectMongo, MongooseAppSettings } from '@/db/mongodb';
+import { prisma } from '@/lib/prisma';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const settings = db.settings.get();
-    return NextResponse.json({ success: true, settings });
+    const settings = await prisma.appSettings.findFirst();
+    return NextResponse.json({
+      success: true,
+      settings: settings || { whatsappNotificationsEnabled: true }
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -18,21 +22,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'whatsappNotificationsEnabled parameter must be boolean' }, { status: 400 });
     }
 
-    // 1. Update local JSON DB
-    const settings = db.settings.update({ whatsappNotificationsEnabled });
-
-    // 2. Update MongoDB settings
-    if (process.env.MONGODB_URI) {
-      try {
-        await connectMongo();
-        await MongooseAppSettings.findOneAndUpdate(
-          {},
-          { whatsappNotificationsEnabled },
-          { upsert: true, new: true }
-        );
-      } catch (err) {
-        console.warn('[MongoDB Settings Update Error]', err);
-      }
+    let settings = await prisma.appSettings.findFirst();
+    if (settings) {
+      settings = await prisma.appSettings.update({
+        where: { id: settings.id },
+        data: { whatsappNotificationsEnabled }
+      });
+    } else {
+      settings = await prisma.appSettings.create({
+        data: { whatsappNotificationsEnabled }
+      });
     }
 
     return NextResponse.json({ success: true, settings });

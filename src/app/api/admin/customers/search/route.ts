@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/db/db';
+import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,61 +15,81 @@ export async function GET(request: Request) {
       );
     }
 
-    const users = db.users.getAll();
-    const orders = db.orders.getAll();
+    // Search users by name, email, phone, or ID
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: 'insensitive' } },
+          { email: { contains: q, mode: 'insensitive' } },
+          { phone: { contains: q, mode: 'insensitive' } },
+          { id: { contains: q, mode: 'insensitive' } }
+        ]
+      },
+      include: {
+        addresses: true,
+        orders: {
+          include: { items: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        }
+      },
+      take: 20
+    });
 
-    // Match users by name, phone, email, or ID
-    const matchedUsers = users.filter(u =>
-      u.name?.toLowerCase().includes(q) ||
-      u.email?.toLowerCase().includes(q) ||
-      u.phone?.toLowerCase().includes(q) ||
-      u.id?.toLowerCase().includes(q) ||
-      // Also search by order ID — find orders first then get users
-      orders.some(o => o.userId === u.id && o.id.toLowerCase().includes(q))
-    );
-
-    // If no user match but query looks like an order ID, return the order's user
-    if (matchedUsers.length === 0) {
-      const matchedOrder = orders.find(o => o.id.toLowerCase().includes(q));
-      if (matchedOrder) {
-        const orderUser = users.find(u => u.id === matchedOrder.userId);
-        if (orderUser) matchedUsers.push(orderUser);
-      }
+    // Also search by order ID
+    let extraUsers: typeof users = [];
+    if (users.length === 0) {
+      const matchedOrders = await prisma.order.findMany({
+        where: { id: { contains: q, mode: 'insensitive' } },
+        include: {
+          user: {
+            include: {
+              addresses: true,
+              orders: {
+                include: { items: true },
+                orderBy: { createdAt: 'desc' },
+                take: 10
+              }
+            }
+          }
+        },
+        take: 5
+      });
+      extraUsers = matchedOrders.map(o => o.user);
     }
 
-    const results = matchedUsers.slice(0, 20).map(u => {
-      const userOrders = orders
-        .filter(o => o.userId === u.id)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const allUsers = [...users, ...extraUsers];
 
-      const totalSpending = userOrders
-        .filter(o => !['Cancelled'].includes(o.status))
-        .reduce((sum, o) => sum + o.grandTotal, 0);
+    type DbUser = typeof allUsers[number];
+    const results = allUsers.slice(0, 20).map((u: DbUser) => {
+      const totalSpending = u.orders
+        .filter((o: any) => !['Cancelled'].includes(o.status))
+        .reduce((sum: number, o: any) => sum + o.grandTotal, 0);
 
-      const lastOrder = userOrders[0] || null;
+      const lastOrder = u.orders[0] || null;
 
       return {
         id: u.id,
         name: u.name,
-        email: u.email,
-        phone: u.phone,
+        email: u.email || '',
+        phone: u.phone || '',
         role: u.role,
         avatar: u.avatar,
         addresses: u.addresses,
         walletBalance: u.walletBalance,
         rewardPoints: u.rewardPoints,
-        lastLoginAt: (u as any).lastLoginAt || null,
-        createdAt: (u as any).createdAt || null,
-        isActive: !(u as any).deletedAt,
-        totalOrders: userOrders.length,
+        lastLoginAt: u.lastLoginAt?.toISOString() || null,
+        createdAt: u.createdAt.toISOString(),
+        isActive: true,
+        totalOrders: u.orders.length,
         totalSpending,
         lastOrder: lastOrder ? {
           id: lastOrder.id,
           status: lastOrder.status,
           grandTotal: lastOrder.grandTotal,
-          createdAt: lastOrder.createdAt
+          createdAt: lastOrder.createdAt.toISOString()
         } : null,
-        orderHistory: userOrders.slice(0, 10).map(o => ({
+        orderHistory: u.orders.slice(0, 10).map((o: any) => ({
           id: o.id,
           status: o.status,
           paymentMethod: o.paymentMethod,
@@ -77,7 +97,7 @@ export async function GET(request: Request) {
           grandTotal: o.grandTotal,
           items: o.items,
           deliveryAddress: o.deliveryAddress,
-          createdAt: o.createdAt,
+          createdAt: o.createdAt.toISOString(),
           timeline: o.timeline
         }))
       };

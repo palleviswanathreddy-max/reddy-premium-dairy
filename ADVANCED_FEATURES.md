@@ -185,36 +185,16 @@ const headers = setCacheHeaders(200, 300, true);
 ## Database Optimization
 
 ### Overview
-MongoDB indexes, query optimization, and connection pooling.
+PostgreSQL relational constraints, Prisma schema optimization, and connection pooling.
 
-### Initialization
+### Connection Pooling
+Connection pooling is optimized in [prisma.ts](file:///c:/reddy%20primum%20dairy/src/lib/prisma.ts) using the `pg` driver's connection Pool.
+- **Max Connections**: 10
+- **Connection Timeout**: 5000ms
+- **Idle Timeout**: 30000ms
 
-```typescript
-import { createDatabaseIndexes, getDatabaseStats } from '@/db/optimization';
-
-// Call on server startup
-await createDatabaseIndexes();
-```
-
-### Auto-created Indexes
-- **Users**: email, phone, role, createdAt, pincode
-- **Products**: sku, category, brand, status, price, rating, compound indexes
-- **Orders**: userId, orderId, status, createdAt, compound indexes
-- **Coupons**: code, validity dates
-- **Tickets**: userId, status, priority
-
-### Monitoring
-
-```typescript
-const stats = await getDatabaseStats();
-/*
-{
-  users: { count: 1250, indexCount: 5 },
-  products: { count: 3890, indexCount: 9 },
-  ...
-}
-*/
-```
+### Indexes & Integrity
+Foreign keys, primary keys, and indices are enforced at the PostgreSQL database level using `prisma/schema.prisma` definitions (e.g. `@@unique`, `@unique`, cascades, and indexes).
 
 ---
 
@@ -462,10 +442,10 @@ describe('Auth Validation', () => {
 ## Performance Optimization Tips
 
 1. **Use Caching**: Cache frequently accessed data with appropriate TTLs
-2. **Lean Queries**: Use `.lean()` in MongoDB queries for better performance
-3. **Pagination**: Implement pagination for large datasets
+2. **Select Queries**: Use Prisma select/include query options to load only required fields and relationships
+3. **Pagination**: Implement pagination for large datasets (using `take` and `skip` in Prisma)
 4. **Rate Limiting**: Protect endpoints from abuse
-5. **Database Indexes**: Ensure proper indexes on frequently queried fields
+5. **Database Indexes**: Ensure proper indexes on frequently queried fields in schema.prisma
 6. **Async Operations**: Use async/await and Promise.all() for parallel operations
 7. **Error Handling**: Log and monitor errors for quick debugging
 
@@ -476,7 +456,7 @@ describe('Auth Validation', () => {
 ```env
 JWT_SECRET=your-jwt-secret-key
 JWT_REFRESH_SECRET=your-refresh-secret-key
-MONGODB_URI=mongodb://localhost:27017/reddy-premium-dairy
+DATABASE_URL=postgresql://postgres:password@localhost:5432/reddy_dairy?schema=public
 TWILIO_ACCOUNT_SID=your-twilio-sid
 TWILIO_AUTH_TOKEN=your-twilio-token
 TWILIO_PHONE_NUMBER=your-twilio-number

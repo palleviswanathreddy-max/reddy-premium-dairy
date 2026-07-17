@@ -3,6 +3,26 @@ import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
+// Helper: upsert guest user without race conditions
+async function ensureUser(userId: string) {
+  if (userId === 'user-guest') {
+    return prisma.user.upsert({
+      where: { id: 'user-guest' },
+      update: {},
+      create: {
+        id: 'user-guest',
+        email: 'guest@reddypremiumdairy.com',
+        name: 'Guest User',
+        role: 'customer',
+        phone: null,
+        walletBalance: 0,
+        rewardPoints: 0
+      }
+    });
+  }
+  return prisma.user.findUnique({ where: { id: userId } });
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,24 +32,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
     }
 
-    let user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    // Auto-create guest user if requested
-    if (!user && userId === 'user-guest') {
-      user = await prisma.user.create({
-        data: {
-          id: 'user-guest',
-          email: 'guest@reddypremiumdairy.com',
-          name: 'Guest User',
-          role: 'customer',
-          phone: null,
-          walletBalance: 0,
-          rewardPoints: 0
-        }
-      });
-    }
+    const user = await ensureUser(userId);
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
@@ -68,47 +71,37 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    // cart can be either CartItem[] (with .product) or {productId, quantity}[]
     const { userId, cart } = body;
 
     if (!userId) {
       return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
     }
 
-    let user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    // Auto-create guest user if requested
-    if (!user && userId === 'user-guest') {
-      user = await prisma.user.create({
-        data: {
-          id: 'user-guest',
-          email: 'guest@reddypremiumdairy.com',
-          name: 'Guest User',
-          role: 'customer',
-          phone: null,
-          walletBalance: 0,
-          rewardPoints: 0
-        }
-      });
-    }
+    const user = await ensureUser(userId);
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
+    // Normalise cart items — accept both formats
+    // Format A: { productId, quantity }  (from API-direct callers)
+    // Format B: { product: { id }, quantity }  (from AppContext CartItem[])
+    const normalised: { productId: string; quantity: number }[] = (cart || []).map((item: any) => ({
+      productId: item.productId || item.product?.id,
+      quantity: Number(item.quantity) || 1
+    })).filter((item: any) => !!item.productId);
+
     // Clean old cart items
-    await prisma.cartItem.deleteMany({
-      where: { userId }
-    });
+    await prisma.cartItem.deleteMany({ where: { userId } });
 
     // Save new cart items
-    if (cart && cart.length > 0) {
+    if (normalised.length > 0) {
       await prisma.cartItem.createMany({
-        data: cart.map((item: any) => ({
+        data: normalised.map(item => ({
           userId,
           productId: item.productId,
-          quantity: Number(item.quantity) || 1
+          quantity: item.quantity
         }))
       });
     }
