@@ -1678,6 +1678,15 @@
       "type": "free_shipping",
       "value": 20,
       "minPurchase": 150
+    },
+    {
+      "code": "CDF",
+      "description": "Customer Discount",
+      "type": "flat",
+      "value": 20,
+      "minPurchase": 100,
+      "maxDiscount": 20,
+      "isActive": true
     }
   ],
   "blogs": [

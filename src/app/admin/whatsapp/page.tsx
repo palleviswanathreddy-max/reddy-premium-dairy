@@ -109,7 +109,7 @@ export default function WhatsAppManagerPage() {
     }
   };
 
-  const handleRetrySingle = async (logId: string) => {
+  const handleRetrySingle = async (_logId: string) => {
     showToast('Retrying message...', 'info');
     try {
       // For simple single retry, trigger the global retry which processes all failed, including this one
@@ -119,7 +119,7 @@ export default function WhatsAppManagerPage() {
         showToast('Retry executed', 'success');
         fetchLogs();
       }
-    } catch (err) {
+    } catch {
       showToast('Error retrying message', 'error');
     }
   };

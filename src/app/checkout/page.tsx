@@ -318,7 +318,7 @@ export default function Checkout() {
         } else {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const rzp = new (window as any).Razorpay(options);
-          rzp.on('payment.failed', function (response: any) {
+          rzp.on('payment.failed', function (response: { error: { description?: string } }) {
             showToast(response.error.description || 'Payment failed. Please try again.', 'error');
           });
           rzp.open();
@@ -763,6 +763,7 @@ export default function Checkout() {
                     {paymentMethod === 'UPI' && (
                       <div className="p-5 border border-dashed rounded-2xl bg-slate-50 dark:bg-slate-950/20 text-center space-y-3 flex flex-col items-center">
                         <div className="h-40 w-40 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-white flex items-center justify-center shadow-md">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
                             src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR`)}`} 
                             alt="UPI QR Code" 

@@ -906,15 +906,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const applyCouponCode = useCallback(async (code: string) => {
     try {
       const res = await fetch(`${API_COUPONS}?code=${code}`);
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-      const data = await res.json();
-      if (data.success) {
-        setAppliedCoupon(data.coupon);
-        showToast(`Coupon ${code} applied successfully!`, 'success');
-        return { success: true, message: data.message };
+      let data: { success?: boolean; coupon?: Coupon | null; message?: string } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        // Safe check if json parse fails
+      }
+
+      if (!res.ok) {
+        const errorMsg = data?.message || `HTTP error! status: ${res.status}`;
+        showToast(errorMsg, 'error');
+        return { success: false, message: errorMsg };
+      }
+
+      if (data && data.success) {
+        setAppliedCoupon(data.coupon || null);
+        showToast(`Coupon ${code.toUpperCase()} applied successfully!`, 'success');
+        return { success: true, message: data.message || 'Coupon applied successfully!' };
       } else {
-        showToast(data.message || 'Invalid coupon', 'error');
-        return { success: false, message: data.message };
+        const errorMsg = data?.message || 'Invalid coupon';
+        showToast(errorMsg, 'error');
+        return { success: false, message: errorMsg };
       }
     } catch (err) {
       if (process.env.NODE_ENV === 'development') {

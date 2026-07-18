@@ -14,6 +14,9 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     "src/__tests__/**",   // Test files use Jest globals — handled by separate tsconfig
+    "public/sw.js",
+    "public/workbox-*.js",
+    "public/fallback-*.js",
   ]),
 
   // ── Relaxed rules for infrastructure / utility files ────────────────────

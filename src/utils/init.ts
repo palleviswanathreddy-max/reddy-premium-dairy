@@ -83,18 +83,27 @@ async function seedPostgresFromLocalJSON() {
     }
 
     // 2. Coupons
-    const couponCount = await prisma.coupon.count();
-    if (couponCount === 0 && localDb.coupons && localDb.coupons.length > 0) {
-      logger.info('🌱 Seeding Coupons in PostgreSQL...');
+    if (localDb.coupons && localDb.coupons.length > 0) {
+      logger.info('🌱 Seeding/Syncing Coupons in PostgreSQL...');
       for (const cp of localDb.coupons) {
-        await prisma.coupon.create({
-          data: {
+        await prisma.coupon.upsert({
+          where: { code: cp.code },
+          update: {
+            description: cp.description,
+            type: cp.type || 'flat',
+            value: cp.value,
+            minPurchase: cp.minPurchase,
+            maxDiscount: cp.maxDiscount ?? null,
+            expiryDate: cp.expiryDate ? new Date(cp.expiryDate) : null,
+            isActive: cp.isActive !== false,
+          },
+          create: {
             code: cp.code,
             description: cp.description,
             type: cp.type || 'flat',
             value: cp.value,
             minPurchase: cp.minPurchase,
-            maxDiscount: cp.maxDiscount,
+            maxDiscount: cp.maxDiscount ?? null,
             expiryDate: cp.expiryDate ? new Date(cp.expiryDate) : null,
             isActive: cp.isActive !== false,
           },
