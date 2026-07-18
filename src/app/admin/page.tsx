@@ -13,10 +13,12 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 import { Product, Order } from '@/db/db';
+import { useSession } from 'next-auth/react';
 
 export default function AdminDashboard() {
   const router = useRouter();
   const { user, products, refreshProducts, updateOrderStatus, showToast } = useApp();
+  const { status } = useSession();
   const redirecting = React.useRef(false);
 
   const [activeTab, setActiveTab] = useState('overview');
@@ -376,6 +378,9 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    // Prevent redirecting while NextAuth is loading or while session is authenticated but user state hasn't loaded yet
+    if (status === 'loading' || (status === 'authenticated' && !user)) return;
+
     /* eslint-disable react-hooks/set-state-in-effect */
     if (!user || user.role !== 'admin') {
       if (!redirecting.current) {
@@ -418,7 +423,7 @@ export default function AdminDashboard() {
     }
     /* eslint-enable react-hooks/set-state-in-effect */
      
-  }, [user, router, showToast]);
+  }, [user, status, router, showToast]);
 
   // Fetch insights when tab is activated
   useEffect(() => {

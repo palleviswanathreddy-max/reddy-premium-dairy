@@ -1,18 +1,8 @@
-/**
- * Advanced Authentication with Session Management
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyAccessToken, verifyRefreshToken, generateAccessToken } from '@/db/auth-helper';
+import { getToken } from 'next-auth/jwt';
+import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
-
-interface SessionPayload {
-  userId: string;
-  email: string;
-  role: string;
-  iat: number;
-  exp: number;
-}
+import { verifyAccessToken, verifyRefreshToken } from '@/db/auth-helper';
 
 export interface AuthContext {
   userId: string;
@@ -21,110 +11,121 @@ export interface AuthContext {
   isAuthenticated: boolean;
 }
 
-/**
- * Extract and verify JWT token from request
- */
-export function extractToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader) return null;
+function parseCookies(cookieHeader: string): Record<string, string> {
+  const list: Record<string, string> = {};
+  if (!cookieHeader) return list;
 
-  const [scheme, token] = authHeader.split(' ');
-  if (scheme !== 'Bearer' || !token) return null;
+  cookieHeader.split(';').forEach((cookie) => {
+    const parts = cookie.split('=');
+    const name = parts[0].trim();
+    const value = parts.slice(1).join('=').trim();
+    if (name) {
+      list[name] = decodeURIComponent(value);
+    }
+  });
 
-  return token;
+  return list;
 }
 
 /**
- * Verify access token and return auth context
- */
-export function verifyAuth(token: string): AuthContext | null {
-  try {
-    const payload = verifyAccessToken(token) as SessionPayload;
-    if (!payload) return null;
-
-    return {
-      userId: payload.userId,
-      email: payload.email,
-      role: payload.role,
-      isAuthenticated: true
-    };
-  } catch (error) {
-    logger.warn('Token verification failed', { error: String(error) });
-    return null;
-  }
-}
-
-/**
- * Token Refresh Handler
- */
-export async function handleTokenRefresh(
-  refreshToken: string
-): Promise<{ accessToken: string; refreshToken?: string } | null> {
-  try {
-    const payload = verifyRefreshToken(refreshToken) as SessionPayload;
-    if (!payload) return null;
-
-    const newAccessToken = generateAccessToken({
-      userId: payload.userId,
-      email: payload.email,
-      role: payload.role
-    });
-
-    return {
-      accessToken: newAccessToken
-      // Optionally return new refresh token with longer rotation
-    };
-  } catch (error) {
-    logger.error('Token refresh failed', error as Error);
-    return null;
-  }
-}
-
-/**
- * Middleware: Verify JWT and attach to request
+ * Middleware: Verify NextAuth Session or custom JWT token and attach to request
  */
 export function withAuth(handler: Function) {
-  return async (request: NextRequest) => {
+  return async (request: NextRequest, ...args: any[]) => {
     try {
-      const token = extractToken(request);
-      
-      if (!token) {
+      const cookieHeader = request.headers.get('cookie') || '';
+      const cookies = parseCookies(cookieHeader);
+
+      let userId = '';
+      let email = '';
+
+      // 1. Try Custom JWT Access Token
+      const accessToken = cookies['accessToken'];
+      if (accessToken) {
+        const payload = verifyAccessToken(accessToken);
+        if (payload) {
+          userId = payload.id;
+          email = payload.email;
+        }
+      }
+
+      // 2. Try Custom JWT Refresh Token
+      if (!userId && !email) {
+        const refreshToken = cookies['refreshToken'];
+        if (refreshToken) {
+          const payload = verifyRefreshToken(refreshToken);
+          if (payload) {
+            userId = payload.id;
+            email = payload.email;
+          }
+        }
+      }
+
+      // 3. Fallback to NextAuth token decryption
+      if (!userId && !email) {
+        console.log('[DEBUG withAuth] Parsing token from request...');
+        let isSecure = !!(process.env.NEXTAUTH_URL?.startsWith('https://') || 
+                          request.headers.get('x-forwarded-proto') === 'https' ||
+                          (request.url && request.url.startsWith('https://')));
+                          
+        if (cookieHeader.includes('__Secure-next-auth.session-token')) {
+          isSecure = true;
+        } else if (cookieHeader.includes('next-auth.session-token')) {
+          isSecure = false;
+        }
+
+        const token = await getToken({
+          req: request,
+          secret: process.env.NEXTAUTH_SECRET || 'reddy-premium-dairy-nextauth-secret-key-2026',
+          secureCookie: isSecure
+        });
+
+        if (token) {
+          userId = token.id as string;
+          email = token.email || '';
+        }
+      }
+
+      if (!userId && !email) {
         return NextResponse.json(
-          { error: 'Missing or invalid authorization token' },
+          { error: 'Missing or invalid session' },
           { status: 401 }
         );
       }
 
-      const auth = verifyAuth(token);
-      
-      if (!auth) {
-        // Token expired or invalid - check if refresh token available
-        const refreshToken = request.cookies.get('refreshToken')?.value;
-        
-        if (!refreshToken) {
-          return NextResponse.json(
-            { error: 'Token expired. Please login again.' },
-            { status: 401 }
-          );
-        }
-
-        const newTokens = await handleTokenRefresh(refreshToken);
-        if (!newTokens) {
-          return NextResponse.json(
-            { error: 'Invalid refresh token' },
-            { status: 401 }
-          );
-        }
-
-        // Attach new token to response headers
-        const response = await handler(request, { auth: verifyAuth(newTokens.accessToken)! });
-        response.headers.set('X-New-Access-Token', newTokens.accessToken);
-        return response;
+      let dbUser = null;
+      if (userId) {
+        dbUser = await prisma.user.findUnique({
+          where: { id: userId }
+        });
       }
+
+      if (!dbUser && email) {
+        const normalizedEmail = email.toLowerCase();
+        dbUser = await prisma.user.findUnique({
+          where: { email: normalizedEmail }
+        });
+      }
+
+      if (!dbUser) {
+        return NextResponse.json(
+          { error: 'User not found' },
+          { status: 401 }
+        );
+      }
+
+      const auth: AuthContext = {
+        userId: dbUser.id,
+        email: dbUser.email || '',
+        role: dbUser.role,
+        isAuthenticated: true
+      };
 
       // Attach auth context to request
       (request as any).auth = auth;
-      return handler(request, { auth });
+      
+      const routeContext = args[0] || {};
+      return handler(request, { auth, ...routeContext });
     } catch (error) {
       logger.error('Auth middleware error', error as Error);
       return NextResponse.json(
@@ -167,54 +168,3 @@ export function withRole(...allowedRoles: string[]) {
     };
   };
 }
-
-/**
- * Session Tracking
- */
-export class SessionManager {
-  private sessions: Map<string, { userId: string; createdAt: number; lastActivity: number }> = new Map();
-  private sessionTimeout = 24 * 60 * 60 * 1000; // 24 hours
-
-  createSession(userId: string, sessionId: string): void {
-    const now = Date.now();
-    this.sessions.set(sessionId, {
-      userId,
-      createdAt: now,
-      lastActivity: now
-    });
-  }
-
-  updateActivity(sessionId: string): boolean {
-    const session = this.sessions.get(sessionId);
-    if (!session) return false;
-
-    session.lastActivity = Date.now();
-    return true;
-  }
-
-  isSessionValid(sessionId: string): boolean {
-    const session = this.sessions.get(sessionId);
-    if (!session) return false;
-
-    const elapsedTime = Date.now() - session.lastActivity;
-    return elapsedTime < this.sessionTimeout;
-  }
-
-  destroySession(sessionId: string): void {
-    this.sessions.delete(sessionId);
-  }
-
-  getSessions(userId: string): string[] {
-    return Array.from(this.sessions.entries())
-      .filter(([, session]) => session.userId === userId)
-      .map(([sessionId]) => sessionId);
-  }
-
-  destroyUserSessions(userId: string): number {
-    const sessions = this.getSessions(userId);
-    sessions.forEach(sessionId => this.destroySession(sessionId));
-    return sessions.length;
-  }
-}
-
-export const sessionManager = new SessionManager();

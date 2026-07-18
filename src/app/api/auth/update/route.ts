@@ -1,12 +1,20 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/utils/auth-check';
 
 export async function POST(request: Request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { userId, ...rawUpdates } = body;
-    if (!userId) {
-      return NextResponse.json({ success: false, message: 'User ID is required' }, { status: 400 });
+    const targetUserId = userId || authUser.id;
+
+    if (targetUserId !== authUser.id && authUser.role !== 'admin') {
+      return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
     // Only allow safe fields to be updated — prevent password hash injection etc.
@@ -28,7 +36,7 @@ export async function POST(request: Request) {
 
     // Update user in PostgreSQL
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { id: targetUserId },
       data: userUpdates,
       include: { addresses: true }
     });

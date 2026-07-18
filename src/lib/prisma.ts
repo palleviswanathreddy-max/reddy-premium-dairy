@@ -22,9 +22,13 @@ function createPrismaClient(): PrismaClient {
     globalForPrisma.pgPool = new Pool({
       connectionString,
       // Sensible defaults that work with Prisma's local proxy
-      max: 10,
-      connectionTimeoutMillis: 5000,
-      idleTimeoutMillis: 30000,
+      max: 5,
+      min: 0,
+      connectionTimeoutMillis: 15000,
+      idleTimeoutMillis: 10000,
+      ssl: {
+        rejectUnauthorized: false,
+      },
     });
 
     // Handle pool errors gracefully to prevent unhandled rejections

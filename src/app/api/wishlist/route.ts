@@ -1,39 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/utils/auth-check';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    let user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    // Auto-create guest user if requested
-    if (!user && userId === 'user-guest') {
-      user = await prisma.user.create({
-        data: {
-          id: 'user-guest',
-          email: 'guest@reddypremiumdairy.com',
-          name: 'Guest User',
-          role: 'customer',
-          phone: null,
-          walletBalance: 0,
-          rewardPoints: 0
-        }
-      });
-    }
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
-    }
+    const userId = authUser.id;
 
     const dbWishlistItems = await prisma.wishlistItem.findMany({
       where: { userId }
@@ -49,35 +27,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    const { userId, wishlist } = body; // Array of product IDs
-
-    if (!userId) {
-      return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
-    }
-
-    let user = await prisma.user.findUnique({
-      where: { id: userId }
-    });
-
-    // Auto-create guest user if requested
-    if (!user && userId === 'user-guest') {
-      user = await prisma.user.create({
-        data: {
-          id: 'user-guest',
-          email: 'guest@reddypremiumdairy.com',
-          name: 'Guest User',
-          role: 'customer',
-          phone: null,
-          walletBalance: 0,
-          rewardPoints: 0
-        }
-      });
-    }
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
-    }
+    const { wishlist } = body; // Array of product IDs
+    const userId = authUser.id;
 
     // Clean old wishlist items
     await prisma.wishlistItem.deleteMany({

@@ -1,21 +1,35 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const cookieHeader = request.headers.get('cookie') || '';
+    let isSecure = !!(process.env.NEXTAUTH_URL?.startsWith('https://') || 
+                      request.headers.get('x-forwarded-proto') === 'https' ||
+                      (request.url && request.url.startsWith('https://')));
+                   
+    if (cookieHeader.includes('__Secure-next-auth.session-token')) {
+      isSecure = true;
+    } else if (cookieHeader.includes('next-auth.session-token')) {
+      isSecure = false;
+    }
 
-    if (!session || !session.user || !session.user.email) {
+    const token = await getToken({
+      req: request,
+      secret: process.env.NEXTAUTH_SECRET || 'reddy-premium-dairy-nextauth-secret-key-2026',
+      secureCookie: isSecure
+    });
+
+    if (!token || !token.email) {
       return NextResponse.json(
         { success: false, message: 'No active Google session found' },
         { status: 401 }
       );
     }
 
-    const email = session.user.email.toLowerCase();
+    const email = token.email.toLowerCase();
 
     // Query user from PostgreSQL via Prisma Client
     const dbUser = await prisma.user.findFirst({
@@ -32,27 +46,6 @@ export async function GET() {
       );
     }
 
-    const userPayload = {
-      id: dbUser.id,
-      email: dbUser.email || '',
-      role: dbUser.role,
-      name: dbUser.name,
-    };
-
-    // Generate JWT tokens
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
-
-    // Save Refresh Token in PostgreSQL database
-    await prisma.refreshToken.deleteMany({ where: { userId: dbUser.id } });
-    await prisma.refreshToken.create({
-      data: {
-        userId: dbUser.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      },
-    });
-
     // Log Activity
     await prisma.activityLog.create({
       data: {
@@ -60,6 +53,16 @@ export async function GET() {
         type: 'login',
       },
     });
+
+    // Generate tokens for custom JWT compatibility
+    const payload = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
+      name: dbUser.name
+    };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
     const response = NextResponse.json({
       success: true,
@@ -76,19 +79,20 @@ export async function GET() {
       },
     });
 
-    // Set Secure HTTP-Only Cookie headers
     response.cookies.set('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60,
+      sameSite: 'lax',
       path: '/',
+      maxAge: 15 * 60 // 15 mins
     });
 
     response.cookies.set('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
+      sameSite: 'lax',
       path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
     });
 
     return response;

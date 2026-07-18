@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { verifyRegistrationToken, hashPassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
+import { verifyRegistrationToken, hashPassword } from '@/db/auth-helper';
 
 export async function POST(request: Request) {
   try {
@@ -58,28 +58,6 @@ export async function POST(request: Request) {
       }
     });
 
-    const userPayload = {
-      id: dbUser.id,
-      email: dbUser.email || '',
-      role: dbUser.role,
-      name: dbUser.name
-    };
-
-    // Issue JWT tokens & Auto-login
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
-
-    // Save Refresh Token in PostgreSQL database
-    // Delete any existing tokens for this user first to avoid unique constraint violations.
-    await prisma.refreshToken.deleteMany({ where: { userId: dbUser.id } });
-    await prisma.refreshToken.create({
-      data: {
-        userId: dbUser.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    });
-
     // Log Activity
     await prisma.activityLog.create({
       data: {
@@ -88,7 +66,7 @@ export async function POST(request: Request) {
       }
     });
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       success: true,
       message: 'Registration successful! Welcome to Reddy Premium Dairy.',
       user: {
@@ -102,22 +80,6 @@ export async function POST(request: Request) {
         addresses: []
       }
     });
-
-    response.cookies.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60,
-      path: '/'
-    });
-
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/'
-    });
-
-    return response;
 
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

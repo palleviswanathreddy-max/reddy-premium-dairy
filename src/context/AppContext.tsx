@@ -1,9 +1,9 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { translations, LanguageType, TranslationKey } from '@/utils/translations';
 import { Product, User, Order, Coupon, Address } from '@/db/db';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession, signOut, signIn } from 'next-auth/react';
 
 interface CartItem {
   product: Product;
@@ -19,13 +19,77 @@ export interface NotificationMsg {
   read: boolean;
 }
 
+// Type definitions for Central Constants & Types
+export type OrderStatus =
+  | 'Delivered'
+  | 'Paid'
+  | 'Confirmed'
+  | 'Packed'
+  | 'Shipped'
+  | 'Out for Delivery'
+  | 'Pending'
+  | 'Cancelled'
+  | 'Returned'
+  | 'Failed'
+  | 'Refunded';
+
+// Central API Routes Constants
+const API_PRODUCTS = '/api/products';
+const API_ORDERS = '/api/orders';
+const API_CART = '/api/cart';
+const API_WISHLIST = '/api/wishlist';
+const API_NOTIFICATIONS = '/api/notifications';
+const API_INIT = '/api/init';
+const API_AUTH_SYNC = '/api/auth/google-sync';
+const API_PROFILE = '/api/profile';
+const API_AUTH_LOGIN = '/api/auth/login';
+const API_AUTH_REGISTER = '/api/auth/register';
+const API_AUTH_UPDATE = '/api/auth/update';
+const API_FCM_TOKEN = '/api/user/fcm-token';
+const API_COUPONS = '/api/coupons';
+const API_ORDERS_UPDATE = '/api/orders/update';
+const API_TRACK_CART = '/api/track/cart';
+const API_TRACK_PURCHASE = '/api/track/purchase';
+
+// Safe LocalStorage Utility Wrapper
+const safeLocalStorage = {
+  getItem: (key: string): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, value);
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage setItem failed:', err);
+      }
+    }
+  },
+  removeItem: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(key);
+    } catch (err) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('localStorage removeItem failed:', err);
+      }
+    }
+  }
+};
+
 interface AppContextProps {
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   language: LanguageType;
   setLanguage: (lang: LanguageType) => void;
   t: (key: TranslationKey) => string;
-  
+
   // Auth
   user: User | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -34,32 +98,32 @@ interface AppContextProps {
   updateUserAvatar: (base64Avatar: string) => Promise<boolean>;
   addAddress: (address: Omit<Address, 'id'>) => Promise<boolean>;
   removeAddress: (id: string) => Promise<boolean>;
-  
+
   // Products
   products: Product[];
   refreshProducts: () => Promise<void>;
-  
+
   // Cart
   cart: CartItem[];
   addToCart: (product: Product, qty?: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQty: (productId: string, qty: number) => void;
   clearCart: () => void;
-  
+
   // Coupon
   appliedCoupon: Coupon | null;
   applyCouponCode: (code: string) => Promise<{ success: boolean; message: string }>;
   removeCoupon: () => void;
-  
+
   // Wishlist
   wishlist: string[];
   toggleWishlist: (productId: string) => void;
-  
+
   // Compare
   compareList: Product[];
   toggleCompare: (product: Product) => void;
   clearCompare: () => void;
-  
+
   // Orders
   orders: Order[];
   createOrder: (orderData: {
@@ -75,8 +139,8 @@ interface AppContextProps {
     deliveryInstructions?: string;
   }) => Promise<{ success: boolean; orderId?: string }>;
   refreshOrders: () => Promise<void>;
-  updateOrderStatus: (orderId: string, status: string) => Promise<boolean>;
-  
+  updateOrderStatus: (orderId: string, status: OrderStatus | string) => Promise<boolean>;
+
   // Toast & Notifications
   notifications: NotificationMsg[];
   addNotification: (type: NotificationMsg['type'], title: string, message: string) => void;
@@ -89,26 +153,24 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
-  // Lazy initializer — reads localStorage once on mount, no setState-in-effect needed
+
+  // Lazy theme state initializer
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window === 'undefined') return 'light';
-    const stored = localStorage.getItem('reddy-theme') as 'light' | 'dark' | null;
+    const stored = safeLocalStorage.getItem('reddy-theme') as 'light' | 'dark' | null;
     if (stored) return stored;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-  const [language, setLanguageState] = useState<LanguageType>(() => {
-    if (typeof window === 'undefined') return 'en';
-    return (localStorage.getItem('reddy-lang') as LanguageType) || 'en';
-  });
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window === 'undefined') return null;
-    try {
-      const stored = localStorage.getItem('reddy-user');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
+    return 'light';
   });
+
+  // Lazy language state initializer
+  const [language, setLanguageState] = useState<LanguageType>(() => {
+    return (safeLocalStorage.getItem('reddy-lang') as LanguageType) || 'en';
+  });
+
+  const [user, setUser] = useState<User | null>(null);
+  const [isCartLoaded, setIsCartLoaded] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -119,84 +181,79 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | null }>({ message: '', type: null });
 
   // Show Toast Alert
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+  const showToast = useCallback((message: string, type: 'success' | 'error' | 'info') => {
     setToast({ message, type });
     setTimeout(() => {
       setToast({ message: '', type: null });
     }, 3000);
-  };
+  }, []);
 
-  // ── Activity Tracking ────────────────────────────────────────────────────
-  // Fire-and-forget: never await, never throw, never block the UI.
-  const trackEvent = (endpoint: string, payload: Record<string, unknown>) => {
-    // Use requestIdleCallback if available so tracking never blocks the main thread
+  // Activity Tracking (Fire-and-forget helper)
+  const trackEvent = useCallback((endpoint: string, payload: Record<string, unknown>) => {
     const fire = () => {
       fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      }).catch(() => { /* silently ignore tracking failures */ });
+      }).catch((err) => {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Silent tracking failed (expected in some mock scopes):', err);
+        }
+      });
     };
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
       (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(fire);
     } else {
       setTimeout(fire, 0);
     }
-  };
+  }, []);
 
-  // Apply theme class to document whenever theme changes (side-effect only, no setState)
+  // Apply theme class to HTML element whenever theme state changes
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
+    if (typeof window !== 'undefined') {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    }
   }, [theme]);
 
-  // Fetch Products from Database API — declared BEFORE the mount useEffect that calls it
-  const fetchProducts = async () => {
+  // Fetch Products from Database API
+  const fetchProducts = useCallback(async (signal?: AbortSignal) => {
     try {
-      const res = await fetch('/api/products');
+      const res = await fetch(API_PRODUCTS, { signal });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setProducts(data.products);
       }
     } catch (err) {
-      console.error('Failed to fetch products:', err);
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch products:', error);
+      }
     }
-  };
+  }, []);
 
-  // Fetch Orders from Database API — declared BEFORE the mount useEffect that calls it
-  const fetchOrders = async (userId: string, role: string) => {
+  // Fetch Orders from Database API
+  const fetchOrders = useCallback(async (userId: string, role: string, signal?: AbortSignal) => {
     try {
-      const res = await fetch(`/api/orders?userId=${userId}&role=${role}`, { cache: 'no-store' });
+      const res = await fetch(`${API_ORDERS}?userId=${userId}&role=${role}`, { cache: 'no-store', signal });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setOrders(data.orders);
       }
     } catch (err) {
-      console.error('Failed to fetch orders:', err);
-    }
-  };
-
-  // Fetch cart & wishlist from database
-  const fetchCartAndWishlist = async (userId: string) => {
-    try {
-      const cartRes = await fetch(`/api/cart?userId=${userId}`, { cache: 'no-store' });
-      const cartData = await cartRes.json();
-      if (cartData.success) {
-        setCart(cartData.cart);
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch orders:', error);
       }
-      const wishlistRes = await fetch(`/api/wishlist?userId=${userId}`, { cache: 'no-store' });
-      const wishlistData = await wishlistRes.json();
-      if (wishlistData.success) {
-        setWishlist(wishlistData.wishlist);
-      }
-    } catch (err) {
-      console.error('Failed to fetch cart/wishlist:', err);
     }
-  };
+  }, []);
 
-  // Fetch notifications from database
-  const fetchNotifications = async (userId: string) => {
+  // Fetch Notifications from Database
+  const fetchNotifications = useCallback(async (userId: string, signal?: AbortSignal) => {
     try {
-      const res = await fetch(`/api/notifications?userId=${userId}`, { cache: 'no-store' });
+      const res = await fetch(`${API_NOTIFICATIONS}?userId=${userId}`, { cache: 'no-store', signal });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         const msgs = data.notifications.map((n: { id: string; type: string; title: string; message: string; createdAt: string; isRead: boolean }) => ({
@@ -210,77 +267,175 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setNotifications(msgs);
       }
     } catch (err) {
-      console.error('Failed to fetch notifications:', err);
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch notifications:', error);
+      }
     }
-  };
+  }, []);
+
+  // Fetch cart & wishlist from database
+  const fetchCartAndWishlist = useCallback(async (userId: string, signal?: AbortSignal) => {
+    try {
+      const cartRes = await fetch(`${API_CART}?userId=${userId}`, { cache: 'no-store', signal });
+      if (!cartRes.ok) throw new Error(`HTTP error! status: ${cartRes.status}`);
+      const cartData = await cartRes.json();
+      let dbCart = cartData.success ? cartData.cart : [];
+
+      // Check for guest cart merge
+      const guestCartStr = safeLocalStorage.getItem('reddy-guest-cart');
+      if (guestCartStr && userId) {
+        try {
+          const guestCart = JSON.parse(guestCartStr);
+          if (guestCart && guestCart.length > 0) {
+            const mergedCart = [...dbCart];
+            for (const guestItem of guestCart) {
+              const idx = mergedCart.findIndex(item => item.product.id === guestItem.product.id);
+              if (idx > -1) {
+                mergedCart[idx].quantity += guestItem.quantity;
+              } else {
+                mergedCart.push(guestItem);
+              }
+            }
+            dbCart = mergedCart;
+            // Sync merged cart to DB
+            const cartPayload = mergedCart.map(item => ({
+              productId: item.product.id,
+              quantity: item.quantity
+            }));
+            const mergeRes = await fetch(API_CART, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, cart: cartPayload }),
+              signal
+            });
+            if (!mergeRes.ok) throw new Error(`HTTP error! status: ${mergeRes.status}`);
+          }
+        } catch (e) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to merge guest cart:', e);
+          }
+        } finally {
+          safeLocalStorage.removeItem('reddy-guest-cart');
+        }
+      }
+
+      setCart(dbCart);
+      setIsCartLoaded(true);
+
+      const wishlistRes = await fetch(`${API_WISHLIST}?userId=${userId}`, { cache: 'no-store', signal });
+      if (!wishlistRes.ok) throw new Error(`HTTP error! status: ${wishlistRes.status}`);
+      const wishlistData = await wishlistRes.json();
+      if (wishlistData.success) {
+        setWishlist(wishlistData.wishlist);
+      }
+    } catch (err) {
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch cart/wishlist:', error);
+      }
+    }
+  }, []);
+
+  // Sync Google/Credentials user profiles safely from PostgreSQL
+  const syncSessionProfile = useCallback(async (syncUrl: string, isGoogleProvider: boolean, signal?: AbortSignal) => {
+    try {
+      const res = await fetch(syncUrl, { signal });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+      const data = await res.json();
+      if (data.success) {
+        setUser(data.user);
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(data.user));
+        
+        // Fetch all relational collections
+        fetchOrders(data.user.id, data.user.role, signal);
+        fetchCartAndWishlist(data.user.id, signal);
+        fetchNotifications(data.user.id, signal);
+
+        if (isGoogleProvider) {
+          showToast(`Logged in as ${data.user.name}`, 'success');
+          trackEvent(API_TRACK_CART, { userId: data.user.id, type: 'login' });
+        }
+      } else if (process.env.NODE_ENV === 'development') {
+        console.error('Session sync failed:', data.message);
+      }
+    } catch (err) {
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('Error syncing session:', error);
+      }
+    }
+  }, [fetchOrders, fetchCartAndWishlist, fetchNotifications, showToast, trackEvent]);
 
   // Load state on mount
   useEffect(() => {
-    // Initialize application (database indexes, caching, etc.)
+    const controller = new AbortController();
     const initApp = async () => {
       try {
-        await fetch('/api/init', { method: 'GET' });
+        const res = await fetch(API_INIT, { method: 'GET', signal: controller.signal });
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       } catch (error) {
-        console.error('App initialization error (non-blocking):', error);
-      }
-    };
-    initApp();
-
-    // Load initial products
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchProducts();
-
-    // Restore user session or load guest
-    const storedUser = localStorage.getItem('reddy-user');
-    const activeId = storedUser ? JSON.parse(storedUser).id : 'user-guest';
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      fetchOrders(parsedUser.id, parsedUser.role);
-    }
-
-    fetchCartAndWishlist(activeId);
-    fetchNotifications(activeId);
-  }, []);
-
-  // Sync Google session with database and custom JWT session
-  useEffect(() => {
-    const syncGoogleSession = async () => {
-      if (status === 'authenticated' && session?.user && !user) {
-        try {
-          const res = await fetch('/api/auth/google-sync');
-          const data = await res.json();
-          if (data.success) {
-            setUser(data.user);
-            localStorage.setItem('reddy-user', JSON.stringify(data.user));
-            fetchOrders(data.user.id, data.user.role);
-            fetchCartAndWishlist(data.user.id);
-            fetchNotifications(data.user.id);
-            showToast(`Logged in as ${data.user.name}`, 'success');
-            trackEvent('/api/track/cart', { userId: data.user.id, type: 'login' });
-          } else {
-            console.error('Google session sync failed:', data.message);
-          }
-        } catch (err) {
-          console.error('Error syncing Google session:', err);
+        const err = error as Error;
+        if (err.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+          console.error('App initialization error (non-blocking):', err);
         }
       }
     };
-    syncGoogleSession();
-  }, [status, session, user]);
+    initApp();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProducts(controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchProducts]);
+
+  // Sync NextAuth session changes dynamically
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    if (status === 'loading') return;
+
+    if (status === 'authenticated') {
+      const isGoogleProvider = !!(session?.user && !session.user.image?.startsWith('data:') && !safeLocalStorage.getItem('reddy-user'));
+      const syncUrl = isGoogleProvider ? API_AUTH_SYNC : API_PROFILE;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      syncSessionProfile(syncUrl, isGoogleProvider, controller.signal);
+    } else if (status === 'unauthenticated') {
+      setUser(null);
+      setIsCartLoaded(false);
+      safeLocalStorage.removeItem('reddy-user');
+
+      // Restores guest cart on unauthenticated/logout states
+      const localCart = safeLocalStorage.getItem('reddy-guest-cart');
+      if (localCart) {
+        try {
+          setCart(JSON.parse(localCart));
+        } catch (e) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Error parsing local cart:', e);
+          }
+        }
+      }
+    }
+
+    return () => {
+      controller.abort();
+    };
+  }, [status, session, syncSessionProfile]);
 
   // Live Order & Notification Updates via Server-Sent Events (SSE)
-  // Polling is intentionally removed — SSE events handle real-time updates.
-  // Polling was causing excessive API requests and race conditions.
-  useEffect(() => {
-    const activeId = user ? user.id : 'user-guest';
-    const activeRole = user ? user.role : 'customer';
+  const sseUserId = user?.id;
+  const sseUserRole = user?.role;
 
-    const eventSource = new EventSource(`/api/events?userId=${activeId}`);
+  useEffect(() => {
+    if (!sseUserId) return;
+
+    const eventSource = new EventSource(`/api/events?userId=${sseUserId}`);
 
     const handleSSEMessage = () => {
-      fetchOrders(activeId, activeRole);
-      fetchNotifications(activeId);
+      fetchOrders(sseUserId, sseUserRole || '');
+      fetchNotifications(sseUserId);
     };
 
     eventSource.addEventListener('order_created', handleSSEMessage);
@@ -288,7 +443,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     eventSource.addEventListener('notification_created', handleSSEMessage);
     eventSource.onmessage = handleSSEMessage;
 
-    // On SSE error, close and let the effect re-run if user changes
     eventSource.onerror = () => {
       eventSource.close();
     };
@@ -296,110 +450,167 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return () => {
       eventSource.close();
     };
-  }, [user]);
+  }, [sseUserId, sseUserRole, fetchOrders, fetchNotifications]);
 
   // Register Firebase Cloud Messaging (FCM) Token
-  const registerFCMToken = async (userId: string) => {
+  const registerFCMToken = useCallback(async (userId: string, signal?: AbortSignal) => {
     try {
       const { requestForToken } = await import('@/lib/firebase');
       const token = await requestForToken();
       if (token) {
-        await fetch('/api/user/fcm-token', {
+        const res = await fetch(API_FCM_TOKEN, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, token })
+          body: JSON.stringify({ userId, token }),
+          signal
         });
-        console.log('FCM Token registered with server successfully.');
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        if (process.env.NODE_ENV === 'development') {
+          console.log('FCM Token registered with server successfully.');
+        }
       }
     } catch (err) {
-      console.error('FCM Token registration skipped/failed:', err);
+      const error = err as Error;
+      if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+        console.error('FCM Token registration skipped/failed:', error);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     if (user?.id) {
-      registerFCMToken(user.id);
+      registerFCMToken(user.id, controller.signal);
     }
-  }, [user?.id]);
+    return () => {
+      controller.abort();
+    };
+  }, [user?.id, registerFCMToken]);
 
-
-  // Sync Cart to database — skip on first mount to avoid wiping DB cart before it loads
-  const cartMountedRef = React.useRef(false);
+  // Sync Cart to database
   useEffect(() => {
+    const controller = new AbortController();
+    
     if (!cartMountedRef.current) {
       cartMountedRef.current = true;
-      return; // Skip the initial render — data comes FROM the DB, not TO it
+      return;
     }
+    
     const syncCart = async () => {
-      const activeId = user ? user.id : 'user-guest';
+      if (!user) {
+        safeLocalStorage.setItem('reddy-guest-cart', JSON.stringify(cart));
+        return;
+      }
+
+      if (!isCartLoaded) return;
+
       try {
-        // Map CartItem[] -> {productId, quantity}[] that the API expects
         const cartPayload = cart.map(item => ({
           productId: item.product.id,
           quantity: item.quantity
         }));
-        await fetch('/api/cart', {
+        const res = await fetch(API_CART, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: activeId, cart: cartPayload })
+          body: JSON.stringify({ userId: user.id, cart: cartPayload }),
+          signal: controller.signal
         });
+        if (!res.ok) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to sync cart:', res.statusText);
+          }
+        }
       } catch (err) {
-        console.error('Failed to sync cart to db:', err);
+        const error = err as Error;
+        if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+          console.error('Failed to sync cart to db:', error);
+        }
       }
     };
     syncCart();
-  }, [cart, user]);
 
-  // Sync Wishlist to database — skip on first mount
-  const wishlistMountedRef = React.useRef(false);
+    return () => {
+      controller.abort();
+    };
+  }, [cart, user, isCartLoaded]);
+
+  const cartMountedRef = useRef(false);
+
+  // Sync Wishlist to database
   useEffect(() => {
+    const controller = new AbortController();
+    
     if (!wishlistMountedRef.current) {
       wishlistMountedRef.current = true;
       return;
     }
+    
+    if (!user) return;
+
     const syncWishlist = async () => {
-      const activeId = user ? user.id : 'user-guest';
       try {
-        await fetch('/api/wishlist', {
+        const res = await fetch(API_WISHLIST, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: activeId, wishlist })
+          body: JSON.stringify({ userId: user.id, wishlist }),
+          signal: controller.signal
         });
+        if (!res.ok) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to sync wishlist:', res.statusText);
+          }
+        }
       } catch (err) {
-        console.error('Failed to sync wishlist to db:', err);
+        const error = err as Error;
+        if (error.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+          console.error('Failed to sync wishlist to db:', error);
+        }
       }
     };
     syncWishlist();
+
+    return () => {
+      controller.abort();
+    };
   }, [wishlist, user]);
 
+  const wishlistMountedRef = useRef(false);
+
   // Theme Toggler
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(nextTheme);
-    localStorage.setItem('reddy-theme', nextTheme);
-    document.documentElement.classList.toggle('dark', nextTheme === 'dark');
+    safeLocalStorage.setItem('reddy-theme', nextTheme);
     showToast(`Switched to ${nextTheme} mode`, 'info');
-  };
+  }, [theme, showToast]);
 
   // Language Setter
-  const setLanguage = (lang: LanguageType) => {
+  const setLanguage = useCallback((lang: LanguageType) => {
     setLanguageState(lang);
-    localStorage.setItem('reddy-lang', lang);
+    safeLocalStorage.setItem('reddy-lang', lang);
     showToast(lang === 'en' ? 'Language changed to English' : 'భాష తెలుగులోకి మార్చబడింది', 'info');
-  };
+  }, [showToast]);
 
   // Translation function
-  const t = (key: TranslationKey): string => {
+  const t = useCallback((key: TranslationKey): string => {
     return translations[language][key] || translations['en'][key] || String(key);
-  };
+  }, [language]);
 
-
-
-  // Add Notification System (Logs simulation as well)
-  const addNotification = async (type: NotificationMsg['type'], title: string, message: string) => {
-    const userId = user ? user.id : 'user-guest';
+  // Add Notification System
+  const addNotification = useCallback(async (type: NotificationMsg['type'], title: string, message: string) => {
+    if (!user) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`[SIMULATED ${type.toUpperCase()} NOTIFICATION]`);
+        console.log(`To: Customer (Guest)`);
+        console.log(`Title: ${title}`);
+        console.log(`Message: ${message}`);
+        console.log(`-----------------------------------`);
+      }
+      return;
+    }
+    const userId = user.id;
     try {
-      await fetch('/api/notifications', {
+      const res = await fetch(API_NOTIFICATIONS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -409,94 +620,124 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           type: type === 'email' || type === 'sms' || type === 'whatsapp' ? type : 'inapp'
         })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       await fetchNotifications(userId);
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
     }
 
-    // Simulated messaging logs to console
-    console.log(`[SIMULATED ${type.toUpperCase()} NOTIFICATION]`);
-    console.log(`To: ${user?.phone || 'Customer'}`);
-    console.log(`Title: ${title}`);
-    console.log(`Message: ${message}`);
-    console.log(`-----------------------------------`);
-  };
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`[SIMULATED ${type.toUpperCase()} NOTIFICATION]`);
+      console.log(`To: ${user?.phone || 'Customer'}`);
+      console.log(`Title: ${title}`);
+      console.log(`Message: ${message}`);
+      console.log(`-----------------------------------`);
+    }
+  }, [user, fetchNotifications]);
 
-  const markAllNotificationsRead = async () => {
+  const markAllNotificationsRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     if (user) {
       try {
         const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
-        await Promise.all(unreadIds.map(id => 
-          fetch('/api/notifications', {
+        await Promise.all(unreadIds.map(id =>
+          fetch(API_NOTIFICATIONS, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ notificationId: id })
+          }).then(res => {
+            if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           })
         ));
         await fetchNotifications(user.id);
       } catch (err) {
-        console.error(err);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(err);
+        }
       }
     }
-  };
+  }, [user, notifications, fetchNotifications]);
 
-  const refreshProducts = async () => {
+  const refreshProducts = useCallback(async () => {
     await fetchProducts();
-  };
+  }, [fetchProducts]);
 
-
-  // Fetch Orders from Database API
-
-  const refreshOrders = async () => {
+  const refreshOrders = useCallback(async () => {
     if (user) {
       await fetchOrders(user.id, user.role);
     }
-  };
+  }, [user, fetchOrders]);
 
-  // Auth Operations
-  const login = async (email: string, password: string) => {
+  // Auth Operations: Login
+  const login = useCallback(async (email: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/login', {
+      const loginRes = await fetch(API_AUTH_LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: email, password })
       });
+      if (!loginRes.ok) throw new Error(`HTTP error! status: ${loginRes.status}`);
+      const loginData = await loginRes.json();
+
+      if (!loginData.success) {
+        showToast(loginData.message || 'Login failed', 'error');
+        return { success: false, error: loginData.message };
+      }
+
+      const result = await signIn('credentials', {
+        redirect: false,
+        identifier: email,
+        password
+      });
+
+      if (result?.error) {
+        showToast(result.error || 'Login failed', 'error');
+        return { success: false, error: result.error };
+      }
+
+      const res = await fetch(API_PROFILE);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setUser(data.user);
-        localStorage.setItem('reddy-user', JSON.stringify(data.user));
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(data.user));
+        
         fetchOrders(data.user.id, data.user.role);
         fetchCartAndWishlist(data.user.id);
         fetchNotifications(data.user.id);
+        
         addNotification('inapp', 'Login Successful', `Welcome back, ${data.user.name}!`);
         addNotification('email', 'Login Notification', `Hello ${data.user.name}, you have successfully signed into REDDY PREMIUM DAIRY.`);
         showToast(`Logged in as ${data.user.name}`, 'success');
-        // Track login activity
-        trackEvent('/api/track/cart', { userId: data.user.id, type: 'login' });
+        trackEvent(API_TRACK_CART, { userId: data.user.id, type: 'login' });
         return { success: true };
       } else {
-        showToast(data.message || 'Login failed', 'error');
-        return { success: false, error: data.message };
+        showToast('Failed to retrieve user profile', 'error');
+        return { success: false, error: 'Failed to retrieve profile' };
       }
     } catch (err) {
-      console.error('Login error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Login error:', err);
+      }
       showToast('An error occurred during login', 'error');
       return { success: false, error: 'Connection error' };
     }
-  };
+  }, [fetchOrders, fetchCartAndWishlist, fetchNotifications, addNotification, showToast, trackEvent]);
 
-  const register = async (name: string, email: string, phone: string, password: string) => {
+  // Auth Operations: Register
+  const register = useCallback(async (name: string, email: string, phone: string, password: string) => {
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch(API_AUTH_REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, email, phone, password })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         showToast('Registration successful! Please login.', 'success');
-        // Simulated SMS Verification OTP
         addNotification('sms', 'OTP Verification', `Your OTP for registering at REDDY PREMIUM DAIRY is 5812. Valid for 5 minutes.`);
         return { success: true };
       } else {
@@ -504,54 +745,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: data.message };
       }
     } catch (err) {
-      console.error('Registration error:', err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Registration error:', err);
+      }
       showToast('An error occurred during registration', 'error');
       return { success: false, error: 'Connection error' };
     }
-  };
+  }, [addNotification, showToast]);
 
-  const logout = () => {
+  // Auth Operations: Logout
+  const logout = useCallback(() => {
     signOut({ redirect: false });
     setUser(null);
     setOrders([]);
     setCart([]);
     setWishlist([]);
     setNotifications([]);
-    localStorage.removeItem('reddy-user');
-    fetchCartAndWishlist('user-guest');
-    fetchNotifications('user-guest');
+    safeLocalStorage.removeItem('reddy-user');
+    safeLocalStorage.removeItem('reddy-guest-cart');
     showToast('Logged out successfully', 'success');
-  };
+  }, [showToast]);
 
-  const updateUserAvatar = async (base64Avatar: string) => {
+  // Auth Operations: Update Avatar
+  const updateUserAvatar = useCallback(async (base64Avatar: string) => {
     if (!user) return false;
     try {
-      const res = await fetch('/api/auth/update', {
+      const res = await fetch(API_AUTH_UPDATE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, avatar: base64Avatar })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         const updated = { ...user, avatar: base64Avatar };
         setUser(updated);
-        localStorage.setItem('reddy-user', JSON.stringify(updated));
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(updated));
         showToast('Profile image updated', 'success');
         return true;
       }
       return false;
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       return false;
     }
-  };
+  }, [user, showToast]);
 
-  const addAddress = async (newAddress: Omit<Address, 'id'>) => {
+  // Auth Operations: Add Address
+  const addAddress = useCallback(async (newAddress: Omit<Address, 'id'>) => {
     if (!user) return false;
     const addressId = `addr-${Date.now()}`;
     const fullAddress: Address = { ...newAddress, id: addressId };
-    
-    // Default setting
+
     let updatedAddresses = [...user.addresses];
     if (newAddress.isDefault) {
       updatedAddresses = updatedAddresses.map(addr => ({ ...addr, isDefault: false }));
@@ -559,52 +806,59 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updatedAddresses.push(fullAddress);
 
     try {
-      const res = await fetch('/api/auth/update', {
+      const res = await fetch(API_AUTH_UPDATE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, addresses: updatedAddresses })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         const updated = { ...user, addresses: updatedAddresses };
         setUser(updated);
-        localStorage.setItem('reddy-user', JSON.stringify(updated));
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(updated));
         showToast('Address added successfully', 'success');
         return true;
       }
       return false;
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       return false;
     }
-  };
+  }, [user, showToast]);
 
-  const removeAddress = async (id: string) => {
+  // Auth Operations: Remove Address
+  const removeAddress = useCallback(async (id: string) => {
     if (!user) return false;
     const updatedAddresses = user.addresses.filter(addr => addr.id !== id);
     try {
-      const res = await fetch('/api/auth/update', {
+      const res = await fetch(API_AUTH_UPDATE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, addresses: updatedAddresses })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         const updated = { ...user, addresses: updatedAddresses };
         setUser(updated);
-        localStorage.setItem('reddy-user', JSON.stringify(updated));
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(updated));
         showToast('Address removed', 'info');
         return true;
       }
       return false;
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       return false;
     }
-  };
+  }, [user, showToast]);
 
-  // Cart Operations
-  const addToCart = (product: Product, qty: number = 1) => {
+  // Cart: Add to Cart
+  const addToCart = useCallback((product: Product, qty: number = 1) => {
     setCart(prev => {
       const exists = prev.find(item => item.product.id === product.id);
       if (exists) {
@@ -617,17 +871,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return [...prev, { product, quantity: qty }];
     });
     showToast(`${product.name} added to cart`, 'success');
-    // Track cart_add activity
     const userId = user?.id || `guest_${Date.now()}`;
-    trackEvent('/api/track/cart', { userId, type: 'cart_add', productId: product.id, productName: product.name, quantity: qty });
-  };
+    trackEvent(API_TRACK_CART, { userId, type: 'cart_add', productId: product.id, productName: product.name, quantity: qty });
+  }, [user, showToast, trackEvent]);
 
-  const removeFromCart = (productId: string) => {
+  // Cart: Remove from Cart
+  const removeFromCart = useCallback((productId: string) => {
     setCart(prev => prev.filter(item => item.product.id !== productId));
     showToast('Product removed from cart', 'info');
-  };
+  }, [showToast]);
 
-  const updateCartQty = (productId: string, qty: number) => {
+  // Cart: Update Quantity
+  const updateCartQty = useCallback((productId: string, qty: number) => {
     if (qty <= 0) {
       removeFromCart(productId);
       return;
@@ -639,17 +894,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           : item
       )
     );
-  };
+  }, [removeFromCart]);
 
-  const clearCart = () => {
+  // Cart: Clear Cart
+  const clearCart = useCallback(() => {
     setCart([]);
     setAppliedCoupon(null);
-  };
+  }, []);
 
-  // Coupons
-  const applyCouponCode = async (code: string) => {
+  // Coupon: Apply Coupon Code
+  const applyCouponCode = useCallback(async (code: string) => {
     try {
-      const res = await fetch(`/api/coupons?code=${code}`);
+      const res = await fetch(`${API_COUPONS}?code=${code}`);
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         setAppliedCoupon(data.coupon);
@@ -660,18 +917,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return { success: false, message: data.message };
       }
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       return { success: false, message: 'Server error applying coupon' };
     }
-  };
+  }, [showToast]);
 
-  const removeCoupon = () => {
+  // Coupon: Remove Coupon
+  const removeCoupon = useCallback(() => {
     setAppliedCoupon(null);
     showToast('Coupon removed', 'info');
-  };
+  }, [showToast]);
 
-  // Wishlist
-  const toggleWishlist = (productId: string) => {
+  // Wishlist: Toggle Wishlist item
+  const toggleWishlist = useCallback((productId: string) => {
+    if (!user) {
+      showToast('Please login to use the wishlist', 'error');
+      return;
+    }
     setWishlist(prev => {
       const isStarred = prev.includes(productId);
       if (isStarred) {
@@ -679,17 +943,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return prev.filter(id => id !== productId);
       } else {
         showToast('Added to wishlist', 'success');
-        // Track wishlist_add activity
-        const userId = user?.id || `guest_${Date.now()}`;
+        const userId = user.id;
         const product = products.find(p => p.id === productId);
-        trackEvent('/api/track/cart', { userId, type: 'wishlist_add', productId, productName: product?.name || null });
+        trackEvent(API_TRACK_CART, { userId, type: 'wishlist_add', productId, productName: product?.name || null });
         return [...prev, productId];
       }
     });
-  };
+  }, [user, products, showToast, trackEvent]);
 
-  // Compare List
-  const toggleCompare = (product: Product) => {
+  // Compare List: Toggle Compare item
+  const toggleCompare = useCallback((product: Product) => {
     setCompareList(prev => {
       const exists = prev.find(p => p.id === product.id);
       if (exists) {
@@ -703,15 +966,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       showToast('Added to comparison list', 'success');
       return [...prev, product];
     });
-  };
+  }, [showToast]);
 
-  const clearCompare = () => {
+  // Compare List: Clear Compare list
+  const clearCompare = useCallback(() => {
     setCompareList([]);
     showToast('Comparison list cleared', 'info');
-  };
+  }, [showToast]);
 
-  // Orders
-  const createOrder = async (orderData: {
+  // Orders: Create Order
+  const createOrder = useCallback(async (orderData: {
     items: { productId: string; sku: string; name: string; price: number; quantity: number; gst: number }[];
     subtotal: number;
     gstTotal: number;
@@ -723,51 +987,52 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     giftMessage?: string;
     deliveryInstructions?: string;
   }) => {
-    const finalUserId = user ? user.id : 'user-guest';
+    if (!user) {
+      showToast('Please login to place an order', 'error');
+      return { success: false, error: 'Unauthorized' };
+    }
+    const finalUserId = user.id;
     const finalOrder = {
       ...orderData,
       userId: finalUserId
     };
 
     try {
-      const res = await fetch('/api/orders', {
+      const res = await fetch(API_ORDERS, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(finalOrder)
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         clearCart();
-        refreshProducts(); // Refresh stock counts
-        
-        if (user) {
-          // Add reward points (10% of order subtotal)
-          const pointsEarned = Math.floor(orderData.subtotal * 0.1);
-          const updatedPoints = user.rewardPoints + pointsEarned;
-          
-          // Deduct from wallet if wallet balance was used (UPI / Card checkout simulation)
-          const updatedUser = { ...user, rewardPoints: updatedPoints };
-          setUser(updatedUser);
-          localStorage.setItem('reddy-user', JSON.stringify(updatedUser));
-          
-          // Sync with database auth update
-          await fetch('/api/auth/update', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, rewardPoints: updatedPoints })
-          });
-          
-          fetchOrders(user.id, user.role);
-          
-          addNotification('inapp', 'Order Placed', `Order #${data.order.id} has been placed successfully.`);
-          addNotification('sms', 'Order Confirmed', `Thank you for ordering at REDDY PREMIUM DAIRY! Your Order #${data.order.id} is confirmed. Amt: Rs. ${data.order.grandTotal.toFixed(2)}.`);
-          addNotification('whatsapp', 'Order Details', `Hello ${user.name}, your order #${data.order.id} has been successfully placed. Live tracking link: http://reddypremiumdairy.com/orders/${data.order.id}`);
-          addNotification('email', 'Order Invoice', `Dear Customer, please find attached the professional invoice for your order #${data.order.id}.`);
-        }
-        
+        refreshProducts();
+
+        const pointsEarned = Math.floor(orderData.subtotal * 0.1);
+        const updatedPoints = user.rewardPoints + pointsEarned;
+
+        const updatedUser = { ...user, rewardPoints: updatedPoints };
+        setUser(updatedUser);
+        safeLocalStorage.setItem('reddy-user', JSON.stringify(updatedUser));
+
+        await fetch(API_AUTH_UPDATE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, rewardPoints: updatedPoints })
+        }).then(res => {
+          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        });
+
+        fetchOrders(user.id, user.role);
+
+        addNotification('inapp', 'Order Placed', `Order #${data.order.id} has been placed successfully.`);
+        addNotification('sms', 'Order Confirmed', `Thank you for ordering at REDDY PREMIUM DAIRY! Your Order #${data.order.id} is confirmed. Amt: Rs. ${data.order.grandTotal.toFixed(2)}.`);
+        addNotification('whatsapp', 'Order Details', `Hello ${user.name}, your order #${data.order.id} has been successfully placed. Live tracking link: http://reddypremiumdairy.com/orders/${data.order.id}`);
+        addNotification('email', 'Order Invoice', `Dear Customer, please find attached the professional invoice for your order #${data.order.id}.`);
+
         showToast('Order placed successfully!', 'success');
-        // Track purchase activity
-        trackEvent('/api/track/purchase', {
+        trackEvent(API_TRACK_PURCHASE, {
           userId: finalUserId,
           orderId: data.order.id,
           items: orderData.items.map(i => ({ productId: i.productId, productName: i.name, quantity: i.quantity, price: i.price })),
@@ -777,19 +1042,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return { success: false };
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       showToast('Error processing order', 'error');
       return { success: false };
     }
-  };
+  }, [user, clearCart, refreshProducts, fetchOrders, addNotification, showToast, trackEvent]);
 
-  const updateOrderStatus = async (orderId: string, status: string) => {
+  // Orders: Update Order Status
+  const updateOrderStatus = useCallback(async (orderId: string, status: OrderStatus | string) => {
     try {
-      const res = await fetch('/api/orders/update', {
+      const res = await fetch(API_ORDERS_UPDATE, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ orderId, status })
       });
+      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
       const data = await res.json();
       if (data.success) {
         if (user) {
@@ -802,10 +1071,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return false;
     } catch (err) {
-      console.error(err);
+      if (process.env.NODE_ENV === 'development') {
+        console.error(err);
+      }
       return false;
     }
-  };
+  }, [user, fetchOrders, addNotification, showToast]);
 
   const contextValue = useMemo<AppContextProps>(() => ({
     theme,
@@ -844,25 +1115,49 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     markAllNotificationsRead,
     toast,
     showToast
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [
     theme,
+    toggleTheme,
     language,
+    setLanguage,
+    t,
     user,
+    login,
+    register,
+    logout,
+    updateUserAvatar,
+    addAddress,
+    removeAddress,
     products,
+    refreshProducts,
     cart,
+    addToCart,
+    removeFromCart,
+    updateCartQty,
+    clearCart,
     appliedCoupon,
+    applyCouponCode,
+    removeCoupon,
     wishlist,
+    toggleWishlist,
     compareList,
+    toggleCompare,
+    clearCompare,
     orders,
+    createOrder,
+    refreshOrders,
+    updateOrderStatus,
     notifications,
-    toast
+    addNotification,
+    markAllNotificationsRead,
+    toast,
+    showToast
   ]);
 
   return (
     <AppContext.Provider value={contextValue}>
       {children}
-      
+
       {/* Dynamic Toast Alert UI */}
       {toast.message && (
         <div className="fixed bottom-6 left-6 z-50 flex items-center justify-between gap-4 rounded-xl border border-white/20 px-6 py-4 shadow-2xl glass-premium transition-all duration-300 animate-splash">

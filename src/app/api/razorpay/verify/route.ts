@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     const newOrder = await prisma.order.create({
       data: {
         id: orderId,
-        userId: orderData.userId || 'user-guest',
+        userId: orderData.userId,
         subtotal: Number(orderData.subtotal) || 0,
         gstTotal: Number(orderData.gstTotal) || 0,
         deliveryCharges: Number(orderData.deliveryCharges) || 0,
@@ -124,7 +124,7 @@ export async function POST(request: Request) {
 
 
     // Activity logs
-    if (orderData.userId && orderData.userId !== 'user-guest') {
+    if (orderData.userId) {
       await prisma.activityLog.createMany({
         data: [
           { userId: orderData.userId, type: 'order_placed', meta: { orderId, grandTotal: orderData.grandTotal } },

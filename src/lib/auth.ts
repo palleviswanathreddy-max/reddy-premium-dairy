@@ -1,6 +1,8 @@
 import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './prisma';
+import { comparePassword } from '@/db/auth-helper';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -8,8 +10,109 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'Credentials',
+      credentials: {
+        identifier: { type: 'text' },
+        password: { type: 'password' },
+        isPhoneLogin: { type: 'text' },
+        isBiometricLogin: { type: 'text' }
+      },
+      async authorize(credentials) {
+        if (!credentials?.identifier) {
+          throw new Error('Identifier is required');
+        }
+
+        const identifier = credentials.identifier;
+        const password = credentials.password || '';
+        const isPhoneLogin = credentials.isPhoneLogin === 'true';
+        const isBiometricLogin = credentials.isBiometricLogin === 'true';
+
+        let dbUser = null;
+
+        if (isBiometricLogin) {
+          dbUser = await prisma.user.findFirst({
+            where: {
+              biometricCredentialId: identifier,
+              biometricsEnabled: true
+            }
+          });
+          if (!dbUser) {
+            throw new Error('No account is linked to this biometric key.');
+          }
+        } else if (isPhoneLogin) {
+          const normalizedPhone = identifier.replace(/\D/g, '').slice(-10);
+          dbUser = await prisma.user.findFirst({
+            where: { phone: { endsWith: normalizedPhone } }
+          });
+          if (!dbUser) {
+            // Auto-register phone user
+            dbUser = await prisma.user.create({
+              data: {
+                name: `User ${normalizedPhone}`,
+                email: `${normalizedPhone}@reddy.com`,
+                phone: normalizedPhone,
+                role: 'customer',
+                passwordHash: 'otp-registered-account',
+                rewardPoints: 0,
+                walletBalance: 0
+              }
+            });
+          }
+        } else {
+          // Regular Email/Password or Phone/Password Login
+          const trimmed = identifier.trim();
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const isEmail = emailRegex.test(trimmed);
+          const normalizedIdentifier = isEmail
+            ? trimmed.toLowerCase()
+            : trimmed.replace(/\D/g, '').slice(-10);
+
+          dbUser = await prisma.user.findFirst({
+            where: isEmail
+              ? { email: { equals: normalizedIdentifier, mode: 'insensitive' } }
+              : { phone: { endsWith: normalizedIdentifier } }
+          });
+
+          if (!dbUser) {
+            throw new Error('No account found with this email/mobile number. Please register first.');
+          }
+
+          const passwordHash = dbUser.passwordHash || '';
+          const isMatch = await comparePassword(password, passwordHash);
+          if (!isMatch) {
+            throw new Error('Incorrect password.');
+          }
+        }
+
+        // Update lastLoginAt
+        await prisma.user.update({
+          where: { id: dbUser.id },
+          data: { lastLoginAt: new Date() }
+        });
+
+        // Log Activity
+        await prisma.activityLog.create({
+          data: {
+            userId: dbUser.id,
+            type: 'login'
+          }
+        });
+
+        return {
+          id: dbUser.id,
+          email: dbUser.email || '',
+          name: dbUser.name,
+          role: dbUser.role
+        };
+      }
+    })
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'reddy-premium-dairy-nextauth-secret-key-2026',
+  session: {
+    strategy: 'jwt'
+  },
   callbacks: {
     async signIn({ user, account }) {
       if (account?.provider === 'google') {
@@ -59,12 +162,26 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.role = (user as { role?: string }).role;
+      }
+      // Always override token.id and token.role with PostgreSQL database values if email is present
+      if (token.email) {
+        const dbUser = await prisma.user.findUnique({
+          where: { email: token.email.toLowerCase() },
+          select: { id: true, role: true }
+        });
+        if (dbUser) {
+          token.id = dbUser.id;
+          token.role = dbUser.role;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { id?: string }).id = token.id as string;
+        const sessionUser = session.user as { id?: string; role?: string };
+        sessionUser.id = token.id as string;
+        sessionUser.role = token.role as string;
       }
       return session;
     },

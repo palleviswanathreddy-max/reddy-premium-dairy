@@ -2,14 +2,19 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendOrderConfirmation, triggerWhatsApp } from '@/lib/notifications';
 import { sseManager } from '@/utils/events';
+import { getAuthenticatedUser } from '@/utils/auth-check';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const role = searchParams.get('role');
     const page = Math.max(1, parseInt(searchParams.get('page') || '1'));
     const limit = Math.min(200, parseInt(searchParams.get('limit') || '100'));
     const statusFilter = searchParams.get('status');
@@ -21,15 +26,10 @@ export async function GET(request: Request) {
     // Build Prisma where clause
     const where: any = {};
 
-    if (role !== 'admin') {
-      if (userId) {
-        where.userId = userId;
-      } else {
-        return NextResponse.json(
-          { success: true, orders: [], total: 0, page, limit },
-          { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
-        );
-      }
+    if (authUser.role !== 'admin') {
+      where.userId = authUser.id;
+    } else if (userId) {
+      where.userId = userId;
     }
 
     if (statusFilter && statusFilter !== 'all') {
@@ -123,6 +123,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const finalUserId = authUser.id;
     const body = await request.json();
 
     // ── Input Validation ────────────────────────────────────────────────
@@ -140,11 +146,11 @@ export async function POST(request: Request) {
     }
 
     // ── Duplicate Order Prevention ───────────────────────────────────────
-    if (body.userId && body.userId !== 'user-guest') {
+    if (finalUserId) {
       const sixtySecondsAgo = new Date(Date.now() - 60_000);
       const recentOrders = await prisma.order.findMany({
         where: {
-          userId: body.userId,
+          userId: finalUserId,
           createdAt: { gte: sixtySecondsAgo }
         },
         include: { items: true }
@@ -157,7 +163,7 @@ export async function POST(request: Request) {
       });
 
       if (duplicate) {
-        console.warn(`[Duplicate Order Prevented] userId=${body.userId} orderId=${duplicate.id}`);
+        console.warn(`[Duplicate Order Prevented] userId=${finalUserId} orderId=${duplicate.id}`);
         return NextResponse.json({ success: true, order: duplicate, duplicate: true });
       }
     }
@@ -189,7 +195,7 @@ export async function POST(request: Request) {
     const newOrder = await prisma.order.create({
       data: {
         id: orderId,
-        userId: body.userId || 'user-guest',
+        userId: finalUserId,
         subtotal: Number(body.subtotal) || 0,
         gstTotal: Number(body.gstTotal) || 0,
         deliveryCharges: Number(body.deliveryCharges) || 0,
@@ -245,13 +251,12 @@ export async function POST(request: Request) {
       await prisma.$transaction(stockUpdates as any);
     }
 
-
     // Log activity
-    if (body.userId && body.userId !== 'user-guest') {
+    if (finalUserId) {
       await prisma.activityLog.createMany({
         data: [
-          { userId: body.userId, type: 'order_placed', meta: { orderId, grandTotal: body.grandTotal } },
-          { userId: body.userId, type: 'payment', meta: { orderId, method: body.paymentMethod } }
+          { userId: finalUserId, type: 'order_placed', meta: { orderId, grandTotal: body.grandTotal } },
+          { userId: finalUserId, type: 'payment', meta: { orderId, method: body.paymentMethod } }
         ]
       });
     }
@@ -310,7 +315,6 @@ export async function POST(request: Request) {
     const userEmail = newOrder.user?.email || undefined;
     sendOrderConfirmation(orderResponse as any, userEmail).catch((e: unknown) => console.error('Notification failed:', e));
     triggerWhatsApp('Order Placed', orderResponse as any).catch((e: unknown) => console.error('WhatsApp placement failed:', e));
-
 
     // Broadcast SSE event
     sseManager.broadcast('order_created', orderResponse);

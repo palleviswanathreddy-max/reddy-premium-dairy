@@ -1,42 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getAuthenticatedUser } from '@/utils/auth-check';
 
 export const dynamic = 'force-dynamic';
 
-// Helper: upsert guest user without race conditions
-async function ensureUser(userId: string) {
-  if (userId === 'user-guest') {
-    return prisma.user.upsert({
-      where: { id: 'user-guest' },
-      update: {},
-      create: {
-        id: 'user-guest',
-        email: 'guest@reddypremiumdairy.com',
-        name: 'Guest User',
-        role: 'customer',
-        phone: null,
-        walletBalance: 0,
-        rewardPoints: 0
-      }
-    });
-  }
-  return prisma.user.findUnique({ where: { id: userId } });
-}
-
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await ensureUser(userId);
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
-    }
+    const userId = authUser.id;
 
     const dbCartItems = await prisma.cartItem.findMany({
       where: { userId },
@@ -70,19 +45,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const authUser = await getAuthenticatedUser(request);
+    if (!authUser) {
+      return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
-    // cart can be either CartItem[] (with .product) or {productId, quantity}[]
-    const { userId, cart } = body;
-
-    if (!userId) {
-      return NextResponse.json({ success: false, message: 'UserId required' }, { status: 400 });
-    }
-
-    const user = await ensureUser(userId);
-
-    if (!user) {
-      return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
-    }
+    const { cart } = body;
+    const userId = authUser.id;
 
     // Normalise cart items — accept both formats
     // Format A: { productId, quantity }  (from API-direct callers)

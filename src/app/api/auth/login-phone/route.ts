@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
 
+export async function GET() {
+  return new Response("Auth is handled by NextAuth session or custom credentials", { status: 404 });
+}
+
 export async function POST(request: Request) {
   try {
     const { phone } = await request.json();
@@ -9,21 +13,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'Phone number is required' }, { status: 400 });
     }
 
-    // Normalize phone number to last 10 digits
     const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
-    if (normalizedPhone.length !== 10) {
-      return NextResponse.json({ success: false, message: 'Invalid phone number format' }, { status: 400 });
-    }
-
-    // Find or auto-register in PostgreSQL
     let dbUser = await prisma.user.findFirst({
-      where: { phone: { endsWith: normalizedPhone } },
-      include: {
-        addresses: true
-      }
+      where: { phone: { endsWith: normalizedPhone } }
     });
 
     if (!dbUser) {
+      // Auto-register phone user
       dbUser = await prisma.user.create({
         data: {
           name: `User ${normalizedPhone}`,
@@ -33,39 +29,24 @@ export async function POST(request: Request) {
           passwordHash: 'otp-registered-account',
           rewardPoints: 0,
           walletBalance: 0
-        },
-        include: {
-          addresses: true
         }
-      });
-    } else {
-      // Update lastLoginAt
-      await prisma.user.update({
-        where: { id: dbUser.id },
-        data: { lastLoginAt: new Date() }
       });
     }
 
-    const userPayload = {
+    // Generate tokens
+    const payload = {
       id: dbUser.id,
-      email: dbUser.email || '',
+      email: dbUser.email,
       role: dbUser.role,
       name: dbUser.name
     };
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
 
-    // Generate JWT tokens
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
-
-    // Save Refresh Token in PostgreSQL database
-    // Delete any existing tokens for this user first to avoid unique constraint violations.
-    await prisma.refreshToken.deleteMany({ where: { userId: dbUser.id } });
-    await prisma.refreshToken.create({
-      data: {
-        userId: dbUser.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
+    // Update lastLoginAt
+    await prisma.user.update({
+      where: { id: dbUser.id },
+      data: { lastLoginAt: new Date() }
     });
 
     // Log Activity
@@ -78,37 +59,36 @@ export async function POST(request: Request) {
 
     const response = NextResponse.json({
       success: true,
+      message: 'Login successful',
       user: {
         id: dbUser.id,
-        email: dbUser.email || '',
-        role: dbUser.role,
+        email: dbUser.email,
         name: dbUser.name,
-        phone: dbUser.phone || '',
-        walletBalance: dbUser.walletBalance || 0,
-        rewardPoints: dbUser.rewardPoints || 0,
-        addresses: dbUser.addresses || [],
-        avatar: dbUser.avatar || null
+        role: dbUser.role,
+        phone: dbUser.phone,
+        walletBalance: dbUser.walletBalance,
+        rewardPoints: dbUser.rewardPoints
       }
     });
 
-    // Set Secure HTTP-Only Cookie headers
     response.cookies.set('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60,
-      path: '/'
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 15 * 60 // 15 mins
     });
 
     response.cookies.set('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60,
-      path: '/'
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 // 7 days
     });
 
     return response;
-
-  } catch (err: any) {
-    return NextResponse.json({ success: false, message: err.message }, { status: 500 });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

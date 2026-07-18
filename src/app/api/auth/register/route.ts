@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { hashPassword, generateAccessToken, generateRefreshToken } from '@/db/auth-helper';
+import { hashPassword } from '@/db/auth-helper';
 
 export async function POST(request: Request) {
   try {
@@ -43,28 +43,6 @@ export async function POST(request: Request) {
       }
     });
 
-    const userPayload = {
-      id: dbUser.id,
-      email: dbUser.email || '',
-      role: dbUser.role,
-      name: dbUser.name
-    };
-
-    // Generate JWT tokens
-    const accessToken = generateAccessToken(userPayload);
-    const refreshToken = generateRefreshToken(userPayload);
-
-    // Save Refresh Token in PostgreSQL database
-    // Delete any existing tokens for this user first to avoid unique constraint violations.
-    await prisma.refreshToken.deleteMany({ where: { userId: dbUser.id } });
-    await prisma.refreshToken.create({
-      data: {
-        userId: dbUser.id,
-        token: refreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-      }
-    });
-
     // Log Activity
     await prisma.activityLog.create({
       data: {
@@ -93,8 +71,7 @@ export async function POST(request: Request) {
       console.error('[Admin registration notification failed]', e);
     }
 
-
-    const response = NextResponse.json({ 
+    return NextResponse.json({ 
       success: true, 
       user: {
         id: dbUser.id,
@@ -107,23 +84,6 @@ export async function POST(request: Request) {
         addresses: []
       }
     });
-
-    // Set secure HTTP Only cookie headers
-    response.cookies.set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 15 * 60, // 15 mins
-      path: '/'
-    });
-
-    response.cookies.set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 7 * 24 * 60 * 60, // 7 days
-      path: '/'
-    });
-
-    return response;
 
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });

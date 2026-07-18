@@ -8,6 +8,16 @@ async function seedPostgresFromLocalJSON() {
   try {
     const localDb = getDb();
 
+    // Ensure clean removal of user-guest from DB if it previously existed
+    await prisma.user.deleteMany({
+      where: {
+        OR: [
+          { id: 'user-guest' },
+          { email: 'guest@reddypremiumdairy.com' }
+        ]
+      }
+    });
+
     // 1. Categories & Products
     const productCount = await prisma.product.count();
     if (productCount === 0 && localDb.products && localDb.products.length > 0) {

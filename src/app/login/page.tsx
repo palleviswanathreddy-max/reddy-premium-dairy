@@ -242,11 +242,32 @@ export default function Login() {
         }
       }
 
-      const res = await fetch('/api/auth/login-phone', {
+      const loginRes = await fetch('/api/auth/login-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: verifiedPhone })
       });
+      const loginData = await loginRes.json();
+
+      if (!loginData.success) {
+        setIsLoading(false);
+        showToast(loginData.message || 'Verification failed', 'error');
+        return;
+      }
+
+      const result = await signIn('credentials', {
+        identifier: verifiedPhone,
+        isPhoneLogin: 'true',
+        redirect: false
+      });
+
+      if (result?.error) {
+        setIsLoading(false);
+        showToast(result.error || 'Verification failed', 'error');
+        return;
+      }
+
+      const res = await fetch('/api/profile');
       const data = await res.json();
       setIsLoading(false);
 
@@ -255,7 +276,7 @@ export default function Login() {
         showToast(`Login successful! Welcome ${data.user.name}`, 'success');
         window.location.href = data.user.role === 'admin' ? '/admin' : '/profile';
       } else {
-        showToast(data.message || 'Verification failed', 'error');
+        showToast('Failed to retrieve user profile', 'error');
       }
     } catch (err: any) {
       setIsLoading(false);
@@ -302,11 +323,32 @@ export default function Login() {
         await new Promise(resolve => setTimeout(resolve, 1500));
       }
 
-      const res = await fetch('/api/auth/biometrics/login', {
+      const loginRes = await fetch('/api/auth/biometrics/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credentialId })
       });
+      const loginData = await loginRes.json();
+
+      if (!loginData.success) {
+        setIsLoading(false);
+        showToast(loginData.message || 'Biometric authentication failed', 'error');
+        return;
+      }
+
+      const result = await signIn('credentials', {
+        identifier: credentialId,
+        isBiometricLogin: 'true',
+        redirect: false
+      });
+
+      if (result?.error) {
+        setIsLoading(false);
+        showToast(result.error || 'Biometric authentication failed', 'error');
+        return;
+      }
+
+      const res = await fetch('/api/profile');
       const data = await res.json();
       setIsLoading(false);
 
@@ -315,7 +357,7 @@ export default function Login() {
         showToast(`Login successful! Welcome back, ${data.user.name}.`, 'success');
         window.location.href = data.user.role === 'admin' ? '/admin' : '/profile';
       } else {
-        showToast(data.message || 'Biometric authentication failed', 'error');
+        showToast('Failed to retrieve user profile', 'error');
       }
     } catch (err: any) {
       setIsLoading(false);
