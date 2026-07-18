@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { translations, LanguageType, TranslationKey } from '@/utils/translations';
 import { Product, User, Order, Coupon, Address } from '@/db/db';
 import { useSession, signOut } from 'next-auth/react';
@@ -117,6 +117,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMsg[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | null }>({ message: '', type: null });
+
+  // Show Toast Alert
+  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+    setToast({ message, type });
+    setTimeout(() => {
+      setToast({ message: '', type: null });
+    }, 3000);
+  };
+
+  // ── Activity Tracking ────────────────────────────────────────────────────
+  // Fire-and-forget: never await, never throw, never block the UI.
+  const trackEvent = (endpoint: string, payload: Record<string, unknown>) => {
+    // Use requestIdleCallback if available so tracking never blocks the main thread
+    const fire = () => {
+      fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => { /* silently ignore tracking failures */ });
+    };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(fire);
+    } else {
+      setTimeout(fire, 0);
+    }
+  };
 
   // Apply theme class to document whenever theme changes (side-effect only, no setState)
   useEffect(() => {
@@ -367,31 +393,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] || translations['en'][key] || String(key);
   };
 
-  // Show Toast Alert
-  const showToast = (message: string, type: 'success' | 'error' | 'info') => {
-    setToast({ message, type });
-    setTimeout(() => {
-      setToast({ message: '', type: null });
-    }, 3000);
-  };
 
-  // ── Activity Tracking ────────────────────────────────────────────────────
-  // Fire-and-forget: never await, never throw, never block the UI.
-  const trackEvent = (endpoint: string, payload: Record<string, unknown>) => {
-    // Use requestIdleCallback if available so tracking never blocks the main thread
-    const fire = () => {
-      fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).catch(() => { /* silently ignore tracking failures */ });
-    };
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      (window as Window & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(fire);
-    } else {
-      setTimeout(fire, 0);
-    }
-  };
 
   // Add Notification System (Logs simulation as well)
   const addNotification = async (type: NotificationMsg['type'], title: string, message: string) => {
@@ -805,47 +807,60 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const contextValue = useMemo<AppContextProps>(() => ({
+    theme,
+    toggleTheme,
+    language,
+    setLanguage,
+    t,
+    user,
+    login,
+    register,
+    logout,
+    updateUserAvatar,
+    addAddress,
+    removeAddress,
+    products,
+    refreshProducts,
+    cart,
+    addToCart,
+    removeFromCart,
+    updateCartQty,
+    clearCart,
+    appliedCoupon,
+    applyCouponCode,
+    removeCoupon,
+    wishlist,
+    toggleWishlist,
+    compareList,
+    toggleCompare,
+    clearCompare,
+    orders,
+    createOrder,
+    refreshOrders,
+    updateOrderStatus,
+    notifications,
+    addNotification,
+    markAllNotificationsRead,
+    toast,
+    showToast
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }), [
+    theme,
+    language,
+    user,
+    products,
+    cart,
+    appliedCoupon,
+    wishlist,
+    compareList,
+    orders,
+    notifications,
+    toast
+  ]);
+
   return (
-    <AppContext.Provider
-      value={{
-        theme,
-        toggleTheme,
-        language,
-        setLanguage,
-        t,
-        user,
-        login,
-        register,
-        logout,
-        updateUserAvatar,
-        addAddress,
-        removeAddress,
-        products,
-        refreshProducts,
-        cart,
-        addToCart,
-        removeFromCart,
-        updateCartQty,
-        clearCart,
-        appliedCoupon,
-        applyCouponCode,
-        removeCoupon,
-        wishlist,
-        toggleWishlist,
-        compareList,
-        toggleCompare,
-        clearCompare,
-        orders,
-        createOrder,
-        refreshOrders,
-        updateOrderStatus,
-        notifications,
-        addNotification,
-        markAllNotificationsRead,
-        toast,
-        showToast
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
       
       {/* Dynamic Toast Alert UI */}

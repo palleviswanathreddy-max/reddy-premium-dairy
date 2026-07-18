@@ -73,25 +73,26 @@ export async function POST(request: Request) {
       }
     });
 
-    // Admin notification for new registration
+    // Admin notification for new registration in a single database operation
     try {
       const admins = await prisma.user.findMany({
         where: { role: 'admin' }
       });
-      for (const admin of admins) {
-        await prisma.notification.create({
-          data: {
+      if (admins.length > 0) {
+        await prisma.notification.createMany({
+          data: admins.map((admin: any) => ({
             userId: admin.id,
             title: 'New Customer Registered',
             message: `${name} (${cleanEmail}) has signed up.`,
             type: 'Admin Messages',
             isRead: false
-          }
+          }))
         });
       }
     } catch (e) {
       console.error('[Admin registration notification failed]', e);
     }
+
 
     const response = NextResponse.json({ 
       success: true, 

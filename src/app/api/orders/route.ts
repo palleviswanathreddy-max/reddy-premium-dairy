@@ -227,18 +227,24 @@ export async function POST(request: Request) {
       }
     });
 
-    // Update Product Stock Levels
-    for (const item of body.items) {
+    // Update Product Stock Levels in database in a single transaction
+    const stockUpdates = body.items.map((item: any) => {
       const prod = productMap.get(item.productId);
       if (prod) {
         const nextStock = Math.max(0, prod.stock - (Number(item.quantity) || 1));
         const nextStatus = nextStock === 0 ? 'Out of Stock' : nextStock <= 10 ? 'Low Stock' : 'Available';
-        await prisma.product.update({
+        return prisma.product.update({
           where: { id: item.productId },
           data: { stock: nextStock, status: nextStatus }
         });
       }
+      return null;
+    }).filter(Boolean);
+
+    if (stockUpdates.length > 0) {
+      await prisma.$transaction(stockUpdates as any);
     }
+
 
     // Log activity
     if (body.userId && body.userId !== 'user-guest') {
