@@ -621,23 +621,23 @@ function ProfileContent() {
                 </h3>
                 <form onSubmit={handleUpdateProfile} className="space-y-5 max-w-lg">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
-                    <input type="text" required value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                    <label htmlFor="profile-edit-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
+                    <input id="profile-edit-name" name="profileEditName" autoComplete="name" type="text" required value={editName} onChange={(e) => setEditName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 opacity-60 cursor-not-allowed">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email (Non-editable)</label>
-                      <input type="email" readOnly value={profileData.email} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
+                      <label htmlFor="profile-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email (Non-editable)</label>
+                      <input id="profile-email" name="profileEmail" autoComplete="email" type="email" readOnly value={profileData.email} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
                     </div>
                     <div className="space-y-1.5 opacity-60 cursor-not-allowed">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile (Non-editable)</label>
-                      <input type="text" readOnly value={profileData.phone} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
+                      <label htmlFor="profile-phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile (Non-editable)</label>
+                      <input id="profile-phone" name="profilePhone" autoComplete="tel" type="text" readOnly value={profileData.phone} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</label>
-                      <select value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent">
+                      <label htmlFor="profile-edit-gender" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gender</label>
+                      <select id="profile-edit-gender" name="profileEditGender" value={editGender} onChange={(e) => setEditGender(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent">
                         <option value="">Select Gender</option>
                         <option value="Male">Male</option>
                         <option value="Female">Female</option>
@@ -645,14 +645,14 @@ function ProfileContent() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</label>
-                      <input type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                      <label htmlFor="profile-edit-dob" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date of Birth</label>
+                      <input id="profile-edit-dob" name="profileEditDob" type="date" value={editDob} onChange={(e) => setEditDob(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group (Optional)</label>
-                      <select value={editBloodGroup} onChange={(e) => setEditBloodGroup(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent">
+                      <label htmlFor="profile-edit-blood-group" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Blood Group (Optional)</label>
+                      <select id="profile-edit-blood-group" name="profileEditBloodGroup" value={editBloodGroup} onChange={(e) => setEditBloodGroup(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent">
                         <option value="">Select</option>
                         <option value="A+">A+</option>
                         <option value="A-">A-</option>
@@ -665,8 +665,8 @@ function ProfileContent() {
                       </select>
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Emergency Contact</label>
-                      <input type="tel" placeholder="10-digit mobile number" value={editEmergencyContact} onChange={(e) => setEditEmergencyContact(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                      <label htmlFor="profile-edit-emergency-contact" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Emergency Contact</label>
+                      <input id="profile-edit-emergency-contact" name="profileEditEmergencyContact" autoComplete="tel" type="tel" placeholder="10-digit mobile number" value={editEmergencyContact} onChange={(e) => setEditEmergencyContact(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                     </div>
                   </div>
                   <button type="submit" className="px-6 py-3 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/90 transition-colors">
@@ -761,18 +761,21 @@ function ProfileContent() {
                 {showAddressForm && (
                   <form onSubmit={handleAddAddressSubmit} className="p-6 border border-slate-200 dark:border-slate-800 rounded-2xl bg-slate-50 dark:bg-slate-950 text-xs font-semibold space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5"><label className="text-[10px] text-slate-500 uppercase">Full Name *</label><input type="text" required value={addressName} onChange={(e)=>setAddressName(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
-                      <div className="space-y-1.5"><label className="text-[10px] text-slate-500 uppercase">Phone *</label><input type="tel" required value={addressPhone} onChange={(e)=>setAddressPhone(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
+                      <div className="space-y-1.5"><label htmlFor="address-name" className="text-[10px] text-slate-500 uppercase">Full Name *</label><input id="address-name" name="addressName" autoComplete="name" type="text" required value={addressName} onChange={(e)=>setAddressName(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
+                      <div className="space-y-1.5"><label htmlFor="address-phone" className="text-[10px] text-slate-500 uppercase">Phone *</label><input id="address-phone" name="addressPhone" autoComplete="tel" type="tel" required value={addressPhone} onChange={(e)=>setAddressPhone(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1.5"><label className="text-[10px] text-slate-500 uppercase">House No / Flat / Building *</label><input type="text" required value={addressHouse} onChange={(e)=>setAddressHouse(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
-                      <div className="space-y-1.5"><label className="text-[10px] text-slate-500 uppercase">Street / Area *</label><input type="text" required value={addressStreet} onChange={(e)=>setAddressStreet(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
+                      <div className="space-y-1.5"><label htmlFor="address-house" className="text-[10px] text-slate-500 uppercase">House No / Flat / Building *</label><input id="address-house" name="addressHouse" autoComplete="street-address" type="text" required value={addressHouse} onChange={(e)=>setAddressHouse(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
+                      <div className="space-y-1.5"><label htmlFor="address-street" className="text-[10px] text-slate-500 uppercase">Street / Area *</label><input id="address-street" name="addressStreet" autoComplete="street-address" type="text" required value={addressStreet} onChange={(e)=>setAddressStreet(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none" /></div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5 relative">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">Pincode *</label>
+                        <label htmlFor="address-pincode" className="text-[10px] text-slate-500 uppercase font-bold">Pincode *</label>
                         <div className="relative">
                           <input
+                            id="address-pincode"
+                            name="addressPincode"
+                            autoComplete="postal-code"
                             type="text"
                             required
                             maxLength={6}
@@ -798,8 +801,11 @@ function ProfileContent() {
                         {pincodeError && <p className="text-[10px] text-red-500 font-bold mt-1">{pincodeError}</p>}
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">State *</label>
+                        <label htmlFor="address-state" className="text-[10px] text-slate-500 uppercase font-bold">State *</label>
                         <input
+                          id="address-state"
+                          name="addressState"
+                          autoComplete="address-level1"
                           type="text"
                           required
                           readOnly
@@ -811,8 +817,11 @@ function ProfileContent() {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">District</label>
+                        <label htmlFor="address-district" className="text-[10px] text-slate-500 uppercase font-bold">District</label>
                         <input
+                          id="address-district"
+                          name="addressDistrict"
+                          autoComplete="address-level2"
                           type="text"
                           readOnly
                           value={addressDistrict}
@@ -820,8 +829,10 @@ function ProfileContent() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">Mandal / Taluk</label>
+                        <label htmlFor="address-mandal" className="text-[10px] text-slate-500 uppercase font-bold">Mandal / Taluk</label>
                         <input
+                          id="address-mandal"
+                          name="addressMandal"
                           type="text"
                           readOnly={addressMandal !== '' && pincodeSuccess}
                           value={addressMandal}
@@ -835,9 +846,11 @@ function ProfileContent() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">Village / Town *</label>
+                        <label htmlFor="address-village" className="text-[10px] text-slate-500 uppercase font-bold">Village / Town *</label>
                         {availableVillages.length > 0 ? (
                           <select
+                            id="address-village"
+                            name="addressVillage"
                             value={addressVillage}
                             onChange={(e) => setAddressVillage(e.target.value)}
                             className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none focus:border-accent appearance-none"
@@ -848,6 +861,8 @@ function ProfileContent() {
                           </select>
                         ) : (
                           <input
+                            id="address-village"
+                            name="addressVillage"
                             type="text"
                             value={addressVillage}
                             onChange={(e)=>setAddressVillage(e.target.value)}
@@ -856,12 +871,12 @@ function ProfileContent() {
                         )}
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] text-slate-500 uppercase font-bold">Landmark</label>
-                        <input type="text" value={addressLandmark} onChange={(e)=>setAddressLandmark(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none focus:border-accent" />
+                        <label htmlFor="address-landmark" className="text-[10px] text-slate-500 uppercase font-bold">Landmark</label>
+                        <input id="address-landmark" name="addressLandmark" type="text" value={addressLandmark} onChange={(e)=>setAddressLandmark(e.target.value)} className="w-full border dark:border-slate-800 bg-white dark:bg-slate-900 rounded-lg px-3 py-2 outline-none focus:border-accent" />
                       </div>
                     </div>
                     <div className="flex items-center gap-2 pt-2">
-                      <input type="checkbox" id="addrDef" checked={addressDefault} onChange={(e)=>setAddressDefault(e.target.checked)} className="h-4 w-4 rounded" />
+                      <input type="checkbox" id="addrDef" name="addressDefault" checked={addressDefault} onChange={(e)=>setAddressDefault(e.target.checked)} className="h-4 w-4 rounded" />
                       <label htmlFor="addrDef" className="text-[11px] cursor-pointer font-bold">Set as Default Address</label>
                     </div>
                     <button type="submit" className="px-6 py-2.5 bg-primary text-white font-bold rounded-xl mt-2 text-xs">Save Address</button>
@@ -928,20 +943,20 @@ function ProfileContent() {
                 </h3>
                 <form onSubmit={handleChangePassword} className="space-y-5 max-w-sm">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
+                    <label htmlFor="pass-current" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Password</label>
                     <div className="relative">
-                      <input type={showPass ? 'text' : 'password'} required value={passCurrent} onChange={(e) => setPassCurrent(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                      <input id="pass-current" name="passCurrent" autoComplete="current-password" type={showPass ? 'text' : 'password'} required value={passCurrent} onChange={(e) => setPassCurrent(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                       <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-3 text-slate-400"><Eye className="h-4 w-4" /></button>
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
-                    <input type={showPass ? 'text' : 'password'} required value={passNew} onChange={(e) => setPassNew(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                    <label htmlFor="pass-new" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">New Password</label>
+                    <input id="pass-new" name="passNew" autoComplete="new-password" type={showPass ? 'text' : 'password'} required value={passNew} onChange={(e) => setPassNew(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                     <p className="text-[9px] text-slate-400 font-semibold leading-tight pt-1">Must be at least 8 characters, and include uppercase, lowercase, number, and special character.</p>
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirm New Password</label>
-                    <input type={showPass ? 'text' : 'password'} required value={passConfirm} onChange={(e) => setPassConfirm(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
+                    <label htmlFor="pass-confirm" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Confirm New Password</label>
+                    <input id="pass-confirm" name="passConfirm" autoComplete="new-password" type={showPass ? 'text' : 'password'} required value={passConfirm} onChange={(e) => setPassConfirm(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none focus:border-accent" />
                   </div>
                   <button type="submit" className="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors w-full">Update Password</button>
                 </form>
@@ -1087,7 +1102,7 @@ function ProfileContent() {
               To proceed, please enter the OTP sent to your registered mobile number.<br/>
               <span className="text-[10px] font-bold text-secondary">(For demo purposes, use OTP: 1234)</span>
             </p>
-            <input type="text" placeholder="Enter 4-digit OTP" value={deleteOtp} onChange={(e) => setDeleteOtp(e.target.value)} maxLength={4} className="w-full bg-slate-50 dark:bg-slate-900 border rounded-xl px-4 py-3 text-sm font-bold tracking-[0.5em] text-center outline-none focus:border-red-500" />
+            <input id="delete-account-otp" name="deleteAccountOtp" autoComplete="one-time-code" type="text" placeholder="Enter 4-digit OTP" value={deleteOtp} onChange={(e) => setDeleteOtp(e.target.value)} maxLength={4} className="w-full bg-slate-50 dark:bg-slate-900 border rounded-xl px-4 py-3 text-sm font-bold tracking-[0.5em] text-center outline-none focus:border-red-500" />
             <div className="flex gap-3 pt-2">
               <button onClick={handleDeleteAccount} className="flex-1 py-3 bg-red-500 text-white font-bold text-xs rounded-xl shadow-md">Confirm Delete</button>
               <button onClick={() => { setShowDeleteModal(false); setDeleteOtp(''); }} className="flex-1 py-3 border border-slate-200 dark:border-slate-800 font-bold text-xs rounded-xl text-slate-600 dark:text-slate-300">Cancel</button>

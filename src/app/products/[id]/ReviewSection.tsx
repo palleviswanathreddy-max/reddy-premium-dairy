@@ -283,26 +283,30 @@ export default function ReviewSection({ productId }: { productId: string }) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</label>
+              <label htmlFor="review-title" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Title</label>
               <input
+                id="review-title"
+                name="reviewTitle"
                 type="text"
                 required
                 placeholder="Brief summary of your review"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</label>
+              <label htmlFor="review-description" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Description</label>
               <textarea
+                id="review-description"
+                name="reviewDescription"
                 rows={4}
                 required
                 placeholder="What did you like or dislike?"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
               />
             </div>
 
@@ -323,7 +327,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
                 {images.length < 10 && (
                   <label className="h-14 w-14 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary cursor-pointer transition-colors">
                     <Camera className="h-5 w-5" />
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                    <input id="review-images" name="reviewImages" type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                   </label>
                 )}
               </div>

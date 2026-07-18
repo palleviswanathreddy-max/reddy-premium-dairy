@@ -2508,38 +2508,53 @@ export default function AdminDashboard() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2 mb-4">Register Delivery Partner</h3>
                 <form onSubmit={submitDeliveryPartner} className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Full Name *</label>
+                    <label htmlFor="partner-name" className="text-[10px] uppercase font-bold text-slate-400">Full Name *</label>
                     <input 
+                      id="partner-name"
+                      name="partnerName"
+                      autoComplete="name"
                       type="text" required value={partnerName} onChange={e => setPartnerName(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Mobile Phone *</label>
+                    <label htmlFor="partner-phone" className="text-[10px] uppercase font-bold text-slate-400">Mobile Phone *</label>
                     <input 
+                      id="partner-phone"
+                      name="partnerPhone"
+                      autoComplete="tel"
                       type="tel" required value={partnerPhone} onChange={e => setPartnerPhone(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Email Address (Optional)</label>
+                    <label htmlFor="partner-email" className="text-[10px] uppercase font-bold text-slate-400">Email Address (Optional)</label>
                     <input 
+                      id="partner-email"
+                      name="partnerEmail"
+                      autoComplete="email"
                       type="email" value={partnerEmail} onChange={e => setPartnerEmail(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Vehicle Description *</label>
+                    <label htmlFor="partner-vehicle" className="text-[10px] uppercase font-bold text-slate-400">Vehicle Description *</label>
                     <input 
+                      id="partner-vehicle"
+                      name="partnerVehicle"
+                      autoComplete="off"
                       type="text" required placeholder="Hero Electric / TVS King / Auto" value={partnerVehicle} onChange={e => setPartnerVehicle(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                     />
                   </div>
                   <div className="space-y-1 sm:col-span-2">
-                    <label className="text-[10px] uppercase font-bold text-slate-400">Vehicle Registration Number</label>
+                    <label htmlFor="partner-vehicle-number" className="text-[10px] uppercase font-bold text-slate-400">Vehicle Registration Number</label>
                     <input 
+                      id="partner-vehicle-number"
+                      name="partnerVehicleNumber"
+                      autoComplete="off"
                       type="text" placeholder="AP 39 AB 1234" value={partnerVehicleNumber} onChange={e => setPartnerVehicleNumber(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                     />
                   </div>
                   <button 
@@ -2636,8 +2651,11 @@ export default function AdminDashboard() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] uppercase font-bold text-slate-400">Resolution Note (Shared with Customer)</label>
+                <label htmlFor="refund-action-note" className="text-[10px] uppercase font-bold text-slate-400">Resolution Note (Shared with Customer)</label>
                 <input 
+                  id="refund-action-note"
+                  name="refundActionNote"
+                  autoComplete="off"
                   type="text" 
                   placeholder="e.g. Refunded back to UPI source wallet / COD cancellation approved"
                   value={refundActionNote}
@@ -2728,6 +2746,9 @@ export default function AdminDashboard() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Real-Time User Operations Logs</h3>
                 <div className="flex items-center gap-2">
                   <input 
+                    id="activity-search-query"
+                    name="activitySearchQuery"
+                    autoComplete="off"
                     type="text" 
                     placeholder="Search by User ID..." 
                     value={activitySearchQuery} 
@@ -2843,17 +2864,21 @@ export default function AdminDashboard() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b pb-2">Filter Parameters</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold text-slate-500">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">From Date</label>
+                  <label htmlFor="export-date-from" className="text-[10px] uppercase font-bold text-slate-400">From Date</label>
                   <input 
+                    id="export-date-from"
+                    name="exportDateFrom"
                     type="date" value={exportDateFrom} onChange={e => setExportDateFrom(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2 outline-none focus:border-accent"
+                    className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2 outline-none focus:border-accent"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold text-slate-400">To Date</label>
+                  <label htmlFor="export-date-to" className="text-[10px] uppercase font-bold text-slate-400">To Date</label>
                   <input 
+                    id="export-date-to"
+                    name="exportDateTo"
                     type="date" value={exportDateTo} onChange={e => setExportDateTo(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-2 outline-none focus:border-accent"
+                    className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-2 outline-none focus:border-accent"
                   />
                 </div>
               </div>

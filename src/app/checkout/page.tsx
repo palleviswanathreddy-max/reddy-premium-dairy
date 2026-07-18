@@ -511,8 +511,11 @@ export default function Checkout() {
                   <form onSubmit={handleAddressSubmit} className="space-y-4 text-xs font-semibold text-slate-500">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
+                        <label htmlFor="checkout-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
                         <input
+                          id="checkout-name"
+                          name="checkoutName"
+                          autoComplete="name"
                           type="text"
                           required
                           value={name}
@@ -521,8 +524,11 @@ export default function Checkout() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number *</label>
+                        <label htmlFor="checkout-phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number *</label>
                         <input
+                          id="checkout-phone"
+                          name="checkoutPhone"
+                          autoComplete="tel"
                           type="tel"
                           required
                           value={phone}
@@ -533,8 +539,11 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Street Address / House No *</label>
+                      <label htmlFor="checkout-street" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Street Address / House No *</label>
                       <input
+                        id="checkout-street"
+                        name="checkoutStreet"
+                        autoComplete="street-address"
                         type="text"
                         required
                         value={street}
@@ -544,9 +553,12 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5 relative">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PIN Code *</label>
+                      <label htmlFor="checkout-pincode" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">PIN Code *</label>
                       <div className="relative">
                         <input
+                          id="checkout-pincode"
+                          name="checkoutPincode"
+                          autoComplete="postal-code"
                           type="text"
                           required
                           maxLength={6}
@@ -574,8 +586,11 @@ export default function Checkout() {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">State</label>
+                        <label htmlFor="checkout-state" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">State</label>
                         <input
+                          id="checkout-state"
+                          name="checkoutState"
+                          autoComplete="address-level1"
                           type="text"
                           readOnly
                           value={state}
@@ -583,8 +598,11 @@ export default function Checkout() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">District</label>
+                        <label htmlFor="checkout-district" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">District</label>
                         <input
+                          id="checkout-district"
+                          name="checkoutDistrict"
+                          autoComplete="address-level2"
                           type="text"
                           readOnly
                           value={district}
@@ -595,8 +613,10 @@ export default function Checkout() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mandal / Taluk</label>
+                        <label htmlFor="checkout-mandal" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mandal / Taluk</label>
                         <input
+                          id="checkout-mandal"
+                          name="checkoutMandal"
                           type="text"
                           readOnly={mandal !== '' && pincodeSuccess}
                           value={mandal}
@@ -607,9 +627,11 @@ export default function Checkout() {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Village / Post Office *</label>
+                        <label htmlFor="checkout-village" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Village / Post Office *</label>
                         {availableVillages.length > 0 ? (
                           <select
+                            id="checkout-village"
+                            name="checkoutVillage"
                             value={village}
                             onChange={(e) => setVillage(e.target.value)}
                             className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200 appearance-none"
@@ -620,6 +642,8 @@ export default function Checkout() {
                           </select>
                         ) : (
                           <input
+                            id="checkout-village"
+                            name="checkoutVillage"
                             type="text"
                             required
                             value={village}
@@ -631,8 +655,10 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Landmark (Optional)</label>
+                      <label htmlFor="checkout-landmark" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Landmark (Optional)</label>
                       <input
+                        id="checkout-landmark"
+                        name="checkoutLandmark"
                         type="text"
                         value={landmark}
                         onChange={(e) => setLandmark(e.target.value)}
@@ -641,8 +667,10 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Special Delivery Instructions</label>
+                      <label htmlFor="checkout-delivery-instructions" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Special Delivery Instructions</label>
                       <input
+                        id="checkout-delivery-instructions"
+                        name="checkoutDeliveryInstructions"
                         type="text"
                         placeholder="e.g. Leave milk pouch in box near door"
                         value={deliveryInstructions}
@@ -652,8 +680,10 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gift Message (Optional)</label>
+                      <label htmlFor="checkout-gift-message" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Gift Message (Optional)</label>
                       <input
+                        id="checkout-gift-message"
+                        name="checkoutGiftMessage"
                         type="text"
                         placeholder="Happy morning greetings from..."
                         value={giftMessage}
@@ -663,8 +693,10 @@ export default function Checkout() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferred Delivery Slot *</label>
+                      <label htmlFor="checkout-delivery-slot" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Preferred Delivery Slot *</label>
                       <select 
+                        id="checkout-delivery-slot"
+                        name="checkoutDeliverySlot"
                         value={deliverySlot}
                         onChange={(e) => setDeliverySlot(e.target.value)}
                         className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
@@ -822,6 +854,9 @@ export default function Checkout() {
                     <form onSubmit={handleApplyCoupon} className="space-y-1.5 text-xs font-semibold">
                       <div className="flex gap-2">
                         <input
+                          id="checkout-coupon-code"
+                          name="checkoutCouponCode"
+                          autoComplete="off"
                           type="text"
                           placeholder={t('enterCoupon')}
                           value={couponCode}
@@ -869,8 +904,10 @@ export default function Checkout() {
                   {/* Wallet Option UI */}
                   {user && user.walletBalance > 0 && (
                     <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800">
-                      <label className="flex items-center gap-2 cursor-pointer group text-slate-700 dark:text-slate-300">
+                      <label className="flex items-center gap-2 cursor-pointer group text-slate-700 dark:text-slate-300" htmlFor="checkout-use-wallet">
                         <input
+                          id="checkout-use-wallet"
+                          name="checkoutUseWallet"
                           type="checkbox"
                           checked={useWallet}
                           onChange={(e) => setUseWallet(e.target.checked)}

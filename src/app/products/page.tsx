@@ -135,15 +135,18 @@ function ProductsContent() {
 
       {/* Text Search */}
       <div className="space-y-2">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Search</label>
+        <label htmlFor="catalog-search" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Search</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
+            id="catalog-search"
+            name="catalogSearch"
+            autoComplete="off"
             type="text"
             placeholder="Search catalog..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-accent transition-colors"
+            className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs rounded-xl pl-9 pr-4 py-2.5 outline-none focus:border-accent transition-colors"
           />
         </div>
       </div>
@@ -152,24 +155,29 @@ function ProductsContent() {
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Categories</label>
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-          {categories.map((cat) => (
-            <label key={cat} className="flex items-center gap-2 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={selectedCategories.includes(cat)}
-                  onChange={() => toggleSelection(setSelectedCategories, selectedCategories, cat)}
-                  className="peer appearance-none h-4 w-4 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-primary checked:border-primary transition-colors cursor-pointer"
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
-                  <Check className="h-3 w-3 text-white" strokeWidth={4} />
+          {categories.map((cat) => {
+            const catId = `category-${cat.toLowerCase().replace(/\s+/g, '-')}`;
+            return (
+              <label key={cat} htmlFor={catId} className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input
+                    id={catId}
+                    name="selectedCategories"
+                    type="checkbox"
+                    checked={selectedCategories.includes(cat)}
+                    onChange={() => toggleSelection(setSelectedCategories, selectedCategories, cat)}
+                    className="peer appearance-none h-4 w-4 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-primary checked:border-primary transition-colors cursor-pointer"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
+                    <Check className="h-3 w-3 text-white" strokeWidth={4} />
+                  </div>
                 </div>
-              </div>
-              <span className={`text-xs font-semibold transition-colors ${selectedCategories.includes(cat) ? 'text-primary dark:text-accent font-bold' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'}`}>
-                {cat}
-              </span>
-            </label>
-          ))}
+                <span className={`text-xs font-semibold transition-colors ${selectedCategories.includes(cat) ? 'text-primary dark:text-accent font-bold' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'}`}>
+                  {cat}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
@@ -177,24 +185,29 @@ function ProductsContent() {
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
         <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Brands</label>
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
-          {brands.map((brand) => (
-            <label key={brand} className="flex items-center gap-2 cursor-pointer group">
-              <div className="relative flex items-center justify-center">
-                <input
-                  type="checkbox"
-                  checked={selectedBrands.includes(brand)}
-                  onChange={() => toggleSelection(setSelectedBrands, selectedBrands, brand)}
-                  className="peer appearance-none h-4 w-4 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-primary checked:border-primary transition-colors cursor-pointer"
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
-                  <Check className="h-3 w-3 text-white" strokeWidth={4} />
+          {brands.map((brand) => {
+            const brandId = `brand-${brand.toLowerCase().replace(/\s+/g, '-')}`;
+            return (
+              <label key={brand} htmlFor={brandId} className="flex items-center gap-2 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input
+                    id={brandId}
+                    name="selectedBrands"
+                    type="checkbox"
+                    checked={selectedBrands.includes(brand)}
+                    onChange={() => toggleSelection(setSelectedBrands, selectedBrands, brand)}
+                    className="peer appearance-none h-4 w-4 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-primary checked:border-primary transition-colors cursor-pointer"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity">
+                    <Check className="h-3 w-3 text-white" strokeWidth={4} />
+                  </div>
                 </div>
-              </div>
-              <span className={`text-xs font-semibold transition-colors ${selectedBrands.includes(brand) ? 'text-primary dark:text-accent font-bold' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'}`}>
-                {brand}
-              </span>
-            </label>
-          ))}
+                <span className={`text-xs font-semibold transition-colors ${selectedBrands.includes(brand) ? 'text-primary dark:text-accent font-bold' : 'text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200'}`}>
+                  {brand}
+                </span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
@@ -220,22 +233,26 @@ function ProductsContent() {
 
       {/* Price Filter */}
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Price Range (Rs)</label>
+        <label htmlFor="price-min" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 font-display">Price Range (Rs)</label>
         <div className="flex items-center gap-2">
           <input
+            id="price-min"
+            name="minPrice"
             type="number"
             min="0"
             value={minPrice}
             onChange={(e) => setMinPrice(Number(e.target.value))}
-            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-semibold text-center outline-none focus:border-accent transition-colors"
+            className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-semibold text-center outline-none focus:border-accent transition-colors"
           />
           <span className="text-slate-400 font-bold">-</span>
           <input
+            id="price-max"
+            name="maxPrice"
             type="number"
             min="0"
             value={maxPrice}
             onChange={(e) => setMaxPrice(Number(e.target.value))}
-            className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-semibold text-center outline-none focus:border-accent transition-colors"
+            className="w-full bg-white dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-lg px-2 py-1.5 text-xs font-semibold text-center outline-none focus:border-accent transition-colors"
           />
         </div>
       </div>
@@ -269,6 +286,7 @@ function ProductsContent() {
           <input
             type="checkbox"
             id="stockToggle"
+            name="inStockOnly"
             checked={inStockOnly}
             onChange={(e) => setInStockOnly(e.target.checked)}
             className="peer appearance-none h-4.5 w-4.5 rounded border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 checked:bg-primary checked:border-primary transition-colors cursor-pointer"
@@ -371,6 +389,8 @@ function ProductsContent() {
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-slate-400">Sort By</span>
                 <select
+                  id="catalog-sort"
+                  name="sortBy"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
                   className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs rounded-xl px-3 py-2 outline-none font-semibold focus:border-accent"

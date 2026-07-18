@@ -221,6 +221,9 @@ export default function AIChatbot() {
             {/* Input area */}
             <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 flex gap-2">
               <input
+                id="ai-chat-input"
+                name="aiChatInput"
+                autoComplete="off"
                 type="text"
                 placeholder={t('chatPlaceholder')}
                 value={inputVal}

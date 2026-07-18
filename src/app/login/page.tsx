@@ -696,10 +696,13 @@ export default function Login() {
 
             <form onSubmit={handleLogin} className="space-y-4 text-xs font-semibold text-slate-400">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
+                <label htmlFor="admin-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <input
+                    id="admin-email"
+                    name="adminEmail"
+                    autoComplete="email"
                     type="email" required placeholder="admin@reddy.com" value={loginIdentifier} onChange={(e) => setLoginIdentifier(e.target.value)}
                     className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-blue-400"
                   />
@@ -707,10 +710,13 @@ export default function Login() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
+                <label htmlFor="admin-password" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                   <input
+                    id="admin-password"
+                    name="adminPassword"
+                    autoComplete="current-password"
                     type="password" required placeholder="••••••••" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)}
                     className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-white outline-none focus:border-blue-400"
                   />
@@ -766,10 +772,13 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mobile Number</label>
+                      <label htmlFor="customer-login-phone" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Mobile Number</label>
                       <div className="relative">
                         <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="customer-login-phone"
+                          name="customerLoginPhone"
+                          autoComplete="tel"
                           type="text" required
                           placeholder="9876543210"
                           value={loginPhone}
@@ -815,24 +824,30 @@ export default function Login() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
                       <div className="flex justify-center gap-2">
-                        {loginOtpDigits.map((digit, i) => (
-                          <input
-                            key={i}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val.length > 1) return;
-                              if (val && !/^\d$/.test(val)) return;
-                              const newDigits = [...loginOtpDigits];
-                              newDigits[i] = val;
-                              setLoginOtpDigits(newDigits);
-                            }}
-                            className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'} focus:border-accent`}
-                          />
-                        ))}
+                        {loginOtpDigits.map((digit, i) => {
+                          const digitId = `login-otp-digit-${i}`;
+                          return (
+                            <input
+                              key={i}
+                              id={digitId}
+                              name="loginOtpDigit"
+                              autoComplete="one-time-code"
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (val.length > 1) return;
+                                if (val && !/^\d$/.test(val)) return;
+                                const newDigits = [...loginOtpDigits];
+                                newDigits[i] = val;
+                                setLoginOtpDigits(newDigits);
+                              }}
+                              className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'} focus:border-accent`}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -871,10 +886,13 @@ export default function Login() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
+                    <label htmlFor="customer-login-identifier" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
                     <div className="relative">
                       <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                       <input
+                        id="customer-login-identifier"
+                        name="customerLoginIdentifier"
+                        autoComplete="username"
                         type="text" required
                         placeholder="name@email.com or 9876543210"
                         value={loginIdentifier}
@@ -885,10 +903,13 @@ export default function Login() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
+                    <label htmlFor="customer-login-password" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Password</label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                       <input
+                        id="customer-login-password"
+                        name="customerLoginPassword"
+                        autoComplete="current-password"
                         type={showLoginPassword ? 'text' : 'password'} required
                         placeholder="••••••••"
                         value={loginPassword}
@@ -993,7 +1014,7 @@ export default function Login() {
                 {registerStep === 1 && (
                   <form onSubmit={handleSendOTP} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
+                      <label htmlFor="customer-reg-identifier" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
                       <div className="relative">
                         {detectType(regIdentifier) === 'phone' ? (
                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -1001,6 +1022,9 @@ export default function Login() {
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         )}
                         <input
+                          id="customer-reg-identifier"
+                          name="customerRegIdentifier"
+                          autoComplete="username"
                           type="text" required
                           placeholder="name@email.com or 9876543210"
                           value={regIdentifier}
@@ -1045,20 +1069,25 @@ export default function Login() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
                       <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
-                        {otpDigits.map((digit, i) => (
-                          <input
-                            key={i}
-                            ref={(el) => { otpInputRefs.current[i] = el; }}
-                            type="text"
-                            inputMode="numeric"
-                            maxLength={1}
-                            value={digit}
-                            onChange={(e) => handleOtpDigitChange(i, e.target.value)}
-                            onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                            className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'
-                              } focus:border-accent focus:shadow-md focus:shadow-accent/30`}
-                          />
-                        ))}
+                        {otpDigits.map((digit, i) => {
+                          const digitId = `register-otp-digit-${i}`;
+                          return (
+                            <input
+                              key={i}
+                              id={digitId}
+                              name="registerOtpDigit"
+                              autoComplete="one-time-code"
+                              ref={(el) => { otpInputRefs.current[i] = el; }}
+                              type="text"
+                              inputMode="numeric"
+                              maxLength={1}
+                              value={digit}
+                              onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                              className={`w-11 h-12 text-center text-lg font-bold bg-slate-900 border rounded-xl text-white outline-none transition-all duration-200 ${digit ? 'border-accent shadow-sm shadow-accent/20' : 'border-white/10'} focus:border-accent focus:shadow-md focus:shadow-accent/30`}
+                            />
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -1104,10 +1133,13 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</label>
+                      <label htmlFor="customer-reg-name" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Name</label>
                       <div className="relative">
                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="customer-reg-name"
+                          name="customerRegName"
+                          autoComplete="name"
                           type="text" required
                           placeholder="Viswanath Reddy"
                           value={regName}
@@ -1118,10 +1150,13 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Create Password</label>
+                      <label htmlFor="customer-reg-password" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Create Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="customer-reg-password"
+                          name="customerRegPassword"
+                          autoComplete="new-password"
                           type={showRegPassword ? 'text' : 'password'} required
                           placeholder="Min. 6 characters"
                           value={regPassword}
@@ -1139,10 +1174,13 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirm Password</label>
+                      <label htmlFor="customer-reg-confirm-password" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirm Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="customer-reg-confirm-password"
+                          name="customerRegConfirmPassword"
+                          autoComplete="new-password"
                           type="password" required
                           placeholder="••••••••"
                           value={regConfirmPassword}
@@ -1196,7 +1234,7 @@ export default function Login() {
                 {forgotStep === 1 && (
                   <form onSubmit={handleForgotSendOTP} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
+                      <label htmlFor="forgot-identifier" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Email or Mobile Number</label>
                       <div className="relative">
                         {detectType(forgotIdentifier) === 'phone' ? (
                           <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
@@ -1204,6 +1242,9 @@ export default function Login() {
                           <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         )}
                         <input
+                          id="forgot-identifier"
+                          name="forgotIdentifier"
+                          autoComplete="username"
                           type="text" required
                           placeholder="name@email.com or 9876543210"
                           value={forgotIdentifier}
@@ -1241,16 +1282,22 @@ export default function Login() {
 
                     <div className="space-y-2">
                       <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
-                        {otpDigits.map((digit, i) => (
-                          <input
-                            key={i}
-                            ref={(el) => { otpInputRefs.current[i] = el; }}
-                            type="text" inputMode="numeric" maxLength={1} value={digit}
-                            onChange={(e) => handleOtpDigitChange(i, e.target.value)}
-                            onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                            className="w-11 h-12 text-center text-lg font-bold bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:border-accent"
-                          />
-                        ))}
+                        {otpDigits.map((digit, i) => {
+                          const digitId = `forgot-otp-digit-${i}`;
+                          return (
+                            <input
+                              key={i}
+                              id={digitId}
+                              name="forgotOtpDigit"
+                              autoComplete="one-time-code"
+                              ref={(el) => { otpInputRefs.current[i] = el; }}
+                              type="text" inputMode="numeric" maxLength={1} value={digit}
+                              onChange={(e) => handleOtpDigitChange(i, e.target.value)}
+                              onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                              className="w-11 h-12 text-center text-lg font-bold bg-slate-900 border border-white/10 rounded-xl text-white outline-none focus:border-accent"
+                            />
+                          );
+                        })}
                       </div>
                     </div>
 
@@ -1268,10 +1315,13 @@ export default function Login() {
                 {forgotStep === 3 && (
                   <form onSubmit={handleResetPassword} className="space-y-4">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New Password</label>
+                      <label htmlFor="forgot-new-password" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="forgot-new-password"
+                          name="forgotNewPassword"
+                          autoComplete="new-password"
                           type={showForgotNewPassword ? 'text' : 'password'} required
                           placeholder="Min. 6 characters"
                           value={forgotNewPassword}
@@ -1288,10 +1338,13 @@ export default function Login() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
+                      <label htmlFor="forgot-confirm-password" className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirm New Password</label>
                       <div className="relative">
                         <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <input
+                          id="forgot-confirm-password"
+                          name="forgotConfirmPassword"
+                          autoComplete="new-password"
                           type="password" required
                           placeholder="••••••••"
                           value={forgotConfirmPassword}

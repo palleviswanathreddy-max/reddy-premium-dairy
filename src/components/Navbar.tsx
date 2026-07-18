@@ -217,6 +217,9 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
           {/* Search Box */}
           <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative w-72">
             <input
+              id="navbar-search-desktop"
+              name="searchValDesktop"
+              autoComplete="off"
               type="text"
               placeholder={t('searchPlaceholder')}
               value={searchVal}
@@ -462,6 +465,9 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               {/* Mobile Search */}
               <form onSubmit={handleSearchSubmit} className="pt-2 flex gap-2">
                 <input
+                  id="navbar-search-mobile"
+                  name="searchValMobile"
+                  autoComplete="off"
                   type="text"
                   placeholder={t('searchPlaceholder')}
                   value={searchVal}

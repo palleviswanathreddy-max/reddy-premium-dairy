@@ -188,6 +188,9 @@ export default function Footer() {
             </p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
               <input
+                id="footer-subscribe-email"
+                name="subscribeEmail"
+                autoComplete="email"
                 type="email"
                 placeholder={t('newsletterPlaceholder')}
                 value={email}

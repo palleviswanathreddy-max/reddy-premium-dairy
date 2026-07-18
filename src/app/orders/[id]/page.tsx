@@ -469,6 +469,8 @@ export default function OrderTrackingPage() {
                        <div className="bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30 rounded-2xl p-4 space-y-3">
                          <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Select reason for cancellation:</p>
                          <select 
+                           id="order-cancel-reason"
+                           name="cancelReason"
                            value={cancelReason} 
                            onChange={(e) => setCancelReason(e.target.value)}
                            className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs outline-none focus:border-red-500 font-bold"

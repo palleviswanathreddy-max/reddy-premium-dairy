@@ -194,9 +194,12 @@ export default function AdminReviewsPage() {
                   {/* Reply Input */}
                   <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                     <input 
+                      id={`reply-${rev.id}`}
+                      name="officialReply"
+                      autoComplete="off"
                       type="text" 
                       placeholder="Add official reply..." 
-                      className="flex-1 text-xs font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
+                      className="flex-1 text-xs font-semibold bg-slate-50 dark:bg-slate-955 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 outline-none focus:border-accent"
                       value={replyText[rev.id] || ''}
                       onChange={(e) => setReplyText({ ...replyText, [rev.id]: e.target.value })}
                     />

@@ -201,8 +201,11 @@ export default function CouponManagerPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coupon Code *</label>
+                  <label htmlFor="coupon-code" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Coupon Code *</label>
                   <input
+                    id="coupon-code"
+                    name="couponCode"
+                    autoComplete="off"
                     type="text"
                     required
                     placeholder="e.g. SUMMER50"
@@ -213,8 +216,11 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description *</label>
+                  <label htmlFor="coupon-description" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Description *</label>
                   <input
+                    id="coupon-description"
+                    name="couponDescription"
+                    autoComplete="off"
                     type="text"
                     required
                     placeholder="e.g. 50% off on all summer products"
@@ -225,8 +231,10 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Discount Type *</label>
+                  <label htmlFor="coupon-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Discount Type *</label>
                   <select
+                    id="coupon-type"
+                    name="couponType"
                     value={type}
                     onChange={(e) => setType(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-100"
@@ -238,10 +246,12 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <label htmlFor="coupon-value" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                     Discount Value * {type === 'percentage' && '(%)'} {type === 'flat' && '(₹)'}
                   </label>
                   <input
+                    id="coupon-value"
+                    name="couponValue"
                     type="number"
                     required={type !== 'free_shipping'}
                     disabled={type === 'free_shipping'}
@@ -254,8 +264,10 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Minimum Purchase (₹)</label>
+                  <label htmlFor="coupon-min-purchase" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Minimum Purchase (₹)</label>
                   <input
+                    id="coupon-min-purchase"
+                    name="couponMinPurchase"
                     type="number"
                     min="0"
                     placeholder="e.g. 500"
@@ -266,8 +278,10 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Max Discount Amount (₹)</label>
+                  <label htmlFor="coupon-max-discount" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Max Discount Amount (₹)</label>
                   <input
+                    id="coupon-max-discount"
+                    name="couponMaxDiscount"
                     type="number"
                     min="0"
                     placeholder="Optional limit"
@@ -278,8 +292,10 @@ export default function CouponManagerPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valid Until</label>
+                  <label htmlFor="coupon-valid-until" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Valid Until</label>
                   <input
+                    id="coupon-valid-until"
+                    name="couponValidUntil"
                     type="datetime-local"
                     value={validUntil}
                     onChange={(e) => setValidUntil(e.target.value)}
@@ -288,8 +304,10 @@ export default function CouponManagerPage() {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Usage Limit</label>
+                  <label htmlFor="coupon-usage-limit" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Usage Limit</label>
                   <input
+                    id="coupon-usage-limit"
+                    name="couponUsageLimit"
                     type="number"
                     min="1"
                     placeholder="Total allowed uses (Optional)"
@@ -305,6 +323,7 @@ export default function CouponManagerPage() {
                 <input 
                   type="checkbox" 
                   id="isActive" 
+                  name="isActive"
                   checked={isActive} 
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="w-4 h-4 rounded border-slate-300 text-accent focus:ring-accent/20 cursor-pointer"

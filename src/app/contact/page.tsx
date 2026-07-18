@@ -229,15 +229,21 @@ export default function Contact() {
               <form onSubmit={handleFormSubmit} className="space-y-4 text-xs font-semibold text-slate-500 animate-splash">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
+                    <label htmlFor="support-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Full Name *</label>
                     <input 
+                      id="support-name"
+                      name="supportName"
+                      autoComplete="name"
                       type="text" required value={name} onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
+                      className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</label>
+                    <label htmlFor="support-phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number</label>
                     <input 
+                      id="support-phone"
+                      name="supportPhone"
+                      autoComplete="tel"
                       type="tel" value={phone} onChange={(e) => setPhone(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                     />
@@ -245,24 +251,31 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
+                  <label htmlFor="support-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
                   <input 
+                    id="support-email"
+                    name="supportEmail"
+                    autoComplete="email"
                     type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject</label>
+                  <label htmlFor="support-subject" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Subject</label>
                   <input 
+                    id="support-subject"
+                    name="supportSubject"
                     type="text" value={subject} onChange={(e) => setSubject(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Message *</label>
+                  <label htmlFor="support-message" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Message *</label>
                   <textarea 
+                    id="support-message"
+                    name="supportMessage"
                     rows={5} required value={message} onChange={(e) => setMessage(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
@@ -282,8 +295,11 @@ export default function Contact() {
             {(activeTab === 'franchise' || activeTab === 'dealer') && (
               <form onSubmit={handleFranchiseSubmit} className="space-y-4 text-xs font-semibold text-slate-500 animate-splash">
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Applicant Name *</label>
+                  <label htmlFor="franchise-name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Applicant Name *</label>
                   <input 
+                    id="franchise-name"
+                    name="franchiseName"
+                    autoComplete="name"
                     type="text" required value={name} onChange={(e) => setName(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
@@ -291,15 +307,21 @@ export default function Contact() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number *</label>
+                    <label htmlFor="franchise-phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile Number *</label>
                     <input 
+                      id="franchise-phone"
+                      name="franchisePhone"
+                      autoComplete="tel"
                       type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
+                    <label htmlFor="franchise-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email Address *</label>
                     <input 
+                      id="franchise-email"
+                      name="franchiseEmail"
+                      autoComplete="email"
                       type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                     />
@@ -307,24 +329,31 @@ export default function Contact() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proposed Business / Enterprise Name</label>
+                  <label htmlFor="franchise-business" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proposed Business / Enterprise Name</label>
                   <input 
+                    id="franchise-business"
+                    name="franchiseBusiness"
                     type="text" value={businessName} onChange={(e) => setBusinessName(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proposed Outlet Location / Area *</label>
+                  <label htmlFor="franchise-location" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Proposed Outlet Location / Area *</label>
                   <input 
+                    id="franchise-location"
+                    name="franchiseLocation"
+                    autoComplete="street-address"
                     type="text" required placeholder="e.g. Sai Nagar, Anantapur Town" value={location} onChange={(e) => setLocation(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-4 py-3 outline-none focus:border-accent text-slate-800 dark:text-slate-200"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Investment Capability *</label>
+                  <label htmlFor="franchise-investment" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Investment Capability *</label>
                   <select 
+                    id="franchise-investment"
+                    name="franchiseInvestment"
                     value={investment} onChange={(e) => setInvestment(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-3 py-3 outline-none focus:border-accent font-semibold"
                   >

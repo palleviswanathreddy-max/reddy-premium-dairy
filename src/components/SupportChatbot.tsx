@@ -202,6 +202,9 @@ export default function SupportChatbot() {
             className="p-3 bg-slate-900 border-t border-white/10 flex gap-2 items-center"
           >
             <input
+              id="support-chat-input"
+              name="supportChatInput"
+              autoComplete="off"
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}

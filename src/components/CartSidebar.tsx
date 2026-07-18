@@ -219,6 +219,9 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                     <div className="relative flex-1">
                       <Ticket className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
+                        id="cart-coupon-input"
+                        name="couponCode"
+                        autoComplete="off"
                         type="text"
                         placeholder={t('enterCoupon')}
                         value={couponCode}

@@ -252,11 +252,14 @@ export default function WhatsAppManagerPage() {
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
+                id="whatsapp-log-search"
+                name="whatsappLogSearch"
+                autoComplete="off"
                 type="text"
                 placeholder="Search phone or Order ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs text-slate-800 dark:text-white rounded-xl outline-none focus:border-primary transition-colors"
+                className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-955 text-xs text-slate-800 dark:text-white rounded-xl outline-none focus:border-primary transition-colors"
               />
             </div>
           </div>
