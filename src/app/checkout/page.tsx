@@ -85,16 +85,16 @@ export default function Checkout() {
   useEffect(() => {
     if (user) {
       /* eslint-disable react-hooks/set-state-in-effect */
-      setName(user.name);
-      setPhone(user.phone);
+      setName(user.name || '');
+      setPhone(user.phone || '');
       const defAddr = user.addresses.find(a => a.isDefault);
       if (defAddr) {
-        setStreet(defAddr.street);
+        setStreet(defAddr.street || '');
         setVillage(defAddr.village || '');
-        setDistrict(defAddr.district);
-        setState(defAddr.state);
-        setPincode(defAddr.pincode);
-        if (defAddr.mandal) setMandal(defAddr.mandal);
+        setDistrict(defAddr.district || '');
+        setState(defAddr.state || 'Andhra Pradesh');
+        setPincode(defAddr.pincode || '');
+        if (defAddr.mandal) setMandal(defAddr.mandal || '');
         if (defAddr.village) setAvailableVillages([defAddr.village]);
       }
       /* eslint-enable react-hooks/set-state-in-effect */

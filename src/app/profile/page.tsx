@@ -627,11 +627,11 @@ function ProfileContent() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5 opacity-60 cursor-not-allowed">
                       <label htmlFor="profile-email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Email (Non-editable)</label>
-                      <input id="profile-email" name="profileEmail" autoComplete="email" type="email" readOnly value={profileData.email} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
+                      <input id="profile-email" name="profileEmail" autoComplete="email" type="email" readOnly value={profileData.email || ''} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
                     </div>
                     <div className="space-y-1.5 opacity-60 cursor-not-allowed">
                       <label htmlFor="profile-phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Mobile (Non-editable)</label>
-                      <input id="profile-phone" name="profilePhone" autoComplete="tel" type="text" readOnly value={profileData.phone} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
+                      <input id="profile-phone" name="profilePhone" autoComplete="tel" type="text" readOnly value={profileData.phone || ''} className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs font-semibold outline-none" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
