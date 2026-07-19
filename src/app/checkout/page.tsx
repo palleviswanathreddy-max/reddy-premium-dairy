@@ -75,6 +75,42 @@ export default function Checkout() {
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
 
+  // Available Coupons State
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [availableCouponsLoading, setAvailableCouponsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchAvailableCoupons = async () => {
+      setAvailableCouponsLoading(true);
+      try {
+        const res = await fetch('/api/coupons');
+        const data = await res.json();
+        if (data.success && data.coupons) {
+          setAvailableCoupons(data.coupons.filter((c: any) => c.isActive));
+        }
+      } catch (err) {
+        console.error('Error fetching coupons:', err);
+      } finally {
+        setAvailableCouponsLoading(false);
+      }
+    };
+    fetchAvailableCoupons();
+  }, []);
+
+  const applySpecificCoupon = async (code: string) => {
+    setCouponLoading(true);
+    setCouponError('');
+    const res = await applyCouponCode(code);
+    setCouponLoading(false);
+    if (!res.success) {
+      setCouponError(res.message);
+      showToast(res.message, 'error');
+    } else {
+      setCouponCode('');
+      showToast('Coupon applied successfully!', 'success');
+    }
+  };
+
   // Wallet State
   const [useWallet, setUseWallet] = useState(false);
 
@@ -835,48 +871,155 @@ export default function Checkout() {
 
                 {/* Coupon application form */}
                 {activeStep < 3 && (
-                  appliedCoupon ? (
-                    <div className="flex items-center justify-between p-3 rounded-xl border border-secondary/25 bg-secondary/5 text-secondary dark:text-emerald-400 text-xs">
-                      <div className="flex items-center gap-2">
-                        <Ticket className="h-4 w-4 shrink-0" />
-                        <div className="text-left font-semibold">
-                          <p className="font-bold uppercase tracking-wider">{appliedCoupon.code}</p>
-                          <p className="text-[9px] text-slate-450">{appliedCoupon.description}</p>
+                  <div className="space-y-4">
+                    {appliedCoupon ? (
+                      <div className="flex items-center justify-between p-3 rounded-xl border border-secondary/25 bg-secondary/5 text-secondary dark:text-emerald-400 text-xs">
+                        <div className="flex items-center gap-2">
+                          <Ticket className="h-4 w-4 shrink-0" />
+                          <div className="text-left font-semibold">
+                            <p className="font-bold uppercase tracking-wider">{appliedCoupon.code}</p>
+                            <p className="text-[9px] text-slate-450">{appliedCoupon.description}</p>
+                          </div>
                         </div>
-                      </div>
-                      <button 
-                        onClick={removeCoupon}
-                        className="text-[10px] font-bold text-slate-400 hover:text-red-500"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleApplyCoupon} className="space-y-1.5 text-xs font-semibold">
-                      <div className="flex gap-2">
-                        <input
-                          id="checkout-coupon-code"
-                          name="checkoutCouponCode"
-                          autoComplete="off"
-                          type="text"
-                          placeholder={t('enterCoupon')}
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                          className="flex-grow bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 outline-none focus:border-accent"
-                        />
                         <button 
-                          type="submit"
-                          disabled={couponLoading}
-                          className="px-3.5 py-2.5 bg-primary text-white dark:bg-slate-850 text-xs font-bold rounded-xl"
+                          onClick={removeCoupon}
+                          className="text-[10px] font-bold text-slate-400 hover:text-red-500"
                         >
-                          Apply
+                          Remove
                         </button>
                       </div>
-                      {couponError && (
-                        <p className="text-[9px] font-bold text-red-500 text-left px-1">{couponError}</p>
-                      )}
-                    </form>
-                  )
+                    ) : (
+                      <form onSubmit={handleApplyCoupon} className="space-y-1.5 text-xs font-semibold">
+                        <div className="flex gap-2">
+                          <input
+                            id="checkout-coupon-code"
+                            name="checkoutCouponCode"
+                            autoComplete="off"
+                            type="text"
+                            placeholder={t('enterCoupon')}
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                            className="flex-grow bg-white dark:bg-slate-950 border border-slate-250 dark:border-slate-800 text-xs rounded-xl px-3 py-2.5 outline-none focus:border-accent"
+                          />
+                          <button 
+                            type="submit"
+                            disabled={couponLoading}
+                            className="px-3.5 py-2.5 bg-primary text-white dark:bg-slate-850 text-xs font-bold rounded-xl"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-[9px] font-bold text-red-500 text-left px-1">{couponError}</p>
+                        )}
+                      </form>
+                    )}
+
+                    {/* Available Coupons Section */}
+                    {availableCoupons.length > 0 && (
+                      <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-left">
+                        <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                          <Ticket className="h-3.5 w-3.5 text-primary" />
+                          <span>Available Coupons</span>
+                        </h4>
+
+                        {availableCouponsLoading ? (
+                          <div className="flex items-center justify-center py-4 text-[10px] font-bold text-slate-400">
+                            <Loader2 className="w-4 h-4 animate-spin mr-2 text-primary" />
+                            <span>Loading coupons...</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3.5 max-h-72 overflow-y-auto pr-1">
+                            {availableCoupons.map((coupon) => {
+                              const isApplied = appliedCoupon?.code === coupon.code;
+                              const isLocked = subtotal < coupon.minPurchase;
+                              const difference = coupon.minPurchase - subtotal;
+
+                              return (
+                                <div 
+                                  key={coupon.id || coupon.code}
+                                  className={`relative border border-dashed rounded-2xl p-3.5 bg-white dark:bg-slate-950/40 transition-all duration-200 flex flex-col gap-2 ${
+                                    isApplied 
+                                      ? 'border-secondary/40 shadow-sm shadow-secondary/5 bg-secondary/5 dark:bg-emerald-950/5' 
+                                      : isLocked
+                                        ? 'border-slate-200 dark:border-slate-800/60 opacity-75'
+                                        : 'border-slate-250 dark:border-slate-800 hover:border-slate-400 dark:hover:border-slate-700 hover:shadow-sm'
+                                  }`}
+                                >
+                                  {/* Header info: Code & Action Button */}
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className={`px-2.5 py-1 text-[10px] font-black rounded-lg tracking-wider border uppercase ${
+                                      isApplied 
+                                        ? 'bg-secondary/15 dark:bg-emerald-900/20 text-secondary dark:text-emerald-400 border-secondary/20' 
+                                        : 'bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800'
+                                    }`}>
+                                      {coupon.code}
+                                    </span>
+
+                                    {isApplied ? (
+                                      <span className="text-[9px] font-extrabold text-secondary dark:text-emerald-400 bg-secondary/15 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                                        <Check className="h-3 w-3" /> Best Applied
+                                      </span>
+                                    ) : isLocked ? (
+                                      <button
+                                        disabled
+                                        className="text-[10px] font-extrabold text-slate-400 bg-slate-100 dark:bg-slate-900 px-3.5 py-1.5 rounded-xl shrink-0"
+                                      >
+                                        Apply
+                                      </button>
+                                    ) : (
+                                      <button
+                                        onClick={() => applySpecificCoupon(coupon.code)}
+                                        disabled={couponLoading}
+                                        className="text-[10px] font-extrabold text-white bg-primary hover:bg-primary-light dark:bg-slate-850 dark:hover:bg-slate-800 px-3.5 py-1.5 rounded-xl shrink-0 transition-colors shadow-sm"
+                                      >
+                                        Apply
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Description */}
+                                  <p className="text-[10.5px] text-slate-650 dark:text-slate-350 leading-relaxed font-semibold">
+                                    {coupon.description}
+                                  </p>
+
+                                  {/* Discount Details & Minimum Purchase */}
+                                  <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-900/40 pt-2 text-[9px] text-slate-400 font-bold uppercase tracking-wider">
+                                    <span>
+                                      Discount: <span className="text-slate-700 dark:text-slate-300 font-extrabold">
+                                        {coupon.type === 'flat' 
+                                          ? `Rs. ${coupon.value}` 
+                                          : coupon.type === 'percentage' 
+                                            ? `${coupon.value}%` 
+                                            : 'Free Shipping'}
+                                      </span>
+                                    </span>
+                                    <span>
+                                      Min Order: <span className="text-slate-700 dark:text-slate-300 font-extrabold">
+                                        Rs. {coupon.minPurchase}
+                                      </span>
+                                    </span>
+                                  </div>
+
+                                  {/* Dynamic savings info / Lock message */}
+                                  {isApplied && discountAmount > 0 && (
+                                    <p className="text-[9.5px] font-black text-secondary dark:text-emerald-400 mt-1">
+                                      🎉 You Save Rs. {discountAmount.toFixed(2)}
+                                    </p>
+                                  )}
+                                  {isLocked && (
+                                    <p className="text-[9.5px] font-bold text-red-500 mt-1">
+                                      Add Rs. {difference.toFixed(2)} more to unlock this coupon.
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {/* Calculations values block */}
