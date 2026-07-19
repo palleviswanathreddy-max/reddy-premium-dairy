@@ -4,10 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { Star, ThumbsUp, Heart, AlertTriangle, ShieldCheck, Camera, X } from 'lucide-react';
 import Image from 'next/image';
 import { useApp } from '@/context/AppContext';
+import { Review } from '@/db/db';
 
 export default function ReviewSection({ productId }: { productId: string }) {
   const { user, showToast } = useApp();
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Form state
@@ -90,7 +91,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
       } else {
         showToast(data.message, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast('Failed to submit review', 'error');
     } finally {
       setIsSubmitting(false);
@@ -120,7 +121,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
       } else {
         showToast(data.message, 'error');
       }
-    } catch (e) {
+    } catch {
       showToast('Action failed', 'error');
     }
   };

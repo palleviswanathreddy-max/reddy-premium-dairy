@@ -110,7 +110,7 @@ function ProfileContent() {
         } else {
           showToast(data.message || 'Failed to update settings', 'error');
         }
-      } catch (err) {
+      } catch {
         showToast('Error updating biometrics setting', 'error');
       }
     } else {
@@ -439,13 +439,13 @@ function ProfileContent() {
           } else {
             showToast('Could not resolve address from location', 'error');
           }
-        } catch (err) {
+        } catch {
           showToast('Failed to fetch address details', 'error');
         } finally {
           setIsLocating(false);
         }
       },
-      (error) => {
+      () => {
         setIsLocating(false);
         showToast('Location access denied or failed', 'error');
       },

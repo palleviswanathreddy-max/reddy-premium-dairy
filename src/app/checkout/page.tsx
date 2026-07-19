@@ -963,6 +963,7 @@ export default function Checkout() {
                   <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verifying...</p>
                 </div>
               ) : (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img 
                   src={generatedQRUrl} 
                   alt="Scan UPI QR" 
