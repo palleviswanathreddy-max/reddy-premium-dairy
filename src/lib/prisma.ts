@@ -21,11 +21,10 @@ function createPrismaClient(): PrismaClient {
   if (!globalForPrisma.pgPool) {
     globalForPrisma.pgPool = new Pool({
       connectionString,
-      // Sensible defaults that work with Prisma's local proxy
-      max: 5,
-      min: 0,
-      connectionTimeoutMillis: 15000,
-      idleTimeoutMillis: 10000,
+      // Optimized connection pool settings for serverless environment & Neon
+      max: 3,
+      connectionTimeoutMillis: 35000,
+      idleTimeoutMillis: 30000,
       ssl: {
         rejectUnauthorized: false,
       },
@@ -48,6 +47,5 @@ function createPrismaClient(): PrismaClient {
 export const prisma: PrismaClient =
   globalForPrisma.prisma ?? createPrismaClient();
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
+// Keep database client persistent globally in both dev and production to prevent connection leaks
+globalForPrisma.prisma = prisma;

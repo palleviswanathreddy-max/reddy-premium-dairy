@@ -11,59 +11,150 @@ export async function GET() {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    // Fetch all needed data in parallel
-    const [orders, products, users, categoryCount] = await Promise.all([
-      prisma.order.findMany({
-        include: {
-          items: {
-            include: { product: { include: { category: true } } }
-          },
-          user: { select: { id: true, name: true } }
-        },
-        orderBy: { createdAt: 'desc' }
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    const queryThreshold = yearStart < sixMonthsAgo ? yearStart : sixMonthsAgo;
+
+    // Fetch all needed data in parallel using optimized queries and aggregations
+    const [
+      totalRevenueAgg,
+      totalCollectedAgg,
+      totalPendingAgg,
+      cancelledCount,
+      completedRefundOrders,
+      pendingRefunds,
+      orderCount,
+      products,
+      customerCount,
+      recentUsers,
+      categoryCount,
+      orders,
+      paymentMethodGroups,
+      paymentStatusGroups,
+      deliveryStatusGroups
+    ] = await Promise.all([
+      // 1. All-time revenue & sales aggregates
+      prisma.order.aggregate({
+        _sum: { grandTotal: true },
+        where: { NOT: { status: 'Cancelled' } }
       }),
+      prisma.order.aggregate({
+        _sum: { grandTotal: true },
+        where: { paymentStatus: 'Paid' }
+      }),
+      prisma.order.aggregate({
+        _sum: { grandTotal: true },
+        where: {
+          NOT: [
+            { status: 'Cancelled' },
+            { paymentStatus: 'Paid' }
+          ]
+        }
+      }),
+      // 2. Cancellation and refunds
+      prisma.order.count({ where: { status: 'Cancelled' } }),
+      prisma.order.findMany({
+        where: { refundStatus: 'Completed' },
+        select: { refundAmount: true, grandTotal: true }
+      }),
+      prisma.order.count({
+        where: {
+          status: 'Cancelled',
+          OR: [
+            { refundStatus: null },
+            { refundStatus: 'Pending' }
+          ]
+        }
+      }),
+      // 3. Overall catalog / user totals
+      prisma.order.count(),
       prisma.product.findMany({
         select: { id: true, name: true, sku: true, stock: true, status: true, price: true }
       }),
+      prisma.user.count({ where: { role: 'customer' } }),
       prisma.user.findMany({
-        where: { role: 'customer' },
-        select: { id: true, name: true, createdAt: true }
+        where: {
+          role: 'customer',
+          createdAt: { gte: sixMonthsAgo }
+        },
+        select: { createdAt: true }
       }),
-      prisma.category.count()
+      prisma.category.count(),
+      // 4. Dynamic threshold order list (for charts, top products, top customers)
+      prisma.order.findMany({
+        where: {
+          createdAt: { gte: queryThreshold }
+        },
+        select: {
+          id: true,
+          userId: true,
+          grandTotal: true,
+          status: true,
+          paymentMethod: true,
+          paymentStatus: true,
+          refundStatus: true,
+          refundAmount: true,
+          createdAt: true,
+          user: { select: { name: true } },
+          items: {
+            select: {
+              productId: true,
+              name: true,
+              quantity: true,
+              price: true,
+              product: {
+                select: {
+                  category: {
+                    select: { name: true }
+                  }
+                }
+              }
+            }
+          }
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      // 5. All-time GroupBy aggregations
+      prisma.order.groupBy({
+        by: ['paymentMethod'],
+        _count: { id: true },
+        _sum: { grandTotal: true }
+      }),
+      prisma.order.groupBy({
+        by: ['paymentStatus'],
+        _count: { id: true }
+      }),
+      prisma.order.groupBy({
+        by: ['status'],
+        _count: { id: true }
+      })
     ]);
 
-    // Revenue accumulators
-    let totalRevenue = 0, todaySales = 0, weeklySales = 0, monthlySales = 0, yearlySales = 0;
-    let totalCollected = 0, totalPending = 0;
-    let cancelledCount = 0, refundTotal = 0;
+    // Parse aggregates
+    const totalRevenue = totalRevenueAgg._sum.grandTotal || 0;
+    const totalCollected = totalCollectedAgg._sum.grandTotal || 0;
+    const totalPending = totalPendingAgg._sum.grandTotal || 0;
+    const refundTotal = completedRefundOrders.reduce((sum, o) => sum + (o.refundAmount || o.grandTotal), 0);
+    const profit = totalRevenue * 0.22;
 
+    // Recent sales metrics
+    let todaySales = 0, weeklySales = 0, monthlySales = 0, yearlySales = 0;
     orders.forEach((order: any) => {
-      const isCancelled = order.status === 'Cancelled';
-      if (isCancelled) cancelledCount++;
-      if (order.refundStatus === 'Completed') refundTotal += Number(order.refundAmount) || order.grandTotal;
-
-      if (!isCancelled) {
+      if (order.status !== 'Cancelled') {
         const amt = order.grandTotal;
-        totalRevenue += amt;
-
         if (order.createdAt >= todayStart) todaySales += amt;
         if (order.createdAt >= weekAgo) weeklySales += amt;
         if (order.createdAt >= monthStart) monthlySales += amt;
         if (order.createdAt >= yearStart) yearlySales += amt;
       }
-
-      if (order.paymentStatus === 'Paid') totalCollected += order.grandTotal;
-      else if (!isCancelled) totalPending += order.grandTotal;
     });
-
-    const profit = totalRevenue * 0.22;
 
     // Low stock alerts
     const lowStockProducts = products
       .filter((p: any) => p.stock <= 15)
       .map((p: any) => ({ id: p.id, name: p.name, stock: p.stock, sku: p.sku, status: p.status }));
 
-    // Best Sellers
+    // Best Sellers (computed over dynamic threshold orders)
     const salesCount: Record<string, { name: string; qty: number; revenue: number }> = {};
     orders.forEach((order: any) => {
       if (order.status === 'Cancelled') return;
@@ -78,7 +169,7 @@ export async function GET() {
       .sort((a, b) => b.qty - a.qty)
       .slice(0, 5);
 
-    // Top Customers
+    // Top Customers (computed over dynamic threshold orders)
     const customerSpend: Record<string, { name: string; orders: number; spent: number }> = {};
     orders.forEach((o: any) => {
       if (o.status === 'Cancelled') return;
@@ -149,45 +240,37 @@ export async function GET() {
     }
 
     // Payment method distribution
-    const paymentMethodCounts: Record<string, { count: number; amount: number }> = {};
-    orders.forEach((order: any) => {
-      const method = order.paymentMethod || 'Unknown';
-      if (!paymentMethodCounts[method]) paymentMethodCounts[method] = { count: 0, amount: 0 };
-      paymentMethodCounts[method].count++;
-      paymentMethodCounts[method].amount += order.grandTotal;
-    });
-    const paymentMethodDistribution = Object.entries(paymentMethodCounts)
-      .map(([method, v]) => ({ method, ...v }));
+    const paymentMethodDistribution = paymentMethodGroups.map(g => ({
+      method: g.paymentMethod || 'Unknown',
+      count: g._count.id,
+      amount: g._sum.grandTotal || 0
+    }));
 
-    const paymentStatusCounts: Record<string, number> = {};
-    const deliveryStatusCounts: Record<string, number> = {};
-    orders.forEach((order: any) => {
-      const ps = order.paymentStatus || 'Unknown';
-      const ds = order.status || 'Unknown';
-      paymentStatusCounts[ps] = (paymentStatusCounts[ps] || 0) + 1;
-      deliveryStatusCounts[ds] = (deliveryStatusCounts[ds] || 0) + 1;
-    });
-    const paymentStatusBreakdown = Object.entries(paymentStatusCounts).map(([status, count]) => ({ status, count }));
-    const deliveryStatusBreakdown = Object.entries(deliveryStatusCounts).map(([status, count]) => ({ status, count }));
+    // Payment & delivery status breakdown
+    const paymentStatusBreakdown = paymentStatusGroups.map(g => ({
+      status: g.paymentStatus || 'Unknown',
+      count: g._count.id
+    }));
+
+    const deliveryStatusBreakdown = deliveryStatusGroups.map(g => ({
+      status: g.status || 'Unknown',
+      count: g._count.id
+    }));
 
     // Customer acquisition trend (last 6 months)
     const customerAcquisition = months.map((m: any) => {
-      const count = users.filter((u: any) => u.createdAt.toISOString().slice(0, 7) === m).length;
+      const count = recentUsers.filter((u: any) => u.createdAt.toISOString().slice(0, 7) === m).length;
       const label = new Date(m + '-02').toLocaleString('en-US', { month: 'short', year: 'numeric' });
       return { label, count };
     });
-
-    const pendingRefunds = orders.filter((o: any) =>
-      o.status === 'Cancelled' && (!o.refundStatus || o.refundStatus === 'Pending')
-    ).length;
 
     return NextResponse.json({
       success: true,
       stats: {
         totalRevenue, todaySales, weeklySales, monthlySales, yearlySales,
         profit, loss: 0,
-        customerCount: users.length,
-        orderCount: orders.length,
+        customerCount,
+        orderCount,
         productCount: products.length,
         categoryCount,
         cancelledCount, refundTotal, pendingRefunds, monthlyGrowthRate,

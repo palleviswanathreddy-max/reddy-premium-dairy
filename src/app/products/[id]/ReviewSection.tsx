@@ -225,14 +225,14 @@ export default function ReviewSection({ productId }: { productId: string }) {
                 <div className="flex items-center gap-6 pt-4 border-t border-slate-100 dark:border-slate-800/80 text-xs font-bold text-slate-500">
                   <button 
                     onClick={() => handleInteract(rev.id, 'helpful')}
-                    className={`flex items-center gap-1.5 hover:text-primary transition-colors ${rev.helpfulVotes?.includes(user?.id) ? 'text-primary' : ''}`}
+                    className={`flex items-center gap-1.5 hover:text-primary transition-colors ${user?.id && rev.helpfulVotes?.includes(user.id) ? 'text-primary' : ''}`}
                   >
                     <ThumbsUp className="h-4 w-4" /> 
                     <span>Helpful ({rev.helpfulCount || 0})</span>
                   </button>
                   <button 
                     onClick={() => handleInteract(rev.id, 'like')}
-                    className={`flex items-center gap-1.5 hover:text-red-500 transition-colors ${rev.likes?.includes(user?.id) ? 'text-red-500' : ''}`}
+                    className={`flex items-center gap-1.5 hover:text-red-500 transition-colors ${user?.id && rev.likes?.includes(user.id) ? 'text-red-500' : ''}`}
                   >
                     <Heart className="h-4 w-4" /> 
                     <span>Like ({rev.likeCount || 0})</span>

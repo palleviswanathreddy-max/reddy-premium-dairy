@@ -5,7 +5,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
- 
 }
 
 model User {
@@ -314,11 +313,6 @@ model SupportTicket {
   updatedAt  DateTime @updatedAt
 }
 
-enum Role {
-  admin
-  customer
-}
-
 model WhatsAppLog {
   id        String   @id @default(uuid())
   orderId   String
@@ -336,3 +330,7 @@ model AppSettings {
   whatsappNotificationsEnabled Boolean @default(true)
 }
 
+enum Role {
+  admin
+  customer
+}

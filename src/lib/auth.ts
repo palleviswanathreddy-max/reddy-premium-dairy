@@ -160,19 +160,31 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user }) {
+      const now = Date.now();
+
       if (user) {
         token.id = user.id;
         token.role = (user as { role?: string }).role;
+        token.lastVerified = now;
       }
-      // Always override token.id and token.role with PostgreSQL database values if email is present
-      if (token.email) {
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email.toLowerCase() },
-          select: { id: true, role: true }
-        });
-        if (dbUser) {
-          token.id = dbUser.id;
-          token.role = dbUser.role;
+
+      // To prevent database connection pool exhaustion from constant session checks,
+      // only query the database to verify/refresh the user role at most once every 5 minutes.
+      const shouldRefresh = !token.id || !token.role || !token.lastVerified || (now - (token.lastVerified as number) > 5 * 60 * 1000);
+
+      if (shouldRefresh && token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email.toLowerCase() },
+            select: { id: true, role: true }
+          });
+          if (dbUser) {
+            token.id = dbUser.id;
+            token.role = dbUser.role;
+            token.lastVerified = now;
+          }
+        } catch (error) {
+          console.error('[NextAuth] Database query failed in jwt callback:', error);
         }
       }
       return token;
