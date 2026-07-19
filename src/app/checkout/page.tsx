@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import Script from 'next/script';
 import confetti from 'canvas-confetti';
+import { Coupon } from '@/db/db';
 
 export default function Checkout() {
   const router = useRouter();
@@ -76,7 +77,7 @@ export default function Checkout() {
   const [couponLoading, setCouponLoading] = useState(false);
 
   // Available Coupons State
-  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [availableCouponsLoading, setAvailableCouponsLoading] = useState(false);
 
   useEffect(() => {
@@ -86,7 +87,7 @@ export default function Checkout() {
         const res = await fetch('/api/coupons');
         const data = await res.json();
         if (data.success && data.coupons) {
-          setAvailableCoupons(data.coupons.filter((c: any) => c.isActive));
+          setAvailableCoupons(data.coupons.filter((c: Coupon) => c.isActive));
         }
       } catch (err) {
         console.error('Error fetching coupons:', err);
