@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
+import ProductImage from '@/components/ProductImage';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -42,12 +43,15 @@ export default function Home() {
   const featuredProducts = products.slice(0, 4);
 
   const categoriesList = [
-    { name: t('milk'), slug: 'Fresh Milk', icon: '🥛', color: 'from-blue-500/10 to-indigo-500/10' },
-    { name: t('curd'), slug: 'Curd', icon: '🍧', color: 'from-sky-500/10 to-blue-500/10' },
-    { name: t('paneer'), slug: 'Paneer', icon: '🧈', color: 'from-yellow-500/10 to-orange-500/10' },
-    { name: t('ghee'), slug: 'Ghee', icon: '🏺', color: 'from-amber-500/10 to-yellow-500/10' },
-    { name: t('butter'), slug: 'Butter', icon: '🧈', color: 'from-cream-200 to-cream-100' },
-    { name: t('cheese'), slug: 'Cheese', icon: '🧀', color: 'from-yellow-600/10 to-yellow-500/10' }
+    { name: 'Fresh Dairy', slug: 'Fresh Dairy', icon: '🥛', color: 'from-blue-500/10 to-indigo-500/10' },
+    { name: 'Curd & Fermented', slug: 'Curd & Fermented', icon: '🍧', color: 'from-sky-500/10 to-blue-500/10' },
+    { name: 'Cheese Range', slug: 'Cheese Range', icon: '🧀', color: 'from-yellow-600/10 to-yellow-500/10' },
+    { name: 'Butter & Cream', slug: 'Butter & Cream', icon: '🧈', color: 'from-cream-200 to-cream-100' },
+    { name: 'Ghee', slug: 'Ghee', icon: '🏺', color: 'from-amber-500/10 to-yellow-500/10' },
+    { name: 'Beverage Range', slug: 'Beverage Range', icon: '🥤', color: 'from-teal-500/10 to-emerald-500/10' },
+    { name: 'Traditional Products', slug: 'Traditional Products', icon: '🏺', color: 'from-orange-500/10 to-red-500/10' },
+    { name: 'Milk Powder & Ingredients', slug: 'Milk Powder & Ingredients', icon: '🥛', color: 'from-purple-500/10 to-pink-500/10' },
+    { name: 'Desserts', slug: 'Desserts', icon: '🍨', color: 'from-rose-500/10 to-purple-500/10' }
   ];
 
   if (showSplash) {
@@ -256,10 +260,10 @@ export default function Home() {
                 >
                   {/* Image container */}
                   <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
-                    <img 
+                    <ProductImage 
                       src={prod.images[0]} 
                       alt={prod.name} 
-                      className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500"
+                      className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
                     />
                     
                     {/* Brand Logo overlay */}

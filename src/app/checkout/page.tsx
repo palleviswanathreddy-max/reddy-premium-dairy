@@ -17,12 +17,14 @@ export default function Checkout() {
   const router = useRouter();
   const { 
     cart, 
+    isCartLoaded,
     user, 
     appliedCoupon, 
     applyCouponCode, 
     removeCoupon, 
     createOrder,
     clearCart,
+    refreshOrders,
     showToast,
     t
   } = useApp();
@@ -35,12 +37,20 @@ export default function Checkout() {
     setIsMounted(true);
   }, []);
 
-  // Redirect if cart is empty
+  // Redirect if cart is empty and user is logged in
   useEffect(() => {
-    if (cart.length === 0 && activeStep < 3) {
+    if (isCartLoaded && user && cart.length === 0 && activeStep < 3) {
       router.push('/products');
     }
-  }, [cart, router, activeStep]);
+  }, [isCartLoaded, user, cart, router, activeStep]);
+
+  // Protect route: Redirect to login if not logged in
+  useEffect(() => {
+    if (isCartLoaded && !user) {
+      showToast('Please login to checkout', 'info');
+      router.push('/login?callbackUrl=/checkout');
+    }
+  }, [isCartLoaded, user, router, showToast]);
 
   // Address form fields
   const [name, setName] = useState('');
@@ -146,7 +156,7 @@ export default function Checkout() {
         setPincodeError('');
         setPincodeSuccess(false);
         try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const res = await fetch(`/api/pincode?code=${pincode}`);
           const data = await res.json();
           if (data && data[0] && data[0].Status === 'Success') {
             const postOffices = data[0].PostOffice;
@@ -262,6 +272,7 @@ export default function Checkout() {
     };
 
     const finalOrderData = {
+      userId: user?.id,
       items,
       subtotal,
       gstTotal,
@@ -331,6 +342,7 @@ export default function Checkout() {
               const verifyData = await verifyRes.json();
               if (verifyData.success) {
                 clearCart();
+                refreshOrders();
                 setCompletedOrderId(verifyData.order.id || 'ORD-ERROR');
                 setActiveStep(3);
                 confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
@@ -366,7 +378,7 @@ export default function Checkout() {
     } else if (paymentMethod === 'UPI') {
       const tempId = `ORD-${Date.now()}`;
       const upiUrl = `upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR&tn=${tempId}`;
-      const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+      const qrApiUrl = `/api/qr?size=250x250&data=${encodeURIComponent(upiUrl)}`;
       
       setGeneratedQRUrl(qrApiUrl);
       setShowQRModal(true);
@@ -445,10 +457,10 @@ export default function Checkout() {
     }
   };
 
-  if (!isMounted) {
+  if (!isMounted || !isCartLoaded) {
     return (
       <PageWrapper>
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
           <Loader2 className="w-10 h-10 animate-spin text-accent" />
         </div>
       </PageWrapper>
@@ -457,7 +469,7 @@ export default function Checkout() {
 
   return (
     <PageWrapper>
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 text-left">
         
         {/* Progress Timeline Header */}
@@ -802,7 +814,7 @@ export default function Checkout() {
                         <div className="h-40 w-40 border border-slate-200 dark:border-slate-800 rounded-xl p-2 bg-white flex items-center justify-center shadow-md">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR`)}`} 
+                            src={`/api/qr?size=150x150&data=${encodeURIComponent(`upi://pay?pa=6300928511@ybl&pn=Palle Viswanatha Reddy&am=${grandTotal.toFixed(2)}&cu=INR`)}`} 
                             alt="UPI QR Code" 
                             className="h-36 w-36 object-contain"
                           />

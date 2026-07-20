@@ -1,6 +1,7 @@
 import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { verifyAccessToken, verifyRefreshToken } from '@/db/auth-helper';
+import { getCachedOrFetch, CacheKeys } from '@/utils/cache';
 
 export interface AuthenticatedUser {
   id: string;
@@ -30,15 +31,20 @@ function parseCookies(cookieHeader: string): Record<string, string> {
  * or null if not authenticated.
  */
 export async function getAuthenticatedUser(request: Request): Promise<AuthenticatedUser | null> {
+  const isDev = process.env.NODE_ENV === 'development';
+  const startTime = isDev ? performance.now() : 0;
+
   try {
     const cookieHeader = request.headers.get('cookie') || '';
     const cookies = parseCookies(cookieHeader);
     
+    const accessToken = cookies['accessToken'];
+    const refreshToken = cookies['refreshToken'];
+
     let userId = '';
     let email = '';
-    
+
     // 1. Try Custom JWT Access Token
-    const accessToken = cookies['accessToken'];
     if (accessToken) {
       const payload = verifyAccessToken(accessToken);
       if (payload) {
@@ -46,22 +52,22 @@ export async function getAuthenticatedUser(request: Request): Promise<Authentica
         email = payload.email;
       }
     }
-    
+
     // 2. Try Custom JWT Refresh Token fallback
-    if (!userId && !email) {
-      const refreshToken = cookies['refreshToken'];
-      if (refreshToken) {
-        const payload = verifyRefreshToken(refreshToken);
-        if (payload) {
-          userId = payload.id;
-          email = payload.email;
-        }
+    if (!userId && !email && refreshToken) {
+      const payload = verifyRefreshToken(refreshToken);
+      if (payload) {
+        userId = payload.id;
+        email = payload.email;
       }
     }
-    
-    // 3. Fallback to NextAuth token decryption
-    if (!userId && !email) {
-      console.log('[DEBUG getAuthenticatedUser] Parsing token from request...');
+
+    // 3. Fallback to NextAuth token decryption ONLY if neither accessToken nor refreshToken exists in cookies
+    if (!userId && !email && !accessToken && !refreshToken) {
+      if (isDev) {
+        console.log('[DEBUG getAuthenticatedUser] Parsing token from request...');
+      }
+      
       let isSecure = !!(process.env.NEXTAUTH_URL?.startsWith('https://') || 
                         request.headers.get('x-forwarded-proto') === 'https' ||
                         (request.url && request.url.startsWith('https://')));
@@ -83,23 +89,35 @@ export async function getAuthenticatedUser(request: Request): Promise<Authentica
         email = token.email as string;
       }
     }
-    
+
     // 4. Look up user in DB if we resolved credentials
     if (userId || email) {
-      let dbUser = null;
+      let dbUser: { id: string; email: string | null; role: string } | null = null;
+      
       if (userId) {
-        dbUser = await prisma.user.findUnique({
-          where: { id: userId }
+        dbUser = await getCachedOrFetch(CacheKeys.USER(userId), async () => {
+          return prisma.user.findUnique({
+            where: { id: userId },
+            select: { id: true, email: true, role: true }
+          });
         });
       }
+      
       if (!dbUser && email) {
         const normalizedEmail = email.toLowerCase();
-        dbUser = await prisma.user.findUnique({
-          where: { email: normalizedEmail }
+        dbUser = await getCachedOrFetch(CacheKeys.USER(normalizedEmail), async () => {
+          return prisma.user.findUnique({
+            where: { email: normalizedEmail },
+            select: { id: true, email: true, role: true }
+          });
         });
       }
       
       if (dbUser) {
+        if (isDev) {
+          const endTime = performance.now();
+          console.log(`[PERF getAuthenticatedUser] Authenticated user ${dbUser.id} in ${(endTime - startTime).toFixed(2)}ms`);
+        }
         return {
           id: dbUser.id,
           email: dbUser.email || '',
@@ -111,5 +129,9 @@ export async function getAuthenticatedUser(request: Request): Promise<Authentica
     console.error('[DEBUG getAuthenticatedUser] Error occurred:', error);
   }
 
+  if (isDev) {
+    const endTime = performance.now();
+    console.log(`[PERF getAuthenticatedUser] Failed authentication in ${(endTime - startTime).toFixed(2)}ms`);
+  }
   return null;
 }

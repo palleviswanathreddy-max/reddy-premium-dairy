@@ -74,11 +74,11 @@ export default function AIChatbot() {
     } 
     else if (text.includes('milk') || text.includes('a2') || text.includes('cow') || text.includes('buffalo')) {
       reply = "We offer premium A2 Cow Milk and thick Farm Fresh Buffalo Milk. Our milk is chilled under 4°C within 1 hour of milking to retain purity. Here are our top products:";
-      recommended = products.filter(p => p.category === 'Fresh Milk').slice(0, 2);
+      recommended = products.filter(p => p.category === 'Fresh Dairy').slice(0, 2);
     } 
     else if (text.includes('paneer') || text.includes('curd') || text.includes('ghee')) {
       reply = "Our Malai Paneer is incredibly soft, our curd is thick and probiotic, and our Vedic Cow Ghee has that rich danedar texture. Check these out:";
-      recommended = products.filter(p => ['Paneer', 'Curd', 'Ghee'].includes(p.category)).slice(0, 2);
+      recommended = products.filter(p => ['Cheese Range', 'Curd & Fermented', 'Ghee'].includes(p.category)).slice(0, 2);
     } 
     else if (text.includes('address') || text.includes('location') || text.includes('where') || text.includes('farm')) {
       reply = "Our farm and processing facility is located in Chiyyedu Village, Anantapur District, Andhra Pradesh - 515721, India. You are welcome to visit our state-of-the-art farm to see our healthy cattle and automated milking systems!";
@@ -220,9 +220,11 @@ export default function AIChatbot() {
 
             {/* Input area */}
             <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 flex gap-2">
+              <label htmlFor="ai-chat-input" className="sr-only">Chat message</label>
               <input
                 id="ai-chat-input"
                 name="aiChatInput"
+                aria-label={t('chatPlaceholder') || "Chat message"}
                 autoComplete="off"
                 type="text"
                 placeholder={t('chatPlaceholder')}
@@ -231,7 +233,8 @@ export default function AIChatbot() {
                 className="flex-1 bg-slate-100 dark:bg-slate-900 text-xs text-slate-700 dark:text-slate-200 px-4 py-3 rounded-xl outline-none focus:bg-white dark:focus:bg-slate-950 border border-transparent focus:border-slate-200 focus:ring-1 focus:ring-accent"
               />
               <button 
-                type="submit" 
+                type="submit"
+                aria-label="Send message"
                 className="p-3 bg-accent text-slate-900 hover:bg-accent-light rounded-xl shadow-md transition-all shrink-0"
               >
                 <Send className="h-4 w-4" />

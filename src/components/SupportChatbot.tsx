@@ -201,9 +201,11 @@ export default function SupportChatbot() {
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(inputText); }}
             className="p-3 bg-slate-900 border-t border-white/10 flex gap-2 items-center"
           >
+            <label htmlFor="support-chat-input" className="sr-only">Support message</label>
             <input
               id="support-chat-input"
               name="supportChatInput"
+              aria-label="Type your message here"
               autoComplete="off"
               type="text"
               value={inputText}
@@ -213,6 +215,7 @@ export default function SupportChatbot() {
             />
             <button
               type="submit"
+              aria-label="Send message"
               disabled={!inputText.trim() || isLoading}
               className="bg-accent text-slate-950 p-2.5 rounded-xl hover:bg-accent-light transition-all flex items-center justify-center disabled:opacity-40 disabled:hover:bg-accent"
             >
@@ -225,6 +228,7 @@ export default function SupportChatbot() {
       {/* Launcher Bubble Button */}
       <button
         onClick={() => setIsOpen(prev => !prev)}
+        aria-label="Open support chat"
         className="h-14 w-14 rounded-full bg-gradient-to-tr from-primary to-emerald-500 text-white shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-300 relative border border-white/15 cursor-pointer hover:shadow-primary/30"
       >
         {isOpen ? (

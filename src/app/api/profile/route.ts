@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthenticatedUser } from '@/utils/auth-check';
+import { cache, CacheKeys, getCachedOrFetch } from '@/utils/cache';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,17 +19,40 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, message: 'Forbidden' }, { status: 403 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: { addresses: true }
-    });
+    // Cache profile for 5 seconds to reduce database load on rapid successive requests
+    const user = await getCachedOrFetch(`profile:${userId}`, async () => {
+      return prisma.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          phone: true,
+          avatar: true,
+          rewardPoints: true,
+          walletBalance: true,
+          gender: true,
+          dob: true,
+          bloodGroup: true,
+          emergencyContact: true,
+          emailVerified: true,
+          mobileVerified: true,
+          biometricsEnabled: true,
+          biometricCredentialId: true,
+          lastLoginAt: true,
+          createdAt: true,
+          updatedAt: true,
+          addresses: true
+        }
+      });
+    }, 5000);
 
     if (!user) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
     }
 
-    const { passwordHash: _, ...safeUser } = user;
-    return NextResponse.json({ success: true, user: safeUser });
+    return NextResponse.json({ success: true, user });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }
@@ -52,11 +76,38 @@ export async function PUT(request: Request) {
     const updatedUser = await prisma.user.update({
       where: { id: targetUserId },
       data: { name, gender, dob, bloodGroup, emergencyContact },
-      include: { addresses: true }
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        phone: true,
+        avatar: true,
+        rewardPoints: true,
+        walletBalance: true,
+        gender: true,
+        dob: true,
+        bloodGroup: true,
+        emergencyContact: true,
+        emailVerified: true,
+        mobileVerified: true,
+        biometricsEnabled: true,
+        biometricCredentialId: true,
+        lastLoginAt: true,
+        createdAt: true,
+        updatedAt: true,
+        addresses: true
+      }
     });
 
-    const { passwordHash: _, ...safeUser } = updatedUser;
-    return NextResponse.json({ success: true, user: safeUser });
+    // Invalidate user cache & profile cache
+    cache.delete(CacheKeys.USER(targetUserId));
+    if (updatedUser.email) {
+      cache.delete(CacheKeys.USER(updatedUser.email.toLowerCase()));
+    }
+    cache.delete(`profile:${targetUserId}`);
+
+    return NextResponse.json({ success: true, user: updatedUser });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

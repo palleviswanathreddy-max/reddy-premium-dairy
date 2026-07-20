@@ -11,23 +11,31 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { userId, type, productId, productName, quantity } = body;
 
-    if (!userId || !productId || !type) {
-      return NextResponse.json({ success: false }, { status: 400 });
+    if (!userId || !type) {
+      return NextResponse.json({ success: false, message: 'userId and type are required' }, { status: 400 });
     }
 
-    const validTypes = ['cart_add', 'wishlist_add'];
+    const validTypes = ['cart_add', 'wishlist_add', 'login'];
     if (!validTypes.includes(type)) {
       return NextResponse.json({ success: false, message: 'Invalid type' }, { status: 400 });
     }
 
-    const logType = type === 'cart_add' ? 'add_to_cart' : 'wishlist_add';
+    if (type !== 'login' && !productId) {
+      return NextResponse.json({ success: false, message: 'productId is required' }, { status: 400 });
+    }
+
+    const logType = type === 'cart_add'
+      ? 'add_to_cart'
+      : type === 'wishlist_add'
+        ? 'wishlist_add'
+        : 'login';
 
     // Non-blocking write
     prisma.activityLog.create({
       data: {
         userId,
         type: logType,
-        meta: { productId, productName: productName || '', quantity }
+        meta: type === 'login' ? {} : { productId, productName: productName || '', quantity }
       }
     }).catch((err: any) => console.error('[track/cart]', err));
 

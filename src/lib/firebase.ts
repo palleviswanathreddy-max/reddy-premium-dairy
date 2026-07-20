@@ -64,8 +64,14 @@ export const requestForToken = async () => {
       serviceWorkerRegistration = await navigator.serviceWorker.ready;
     }
 
+    const vapidKey = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || '';
+    if (!vapidKey || vapidKey.startsWith('BDummy')) {
+      console.warn("FCM VAPID key is a dummy key or missing. Skipping registration.");
+      return null;
+    }
+
     const token = await getToken(messaging, {
-      vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || 'BDummyVapidKeyForFirebaseCloudMessagingDevelopmentOnly',
+      vapidKey,
       serviceWorkerRegistration
     });
 

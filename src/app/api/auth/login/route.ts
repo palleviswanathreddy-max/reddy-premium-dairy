@@ -30,7 +30,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: 'No account found with this email/mobile number.' }, { status: 404 });
     }
 
-    const isMatch = await comparePassword(password, dbUser.passwordHash || '');
+    if (!dbUser.passwordHash || dbUser.passwordHash === 'otp-registered-account') {
+      return NextResponse.json({ success: false, message: 'No password has been set for this account. Please log in using OTP or set a password via Forgot Password.' }, { status: 400 });
+    }
+
+    const isMatch = await comparePassword(password, dbUser.passwordHash);
     if (!isMatch) {
       return NextResponse.json({ success: false, message: 'Incorrect password.' }, { status: 401 });
     }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCachedOrFetch, CacheKeys, cache } from '@/utils/cache';
 
 export async function GET(
   request: Request,
@@ -7,11 +8,13 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const dbProd = await prisma.product.findUnique({
-      where: { id },
-      include: {
-        category: true
-      }
+    const dbProd = await getCachedOrFetch(CacheKeys.PRODUCT(id), async () => {
+      return prisma.product.findUnique({
+        where: { id },
+        include: {
+          category: true
+        }
+      });
     });
 
     if (!dbProd) {
@@ -77,6 +80,9 @@ export async function PUT(
     }
 
     const { category, categoryId: _categoryId, ...safeProduct } = updated;
+    // Invalidate product caches
+    cache.delete(CacheKeys.PRODUCT(id));
+    cache.invalidatePattern('products:');
     return NextResponse.json({
       success: true,
       product: {
@@ -98,6 +104,10 @@ export async function DELETE(
     await prisma.product.delete({
       where: { id }
     });
+
+    // Invalidate product caches
+    cache.delete(CacheKeys.PRODUCT(id));
+    cache.invalidatePattern('products:');
 
     return NextResponse.json({ success: true, message: 'Product deleted successfully' });
   } catch (err: any) {

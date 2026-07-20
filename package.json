@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node -e \"const fs=require('fs'); ['public/sw.js','public/sw.js.map'].concat(fs.readdirSync('public').filter(f=>f.startsWith('workbox-')||f.startsWith('fallback-')).map(f=>'public/'+f)).forEach(f=>{if(fs.existsSync(f))fs.unlinkSync(f)});\"",
     "dev": "next dev --turbo",
     "dev:db": "prisma dev",
     "dev:all": "concurrently -n db,next -c blue,green \"prisma dev\" \"next dev --turbo\"",

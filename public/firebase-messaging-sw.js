@@ -2,12 +2,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js');
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDummyKeyForDevelopment12345",
-  authDomain: "reddy-premium-dairy.firebaseapp.com",
-  projectId: "reddy-premium-dairy",
-  storageBucket: "reddy-premium-dairy.appspot.com",
-  messagingSenderId: "1234567890",
-  appId: "1:1234567890:web:abcdef12345"
+  apiKey: "AIzaSyA129Q9NMQ9fa7fpc70ID3E6DHb09uAv-U",
+  authDomain: "reddy-premium-dairy-f4233.firebaseapp.com",
+  projectId: "reddy-premium-dairy-f4233",
+  storageBucket: "reddy-premium-dairy-f4233.firebasestorage.app",
+  messagingSenderId: "81086282376",
+  appId: "1:81086282376:web:6e5036546fe53392a8fd3d"
 };
 
 // Initialize the Firebase app in the service worker
@@ -19,7 +19,7 @@ const messaging = firebase.messaging();
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  
+
   const notificationTitle = payload.notification?.title || 'Order Update!';
   const notificationOptions = {
     body: payload.notification?.body || 'Your order has been updated.',

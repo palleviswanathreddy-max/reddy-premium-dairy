@@ -32,8 +32,8 @@ export async function GET(request: NextRequest) {
     const email = token.email.toLowerCase();
 
     // Query user from PostgreSQL via Prisma Client
-    const dbUser = await prisma.user.findFirst({
-      where: { email: { equals: email, mode: 'insensitive' } },
+    const dbUser = await prisma.user.findUnique({
+      where: { email },
       include: {
         addresses: true,
       },

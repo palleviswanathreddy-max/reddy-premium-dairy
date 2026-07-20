@@ -46,7 +46,7 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 export async function POST(request: Request) {
   try {
-    const { identifier } = await request.json();
+    const { identifier, purpose = 'register' } = await request.json();
 
     if (!identifier || !identifier.trim()) {
       return NextResponse.json(
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     }
 
     // ──────────────────────────────────────────────
-    // DUPLICATE CHECK: Is this email/mobile already registered?
+    // USER CHECK ACCORDING TO PURPOSE
     // ──────────────────────────────────────────────
     const existingUser = await prisma.user.findFirst({
       where: identifierType === 'email'
@@ -94,15 +94,27 @@ export async function POST(request: Request) {
         : { phone: { endsWith: normalizedIdentifier } }
     });
 
-    if (existingUser) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: 'This email or mobile number is already registered. Please log in instead.',
-          alreadyRegistered: true
-        },
-        { status: 409 }
-      );
+    if (purpose === 'register') {
+      if (existingUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'This email or mobile number is already registered. Please log in instead.',
+            alreadyRegistered: true
+          },
+          { status: 409 }
+        );
+      }
+    } else if (purpose === 'reset' || purpose === 'login') {
+      if (!existingUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: 'No account found with this email or mobile number. Please register first.'
+          },
+          { status: 404 }
+        );
+      }
     }
 
     // ──────────────────────────────────────────────

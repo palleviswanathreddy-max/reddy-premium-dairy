@@ -2,11 +2,12 @@
 /* eslint-disable @next/next/no-img-element */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useApp } from '@/context/AppContext';
 import PageWrapper from '@/components/PageWrapper';
 import { Product } from '@/db/db';
+import ProductImage from '@/components/ProductImage';
 import { 
   Search, Star, SlidersHorizontal, Heart, 
   Eye, RefreshCw, X, Plus, Info, ShieldCheck, ShoppingCart, Check, Filter, SortDesc 
@@ -15,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 function ProductsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { 
     products, 
     addToCart, 
@@ -99,7 +101,7 @@ function ProductsContent() {
 
   const handleBuyNow = (prod: Product) => {
     addToCart(prod, 1);
-    window.location.href = '/checkout';
+    router.push('/checkout');
   };
 
   const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>, current: string[], value: string) => {
@@ -153,7 +155,7 @@ function ProductsContent() {
 
       {/* Categories */}
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Categories</label>
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Categories</h3>
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
           {categories.map((cat) => {
             const catId = `category-${cat.toLowerCase().replace(/\s+/g, '-')}`;
@@ -183,7 +185,7 @@ function ProductsContent() {
 
       {/* Brands */}
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Brands</label>
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Brands</h3>
         <div className="space-y-1.5 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
           {brands.map((brand) => {
             const brandId = `brand-${brand.toLowerCase().replace(/\s+/g, '-')}`;
@@ -213,7 +215,7 @@ function ProductsContent() {
 
       {/* Weights */}
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Weight / Volume</label>
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Weight / Volume</h3>
         <div className="flex flex-wrap gap-1.5">
           {weights.map((w) => (
             <button
@@ -238,6 +240,7 @@ function ProductsContent() {
           <input
             id="price-min"
             name="minPrice"
+            aria-label="Minimum price"
             type="number"
             min="0"
             value={minPrice}
@@ -248,6 +251,7 @@ function ProductsContent() {
           <input
             id="price-max"
             name="maxPrice"
+            aria-label="Maximum price"
             type="number"
             min="0"
             value={maxPrice}
@@ -259,7 +263,7 @@ function ProductsContent() {
 
       {/* Rating Filter */}
       <div className="space-y-2 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-        <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Minimum Rating</label>
+        <h3 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Minimum Rating</h3>
         <div className="flex gap-1">
           {[0, 3, 4, 4.5].map((rating) => (
             <button
@@ -387,7 +391,7 @@ function ProductsContent() {
               </p>
               
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-400">Sort By</span>
+                <label htmlFor="catalog-sort" className="text-xs font-semibold text-slate-400">Sort By</label>
                 <select
                   id="catalog-sort"
                   name="sortBy"
@@ -424,14 +428,17 @@ function ProductsContent() {
                     <Link 
                       key={prod.id}
                       href={`/products/${prod.id}`}
-                      className="flex flex-col rounded-3xl border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-800 transition-all duration-300 overflow-hidden group text-left no-underline"
+                      className="flex flex-col h-full rounded-3xl border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-900 shadow-sm hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-800 transition-all duration-300 overflow-hidden group text-left no-underline"
                     >
                       {/* Image */}
-                      <div className="relative aspect-square overflow-hidden bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-6">
-                        <img 
-                          src={prod.images[0]} 
+                      <div className="relative w-full h-[200px] sm:h-[240px] lg:h-[300px] overflow-hidden bg-white dark:bg-slate-950 flex items-center justify-center p-5">
+                        <ProductImage 
+                          src={prod.images[0] || '/images/placeholder.png'} 
                           alt={prod.name} 
-                          className="object-contain h-full w-full group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = '/images/butter.png';
+                          }}
+                          className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500"
                         />
                         
                         {/* Small Brand Logo at Top */}
@@ -607,7 +614,7 @@ function ProductsContent() {
           <div className="flex gap-2">
             {compareList.map(prod => (
               <div key={prod.id} className="relative flex-1 aspect-square bg-slate-50 dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-200/50 dark:border-slate-800 p-2 flex items-center justify-center">
-                <img src={prod.images[0]} alt={prod.name} className="h-full w-full object-contain rounded-lg" />
+                <ProductImage src={prod.images[0]} alt={prod.name} className="max-h-full max-w-full object-contain rounded-lg" />
                 <button 
                   onClick={() => toggleCompare(prod)}
                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5 hover:scale-105"
@@ -664,7 +671,9 @@ function ProductsContent() {
                 {compareList.map(prod => (
                   <div key={prod.id} className="space-y-4 col-span-1">
                     <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100 dark:border-slate-900">
-                      <img src={prod.images[0]} alt={prod.name} className="h-28 w-28 object-contain rounded-2xl border bg-white mb-2 p-1" />
+                      <div className="h-28 w-28 flex items-center justify-center border bg-white rounded-2xl mb-2 p-1">
+                        <ProductImage src={prod.images[0]} alt={prod.name} className="max-h-full max-w-full object-contain" />
+                      </div>
                       <p className="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">{prod.name}</p>
                       <button 
                         onClick={() => { addToCart(prod, 1); setCompareModalOpen(false); }}
@@ -722,7 +731,7 @@ function ProductsContent() {
                 
                 {/* Image */}
                 <div className="aspect-square bg-slate-50 dark:bg-slate-900 rounded-2xl overflow-hidden p-6 flex items-center justify-center border">
-                  <img src={quickViewProduct.images[0]} alt={quickViewProduct.name} className="object-contain h-full w-full" />
+                  <ProductImage src={quickViewProduct.images[0]} alt={quickViewProduct.name} className="max-h-full max-w-full object-contain" />
                 </div>
 
                 {/* Details */}

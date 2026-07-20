@@ -78,7 +78,7 @@ export default function AdminDashboard() {
 
   // Product Form state
   const [prodName, setProdName] = useState('');
-  const [prodCategory, setProdCategory] = useState('Fresh Milk');
+  const [prodCategory, setProdCategory] = useState('Fresh Dairy');
   const [prodSKU, setProdSKU] = useState('');
   const [prodMRP, setProdMRP] = useState('');
   const [prodPrice, setProdPrice] = useState('');
@@ -472,9 +472,9 @@ export default function AdminDashboard() {
       },
       images: ["/images/interface image.png"],
       tags: [prodCategory, "Fresh", "Healthy"],
-      gst: prodCategory === 'Ghee' ? 12 : ['Butter', 'Cheese', 'Paneer', 'Curd', 'Milkshake'].includes(prodCategory) ? 5 : 0,
-      expiryDays: prodCategory === 'Ghee' ? 180 : ['Butter', 'Cheese', 'Paneer'].includes(prodCategory) ? 30 : 3,
-      deliveryTime: ['Fresh Milk', 'Curd'].includes(prodCategory) ? "6:00 AM - 9:00 AM Tomorrow" : "Same Day (Within 3 Hours)",
+      gst: prodCategory === 'Ghee' ? 12 : ['Butter & Cream', 'Cheese Range', 'Curd & Fermented', 'Beverage Range'].includes(prodCategory) ? 5 : 0,
+      expiryDays: prodCategory === 'Ghee' ? 180 : ['Butter & Cream', 'Cheese Range'].includes(prodCategory) ? 30 : 3,
+      deliveryTime: ['Fresh Dairy', 'Curd & Fermented'].includes(prodCategory) ? "6:00 AM - 9:00 AM Tomorrow" : "Same Day (Within 3 Hours)",
       status: Number(prodStock) > 0 ? "Available" : "Out of Stock"
     };
 
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
 
   const clearProductForm = () => {
     setProdName('');
-    setProdCategory('Fresh Milk');
+    setProdCategory('Fresh Dairy');
     setProdSKU('');
     setProdMRP('');
     setProdPrice('');
@@ -1014,17 +1014,15 @@ export default function AdminDashboard() {
                       value={prodCategory} onChange={(e) => setProdCategory(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-slate-955 border rounded-xl px-3 py-3 outline-none focus:border-accent font-semibold"
                     >
-                      <option value="Fresh Milk">Fresh Milk</option>
-                      <option value="Curd">Curd & Yogurt</option>
-                      <option value="Paneer">Paneer</option>
+                      <option value="Fresh Dairy">Fresh Dairy</option>
+                      <option value="Curd & Fermented">Curd & Fermented</option>
+                      <option value="Cheese Range">Cheese Range</option>
+                      <option value="Butter & Cream">Butter & Cream</option>
                       <option value="Ghee">Ghee</option>
-                      <option value="Butter">Butter</option>
-                      <option value="Cheese">Cheese</option>
-                      <option value="Cream">Cream</option>
-                      <option value="Buttermilk">Buttermilk</option>
-                      <option value="Lassi">Lassi</option>
-                      <option value="Milkshake">Milkshake</option>
-                      <option value="Khova">Khova</option>
+                      <option value="Beverage Range">Beverage Range</option>
+                      <option value="Traditional Products">Traditional Products</option>
+                      <option value="Milk Powder & Ingredients">Milk Powder & Ingredients</option>
+                      <option value="Desserts">Desserts</option>
                     </select>
                   </div>
 

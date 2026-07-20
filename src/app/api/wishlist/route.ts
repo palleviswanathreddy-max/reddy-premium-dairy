@@ -36,20 +36,23 @@ export async function POST(request: Request) {
     const { wishlist } = body; // Array of product IDs
     const userId = authUser.id;
 
-    // Clean old wishlist items
-    await prisma.wishlistItem.deleteMany({
-      where: { userId }
-    });
-
-    // Save new wishlist items
-    if (wishlist && wishlist.length > 0) {
-      await prisma.wishlistItem.createMany({
-        data: wishlist.map((prodId: string) => ({
-          userId,
-          productId: prodId
-        }))
+    // Sync wishlist inside an atomic transaction
+    await prisma.$transaction(async (tx) => {
+      // Clean old wishlist items
+      await tx.wishlistItem.deleteMany({
+        where: { userId }
       });
-    }
+
+      // Save new wishlist items
+      if (wishlist && wishlist.length > 0) {
+        await tx.wishlistItem.createMany({
+          data: wishlist.map((prodId: string) => ({
+            userId,
+            productId: prodId
+          }))
+        });
+      }
+    });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

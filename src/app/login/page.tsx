@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @next/next/no-img-element */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useApp } from '@/context/AppContext';
 import {
   Lock, Mail, User, Phone, ShieldCheck,
@@ -11,7 +11,7 @@ import {
   Eye, EyeOff, ArrowRight, Loader2, Fingerprint
 } from 'lucide-react';
 import Link from 'next/link';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 
 type AuthTab = 'login' | 'register' | 'forgot-password';
 type RegisterStep = 1 | 2 | 3;
@@ -42,9 +42,19 @@ function StepIndicator({ registerStep }: { registerStep: RegisterStep }) {
   );
 }
 
-export default function Login() {
+function LoginContent() {
   const router = useRouter();
-  const { login, showToast } = useApp();
+  const searchParams = useSearchParams();
+  const { user, login, showToast } = useApp();
+  const { status } = useSession();
+
+  // Auto-redirect if user is authenticated
+  useEffect(() => {
+    if (status === 'authenticated' || user) {
+      const targetUrl = searchParams.get('callbackUrl') || '/';
+      router.replace(targetUrl);
+    }
+  }, [status, user, router, searchParams]);
 
   // Main tab state
   const [activeTab, setActiveTab] = useState<AuthTab>('login');
@@ -130,7 +140,8 @@ export default function Login() {
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
-    signIn('google', { callbackUrl: '/profile' });
+    const targetUrl = searchParams.get('callbackUrl') || '/';
+    signIn('google', { callbackUrl: targetUrl });
   };
 
   // ──────────────────────────────────────────────
@@ -550,7 +561,7 @@ export default function Login() {
       const res = await fetch('/api/auth/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: forgotIdentifier.trim() })
+        body: JSON.stringify({ identifier: forgotIdentifier.trim(), purpose: 'reset' })
       });
       const data = await res.json();
       setIsLoading(false);
@@ -822,7 +833,7 @@ export default function Login() {
                     )}
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
+                      <label htmlFor="login-otp-digit-0" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
                       <div className="flex justify-center gap-2">
                         {loginOtpDigits.map((digit, i) => {
                           const digitId = `login-otp-digit-${i}`;
@@ -831,6 +842,7 @@ export default function Login() {
                               key={i}
                               id={digitId}
                               name="loginOtpDigit"
+                              aria-label={`Login verification code digit ${i + 1} of 6`}
                               autoComplete="one-time-code"
                               type="text"
                               inputMode="numeric"
@@ -1067,7 +1079,7 @@ export default function Login() {
                     )}
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
+                      <label htmlFor="register-otp-digit-0" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
                       <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
                         {otpDigits.map((digit, i) => {
                           const digitId = `register-otp-digit-${i}`;
@@ -1076,6 +1088,7 @@ export default function Login() {
                               key={i}
                               id={digitId}
                               name="registerOtpDigit"
+                              aria-label={`Registration verification code digit ${i + 1} of 6`}
                               autoComplete="one-time-code"
                               ref={(el) => { otpInputRefs.current[i] = el; }}
                               type="text"
@@ -1281,6 +1294,7 @@ export default function Login() {
                     )}
 
                     <div className="space-y-2">
+                      <label htmlFor="forgot-otp-digit-0" className="text-[10px] font-bold uppercase tracking-wider text-slate-400 text-center block">Enter 6-Digit Code</label>
                       <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
                         {otpDigits.map((digit, i) => {
                           const digitId = `forgot-otp-digit-${i}`;
@@ -1289,6 +1303,7 @@ export default function Login() {
                               key={i}
                               id={digitId}
                               name="forgotOtpDigit"
+                              aria-label={`Reset verification code digit ${i + 1} of 6`}
                               autoComplete="one-time-code"
                               ref={(el) => { otpInputRefs.current[i] = el; }}
                               type="text" inputMode="numeric" maxLength={1} value={digit}
@@ -1400,5 +1415,17 @@ export default function Login() {
       </footer>
 
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <React.Suspense fallback={
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-xs text-slate-400 font-medium">
+        Loading...
+      </div>
+    }>
+      <LoginContent />
+    </React.Suspense>
   );
 }

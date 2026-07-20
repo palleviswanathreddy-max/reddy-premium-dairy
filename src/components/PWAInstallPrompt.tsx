@@ -13,44 +13,71 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
+// Single global variable to store the deferred prompt, surviving React re-renders and component remounts
+let deferredPrompt: BeforeInstallPromptEvent | null = null;
+
+// Listen once globally for the install event as early as possible
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the default mini-infobar or automatic install prompt
+    e.preventDefault();
+    // Stash the event so it can be triggered later.
+    deferredPrompt = e as BeforeInstallPromptEvent;
+    // Dispatch a custom event to notify mounted components that the prompt is ready
+    window.dispatchEvent(new CustomEvent('pwa-prompt-saved'));
+  });
+}
+
 export default function PWAInstallPrompt() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [hasPrompt, setHasPrompt] = useState(!!deferredPrompt);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the mini-infobar from appearing on mobile
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      // Automatically show prompt after a short delay
+    // If prompt is already cached at module load, schedule the banner delay
+    if (deferredPrompt) {
+      const timer = setTimeout(() => {
+        setIsVisible(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+
+    const handlePromptSaved = () => {
+      setHasPrompt(true);
       setTimeout(() => {
         setIsVisible(true);
       }, 5000);
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-saved', handlePromptSaved);
 
-    window.addEventListener('appinstalled', () => {
-      setDeferredPrompt(null);
+    const handleAppInstalled = () => {
+      deferredPrompt = null;
+      setHasPrompt(false);
       setIsVisible(false);
       console.log('PWA was installed');
-    });
+    };
+
+    window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-saved', handlePromptSaved);
+      window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
-    // Show the install prompt
+    
+    // Trigger Chrome's install prompt inside a user click gesture
     await deferredPrompt.prompt();
-    // Wait for the user to respond to the prompt
+    
+    // Wait for the user response choice
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User response to the install prompt: ${outcome}`);
-    // We've used the prompt, and can't use it again, discard it
-    setDeferredPrompt(null);
+    
+    // Discard the used prompt
+    deferredPrompt = null;
+    setHasPrompt(false);
     setIsVisible(false);
   };
 
@@ -60,7 +87,7 @@ export default function PWAInstallPrompt() {
 
   return (
     <AnimatePresence>
-      {isVisible && deferredPrompt && (
+      {isVisible && hasPrompt && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

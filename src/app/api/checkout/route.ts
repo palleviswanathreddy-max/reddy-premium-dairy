@@ -67,57 +67,71 @@ async function handler(request: NextRequest, { auth }: any) {
     const invoiceNumber = `INV-${new Date().getFullYear()}-${orderId.split('-').pop()}`;
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Resolve product details for items
-    const productIds = (sanitized.items || []).map((i: any) => i.productId);
-    const products = await prisma.product.findMany({ where: { id: { in: productIds } } });
-    type DbCheckoutProduct = typeof products[number];
-    const productMap = new Map<string, any>(products.map((p: DbCheckoutProduct) => [p.id, p]));
+    // Create order and update stock atomically inside a transaction
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // 1. Lock and check stock of all products
+      const productIds = (sanitized.items || []).map((i: any) => i.productId);
+      const dbProducts = await tx.product.findMany({
+        where: { id: { in: productIds } }
+      });
+      const dbProductMap = new Map<string, any>(dbProducts.map((p) => [p.id, p]));
 
-    // Create order in PostgreSQL
-    const newOrder = await prisma.order.create({
-      data: {
-        id: orderId,
-        userId,
-        subtotal: Number(sanitized.totalPrice) || 0,
-        gstTotal: 0,
-        deliveryCharges: 0,
-        discount: 0,
-        grandTotal: Number(sanitized.totalPrice) || 0,
-        status: 'Pending',
-        paymentMethod: sanitized.paymentMethod || 'COD',
-        paymentStatus: 'Pending',
-        deliveryAddress: sanitized.deliveryAddress || {},
-        timeline,
-        invoiceNumber,
-        deliveryOtp,
-        items: {
-          create: (sanitized.items || []).map((item: any) => {
-            const prod = productMap.get(item.productId);
-            return {
-              productId: item.productId,
-              sku: prod?.sku || item.sku || 'UNKNOWN',
-              name: prod?.name || item.name || 'Unknown Product',
-              price: Number(item.price) || Number(prod?.price) || 0,
-              quantity: Number(item.quantity) || 1,
-              gst: Number(item.gst) || Number(prod?.gst) || 0
-            };
-          })
+      for (const item of (sanitized.items || [])) {
+        const prod = dbProductMap.get(item.productId);
+        if (!prod) {
+          throw new Error(`Product not found: ${item.name || item.productId}`);
+        }
+        if (prod.stock < (Number(item.quantity) || 1)) {
+          throw new Error(`Insufficient stock for product: ${prod.name}`);
         }
       }
-    });
 
-    // Automatically reduce inventory stock levels
-    for (const item of (sanitized.items || [])) {
-      const prod = productMap.get(item.productId);
-      if (prod) {
-        const nextStock = Math.max(0, prod.stock - (Number(item.quantity) || 1));
+      // 2. Create the order
+      const createdOrder = await tx.order.create({
+        data: {
+          id: orderId,
+          userId,
+          subtotal: Number(sanitized.totalPrice) || 0,
+          gstTotal: 0,
+          deliveryCharges: 0,
+          discount: 0,
+          grandTotal: Number(sanitized.totalPrice) || 0,
+          status: 'Pending',
+          paymentMethod: sanitized.paymentMethod || 'COD',
+          paymentStatus: 'Pending',
+          deliveryAddress: sanitized.deliveryAddress || {},
+          timeline,
+          invoiceNumber,
+          deliveryOtp,
+          items: {
+            create: (sanitized.items || []).map((item: any) => {
+              const prod = dbProductMap.get(item.productId);
+              return {
+                productId: item.productId,
+                sku: prod?.sku || item.sku || 'UNKNOWN',
+                name: prod?.name || item.name || 'Unknown Product',
+                price: Number(item.price) || Number(prod?.price) || 0,
+                quantity: Number(item.quantity) || 1,
+                gst: Number(item.gst) || Number(prod?.gst) || 0
+              };
+            })
+          }
+        }
+      });
+
+      // 3. Update stock levels
+      for (const item of (sanitized.items || [])) {
+        const prod = dbProductMap.get(item.productId)!;
+        const nextStock = prod.stock - (Number(item.quantity) || 1);
         const nextStatus = nextStock === 0 ? 'Out of Stock' : nextStock <= 10 ? 'Low Stock' : 'Available';
-        await prisma.product.update({
+        await tx.product.update({
           where: { id: item.productId },
           data: { stock: nextStock, status: nextStatus }
         });
       }
-    }
+
+      return createdOrder;
+    });
 
     // Invalidate user's order cache
     cache.invalidatePattern(`orders:${userId}`);
@@ -142,7 +156,13 @@ async function handler(request: NextRequest, { auth }: any) {
         headers: getRateLimitHeaders(result.remaining, result.resetTime)
       }
     );
-  } catch (error) {
+  } catch (error: any) {
+    if (error instanceof Error && (error.message.startsWith('Insufficient stock') || error.message.startsWith('Product not found'))) {
+      return NextResponse.json(
+        { error: error.message },
+        { status: 400 }
+      );
+    }
     logger.error('Checkout error', error as Error, { userId: auth.userId });
     return NextResponse.json(
       { error: 'Failed to process checkout' },

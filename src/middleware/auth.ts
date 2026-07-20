@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { prisma } from '@/lib/prisma';
 import { logger } from '@/utils/logger';
 import { verifyAccessToken, verifyRefreshToken } from '@/db/auth-helper';
+import { getCachedOrFetch, CacheKeys } from '@/utils/cache';
 
 export interface AuthContext {
   userId: string;
@@ -95,15 +96,19 @@ export function withAuth(handler: Function) {
 
       let dbUser = null;
       if (userId) {
-        dbUser = await prisma.user.findUnique({
-          where: { id: userId }
+        dbUser = await getCachedOrFetch(CacheKeys.USER(userId), async () => {
+          return prisma.user.findUnique({
+            where: { id: userId }
+          });
         });
       }
 
       if (!dbUser && email) {
         const normalizedEmail = email.toLowerCase();
-        dbUser = await prisma.user.findUnique({
-          where: { email: normalizedEmail }
+        dbUser = await getCachedOrFetch(CacheKeys.USER(normalizedEmail), async () => {
+          return prisma.user.findUnique({
+            where: { email: normalizedEmail }
+          });
         });
       }
 

@@ -217,10 +217,12 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 <form onSubmit={handleApplyCoupon} className="space-y-1.5">
                   <div className="flex gap-2">
                     <div className="relative flex-1">
+                      <label htmlFor="cart-coupon-input" className="sr-only">Coupon Code</label>
                       <Ticket className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <input
                         id="cart-coupon-input"
                         name="couponCode"
+                        aria-label={t('enterCoupon') || "Enter coupon code"}
                         autoComplete="off"
                         type="text"
                         placeholder={t('enterCoupon')}

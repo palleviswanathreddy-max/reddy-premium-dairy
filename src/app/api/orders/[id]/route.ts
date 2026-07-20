@@ -75,7 +75,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       } : null
     };
 
-    return NextResponse.json({ success: true, order });
+    return NextResponse.json({
+      success: true,
+      message: 'Order retrieved successfully',
+      order,
+      data: { order }
+    });
   } catch (err: any) {
     return NextResponse.json({ success: false, message: err.message }, { status: 500 });
   }

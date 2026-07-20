@@ -79,8 +79,11 @@ export const authOptions: NextAuthOptions = {
             throw new Error('No account found with this email/mobile number. Please register first.');
           }
 
-          const passwordHash = dbUser.passwordHash || '';
-          const isMatch = await comparePassword(password, passwordHash);
+          if (!dbUser.passwordHash || dbUser.passwordHash === 'otp-registered-account') {
+            throw new Error('No password has been set for this account. Please log in using OTP or set a password via Forgot Password.');
+          }
+
+          const isMatch = await comparePassword(password, dbUser.passwordHash);
           if (!isMatch) {
             throw new Error('Incorrect password.');
           }

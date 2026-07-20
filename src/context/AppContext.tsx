@@ -105,6 +105,7 @@ interface AppContextProps {
 
   // Cart
   cart: CartItem[];
+  isCartLoaded: boolean;
   addToCart: (product: Product, qty?: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQty: (productId: string, qty: number) => void;
@@ -154,20 +155,26 @@ const AppContext = createContext<AppContextProps | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
 
-  // Lazy theme state initializer
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const stored = safeLocalStorage.getItem('reddy-theme') as 'light' | 'dark' | null;
-    if (stored) return stored;
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return 'light';
-  });
+  const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [language, setLanguageState] = useState<LanguageType>('en');
 
-  // Lazy language state initializer
-  const [language, setLanguageState] = useState<LanguageType>(() => {
-    return (safeLocalStorage.getItem('reddy-lang') as LanguageType) || 'en';
-  });
+  // Hydration safety: sync theme & language from localStorage on mount
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const storedTheme = safeLocalStorage.getItem('reddy-theme') as 'light' | 'dark' | null;
+    if (storedTheme) {
+      setTheme(storedTheme);
+    } else if (typeof window !== 'undefined') {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
+    }
+
+    const storedLang = safeLocalStorage.getItem('reddy-lang') as LanguageType | null;
+    if (storedLang) {
+      setLanguageState(storedLang);
+    }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, []);
 
   const [user, setUser] = useState<User | null>(null);
   const [isCartLoaded, setIsCartLoaded] = useState(false);
@@ -179,6 +186,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<NotificationMsg[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' | null }>({ message: '', type: null });
+  const lastSyncedCartRef = useRef<string>('');
+  const lastSyncedWishlistRef = useRef<string>('');
 
   // Show Toast Alert
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'info') => {
@@ -321,13 +330,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       setCart(dbCart);
+      lastSyncedCartRef.current = JSON.stringify(dbCart.map((item: CartItem) => ({
+        productId: item.product.id,
+        quantity: item.quantity
+      })));
       setIsCartLoaded(true);
 
-      const wishlistRes = await fetch(`${API_WISHLIST}?userId=${userId}`, { cache: 'no-store', signal });
-      if (!wishlistRes.ok) throw new Error(`HTTP error! status: ${wishlistRes.status}`);
-      const wishlistData = await wishlistRes.json();
-      if (wishlistData.success) {
-        setWishlist(wishlistData.wishlist);
+      try {
+        const wishlistRes = await fetch(`${API_WISHLIST}?userId=${userId}`, { cache: 'no-store', signal });
+        if (wishlistRes.ok) {
+          const wishlistData = await wishlistRes.json();
+          if (wishlistData.success) {
+            setWishlist(wishlistData.wishlist);
+            lastSyncedWishlistRef.current = JSON.stringify(wishlistData.wishlist);
+          }
+        }
+      } catch (wishlistErr) {
+        const wErr = wishlistErr as Error;
+        if (wErr.name !== 'AbortError' && process.env.NODE_ENV === 'development') {
+          console.error('Failed to fetch wishlist:', wishlistErr);
+        }
       }
     } catch (err) {
       const error = err as Error;
@@ -397,14 +419,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (status === 'loading') return;
 
     if (status === 'authenticated') {
-      const isGoogleProvider = !!(session?.user && !session.user.image?.startsWith('data:') && !safeLocalStorage.getItem('reddy-user'));
+      const isGoogleProvider = !!(session?.user && !session.user.image?.startsWith('data:'));
       const syncUrl = isGoogleProvider ? API_AUTH_SYNC : API_PROFILE;
       // eslint-disable-next-line react-hooks/set-state-in-effect
       syncSessionProfile(syncUrl, isGoogleProvider, controller.signal);
     } else if (status === 'unauthenticated') {
       setUser(null);
-      setIsCartLoaded(false);
       safeLocalStorage.removeItem('reddy-user');
+      lastSyncedCartRef.current = '';
+      lastSyncedWishlistRef.current = '';
 
       // Restores guest cart on unauthenticated/logout states
       const localCart = safeLocalStorage.getItem('reddy-guest-cart');
@@ -417,6 +440,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
+      setIsCartLoaded(true);
     }
 
     return () => {
@@ -487,38 +511,40 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id, registerFCMToken]);
 
-  // Sync Cart to database
+  // Sync Cart to database (debounced to group rapid updates and handle Strict Mode)
   useEffect(() => {
-    const controller = new AbortController();
-    
-    if (!cartMountedRef.current) {
-      cartMountedRef.current = true;
+    if (!isCartLoaded) return;
+
+    const cartPayload = cart.map(item => ({
+      productId: item.product.id,
+      quantity: item.quantity
+    }));
+    const cartString = JSON.stringify(cartPayload);
+
+    // Skip if cart data hasn't changed
+    if (lastSyncedCartRef.current === cartString) {
       return;
     }
-    
-    const syncCart = async () => {
-      if (!user) {
-        safeLocalStorage.setItem('reddy-guest-cart', JSON.stringify(cart));
-        return;
-      }
 
-      if (!isCartLoaded) return;
+    if (!user) {
+      safeLocalStorage.setItem('reddy-guest-cart', JSON.stringify(cart));
+      lastSyncedCartRef.current = cartString;
+      return;
+    }
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
       try {
-        const cartPayload = cart.map(item => ({
-          productId: item.product.id,
-          quantity: item.quantity
-        }));
         const res = await fetch(API_CART, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, cart: cartPayload }),
           signal: controller.signal
         });
-        if (!res.ok) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to sync cart:', res.statusText);
-          }
+        if (res.ok) {
+          lastSyncedCartRef.current = cartString;
+        } else if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to sync cart:', res.statusText);
         }
       } catch (err) {
         const error = err as Error;
@@ -526,28 +552,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to sync cart to db:', error);
         }
       }
-    };
-    syncCart();
+    }, 500);
 
     return () => {
+      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [cart, user, isCartLoaded]);
 
-  const cartMountedRef = useRef(false);
-
-  // Sync Wishlist to database
+  // Sync Wishlist to database (debounced to group rapid updates and handle Strict Mode)
   useEffect(() => {
-    const controller = new AbortController();
-    
-    if (!wishlistMountedRef.current) {
-      wishlistMountedRef.current = true;
-      return;
-    }
-    
     if (!user) return;
 
-    const syncWishlist = async () => {
+    const wishlistString = JSON.stringify(wishlist);
+    // Skip if wishlist data hasn't changed
+    if (lastSyncedWishlistRef.current === wishlistString) {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(async () => {
       try {
         const res = await fetch(API_WISHLIST, {
           method: 'POST',
@@ -555,10 +579,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ userId: user.id, wishlist }),
           signal: controller.signal
         });
-        if (!res.ok) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to sync wishlist:', res.statusText);
-          }
+        if (res.ok) {
+          lastSyncedWishlistRef.current = wishlistString;
+        } else if (process.env.NODE_ENV === 'development') {
+          console.error('Failed to sync wishlist:', res.statusText);
         }
       } catch (err) {
         const error = err as Error;
@@ -566,15 +590,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           console.error('Failed to sync wishlist to db:', error);
         }
       }
-    };
-    syncWishlist();
+    }, 500);
 
     return () => {
+      clearTimeout(timeoutId);
       controller.abort();
     };
   }, [wishlist, user]);
-
-  const wishlistMountedRef = useRef(false);
 
   // Theme Toggler
   const toggleTheme = useCallback(() => {
@@ -1106,6 +1128,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     products,
     refreshProducts,
     cart,
+    isCartLoaded,
     addToCart,
     removeFromCart,
     updateCartQty,
@@ -1143,6 +1166,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     products,
     refreshProducts,
     cart,
+    isCartLoaded,
     addToCart,
     removeFromCart,
     updateCartQty,

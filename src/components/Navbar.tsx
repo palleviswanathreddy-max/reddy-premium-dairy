@@ -216,9 +216,11 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
 
           {/* Search Box */}
           <form onSubmit={handleSearchSubmit} className="hidden lg:flex items-center relative w-72">
+            <label htmlFor="navbar-search-desktop" className="sr-only">Search catalog</label>
             <input
               id="navbar-search-desktop"
               name="searchValDesktop"
+              aria-label={t('searchPlaceholder') || "Search catalog"}
               autoComplete="off"
               type="text"
               placeholder={t('searchPlaceholder')}
@@ -230,6 +232,7 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               <button 
                 type="button" 
                 onClick={startVoiceSearch} 
+                aria-label="Voice Search"
                 className={`hover:text-primary dark:hover:text-accent p-1 rounded-full transition-colors ${isListening ? 'text-red-500 animate-pulse' : ''}`}
                 title="Voice Search"
               >
@@ -238,12 +241,13 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               <button 
                 type="button" 
                 onClick={triggerImageSearch}
+                aria-label="AI Product Match"
                 className="hover:text-primary dark:hover:text-accent p-1 rounded-full transition-colors"
                 title="AI Product Match"
               >
                 <Camera className="h-3.5 w-3.5" />
               </button>
-              <button type="submit" className="hover:text-primary dark:hover:text-accent p-1">
+              <button type="submit" aria-label="Submit search" className="hover:text-primary dark:hover:text-accent p-1">
                 <Search className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -464,9 +468,11 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
               
               {/* Mobile Search */}
               <form onSubmit={handleSearchSubmit} className="pt-2 flex gap-2">
+                <label htmlFor="navbar-search-mobile" className="sr-only">Search catalog</label>
                 <input
                   id="navbar-search-mobile"
                   name="searchValMobile"
+                  aria-label={t('searchPlaceholder') || "Search catalog"}
                   autoComplete="off"
                   type="text"
                   placeholder={t('searchPlaceholder')}
@@ -474,7 +480,7 @@ export default function Navbar({ onCartToggle, onNotificationsToggle }: NavbarPr
                   onChange={(e) => setSearchVal(e.target.value)}
                   className="w-full bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 px-4 py-2.5 rounded-xl text-xs outline-none focus:bg-white dark:focus:bg-slate-950 border border-transparent focus:border-slate-300"
                 />
-                <button type="submit" className="p-2.5 bg-primary text-white rounded-xl">
+                <button type="submit" aria-label="Submit search" className="p-2.5 bg-primary text-white rounded-xl">
                   <Search className="h-4 w-4" />
                 </button>
               </form>

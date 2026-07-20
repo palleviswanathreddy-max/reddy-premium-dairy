@@ -3,10 +3,41 @@ import { cache } from '@/utils/cache';
 import { getDb } from '@/db/db';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 async function seedPostgresFromLocalJSON() {
   try {
     const localDb = getDb();
+
+    // Idempotency check: compare file hashes
+    const hashFilePath = path.join(process.cwd(), 'src/db/localdb_hash.txt');
+    const localDbPath = path.join(process.cwd(), 'src/db/localdb.json');
+    let currentHash = '';
+    try {
+      if (fs.existsSync(localDbPath)) {
+        const fileContent = fs.readFileSync(localDbPath, 'utf8');
+        currentHash = crypto.createHash('sha256').update(fileContent).digest('hex');
+      }
+    } catch (hashErr) {
+      logger.error('Failed to compute localdb.json hash', hashErr as Error);
+    }
+
+    const productCount = await prisma.product.count();
+    if (productCount > 0 && currentHash) {
+      try {
+        if (fs.existsSync(hashFilePath)) {
+          const storedHash = fs.readFileSync(hashFilePath, 'utf8').trim();
+          if (storedHash === currentHash) {
+            logger.info('⚡ Database initialization matches checksum. Skipping seeding.');
+            return;
+          }
+        }
+      } catch (readErr) {
+        logger.error('Failed to read stored localdb hash', readErr as Error);
+      }
+    }
 
     // Ensure clean removal of user-guest from DB if it previously existed
     await prisma.user.deleteMany({
@@ -19,24 +50,23 @@ async function seedPostgresFromLocalJSON() {
     });
 
     // 1. Categories & Products
-    const productCount = await prisma.product.count();
-    if (productCount === 0 && localDb.products && localDb.products.length > 0) {
-      logger.info('🌱 Seeding Categories and Products in PostgreSQL...');
+    if (localDb.products && localDb.products.length > 0) {
+      logger.info('🌱 Seeding/Syncing Categories and Products in PostgreSQL...');
       
       // Get unique categories
       const categories = Array.from(new Set(localDb.products.map((p: any) => p.category)));
       
       // Seed Categories
-      for (const catName of categories) {
+      await Promise.all(categories.map(async (catName) => {
         await prisma.category.upsert({
           where: { name: catName },
           update: {},
           create: {
             name: catName,
-            slug: catName.toLowerCase().replace(/\s+/g, '-'),
+            slug: (catName as string).toLowerCase().replace(/\s+/g, '-'),
           },
         });
-      }
+      }));
 
       const dbCategories = await prisma.category.findMany();
       const catMap: Record<string, string> = {};
@@ -44,14 +74,16 @@ async function seedPostgresFromLocalJSON() {
         catMap[c.name] = c.id;
       });
 
-      // Seed Products
-      for (const p of localDb.products) {
-        const catId = catMap[p.category];
-        if (!catId) continue;
-        
-        await prisma.product.create({
-          data: {
-            id: p.id,
+      // Seed/Sync Products in batches of 10 to avoid connection overload
+      const products = localDb.products;
+      const batchSize = 10;
+      for (let i = 0; i < products.length; i += batchSize) {
+        const batch = products.slice(i, i + batchSize);
+        await Promise.all(batch.map(async (p: any) => {
+          const catId = catMap[p.category];
+          if (!catId) return;
+          
+          const productData = {
             sku: p.sku,
             name: p.name,
             categoryId: catId,
@@ -77,15 +109,24 @@ async function seedPostgresFromLocalJSON() {
             relatedProducts: p.relatedProducts,
             variants: p.variants as any || [],
             faq: p.faq as any || [],
-          },
-        });
+          };
+
+          await prisma.product.upsert({
+            where: { id: p.id },
+            update: productData,
+            create: {
+              id: p.id,
+              ...productData
+            }
+          });
+        }));
       }
     }
 
     // 2. Coupons
     if (localDb.coupons && localDb.coupons.length > 0) {
       logger.info('🌱 Seeding/Syncing Coupons in PostgreSQL...');
-      for (const cp of localDb.coupons) {
+      await Promise.all(localDb.coupons.map(async (cp: any) => {
         await prisma.coupon.upsert({
           where: { code: cp.code },
           update: {
@@ -108,14 +149,14 @@ async function seedPostgresFromLocalJSON() {
             isActive: cp.isActive !== false,
           },
         });
-      }
+      }));
     }
 
     // 3. Delivery Partners
     const dpCount = await prisma.deliveryPartner.count();
     if (dpCount === 0 && localDb.deliveryPartners && localDb.deliveryPartners.length > 0) {
       logger.info('🌱 Seeding Delivery Partners in PostgreSQL...');
-      for (const dp of localDb.deliveryPartners) {
+      await Promise.all(localDb.deliveryPartners.map(async (dp: any) => {
         await prisma.deliveryPartner.create({
           data: {
             id: dp.id,
@@ -130,14 +171,14 @@ async function seedPostgresFromLocalJSON() {
             rating: dp.rating || 5.0,
           },
         });
-      }
+      }));
     }
 
     // 4. Users (Admin and standard users)
     const userCount = await prisma.user.count();
     if (userCount === 0 && localDb.users && localDb.users.length > 0) {
       logger.info('🌱 Seeding Users in PostgreSQL...');
-      for (const u of localDb.users) {
+      await Promise.all(localDb.users.map(async (u: any) => {
         const passwordHash = u.passwordHash || (u.password ? await bcrypt.hash(u.password, 10) : null);
         await prisma.user.create({
           data: {
@@ -160,7 +201,7 @@ async function seedPostgresFromLocalJSON() {
             biometricCredentialId: u.biometricCredentialId || null,
           },
         });
-      }
+      }));
     }
 
     // 5. AppSettings
@@ -172,6 +213,16 @@ async function seedPostgresFromLocalJSON() {
           whatsappNotificationsEnabled: true,
         },
       });
+    }
+
+    // Save current hash on successful seeding
+    if (currentHash) {
+      try {
+        fs.writeFileSync(hashFilePath, currentHash, 'utf8');
+        logger.info('💾 Saved localdb checksum hash to disk');
+      } catch (writeErr) {
+        logger.error('Failed to write localdb hash to disk', writeErr as Error);
+      }
     }
 
   } catch (err) {

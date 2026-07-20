@@ -4,7 +4,7 @@
       "id": "prod-fresh-milk",
       "sku": "REDDY-FRSH-500",
       "name": "REDDY PREMIUM Fresh Milk – Pasteurised & Homogenised (500ml)",
-      "category": "Fresh Milk",
+      "category": "Fresh Dairy",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure farm-fresh milk, pasteurised and homogenised for consistent creamy texture. 100% natural with no preservatives. Rich source of calcium and protein for daily health.",
       "ingredients": "100% Pasteurised Homogenised Whole Milk",
@@ -87,7 +87,7 @@
       "id": "prod-cow-milk",
       "sku": "REDDY-COW-500",
       "name": "REDDY PREMIUM Pure Cow Milk – 100% Pure & Natural (500ml)",
-      "category": "Fresh Milk",
+      "category": "Fresh Dairy",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "100% pure and natural cow milk sourced from pasture-fed cows. Easy to digest and packed with natural sweetness and nutrition. Excellent for daily cooking, tea, and coffee.",
       "ingredients": "100% Pure Cow Milk",
@@ -163,7 +163,7 @@
       "id": "prod-buffalo-milk",
       "sku": "REDDY-BUFF-500",
       "name": "REDDY PREMIUM Rich Buffalo Milk – Rich & Nutritious (500ml)",
-      "category": "Fresh Milk",
+      "category": "Fresh Dairy",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Rich, creamy, high-fat buffalo milk sourced directly from our farm. Ideal for preparing traditional curd, ghee, sweets, and rich tea. Pasteurised for guaranteed purity.",
       "ingredients": "100% Raw Buffalo Milk",
@@ -224,7 +224,7 @@
       "id": "prod-a2-milk",
       "sku": "REDDY-A2-500",
       "name": "REDDY PREMIUM A2 Milk – Pure A2 Protein (500ml)",
-      "category": "Fresh Milk",
+      "category": "Fresh Dairy",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure A2 Cow Milk from indigenous grass-fed cows. Rich in A2 beta-casein protein which is highly digestible. Chilled within 1 hour of milking. Great immunity booster for the whole family.",
       "ingredients": "100% Pure A2 Cow Milk",
@@ -285,7 +285,7 @@
       "id": "prod-curd",
       "sku": "REDDY-CURD-500",
       "name": "REDDY PREMIUM Curd – Thick & Tasty (500g)",
-      "category": "Curd",
+      "category": "Curd & Fermented",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Thick, creamy, naturally set curd from pasteurised milk. Rich in active lactic cultures for gut health and digestion. No added preservatives or thickeners. Perfect alongside meals.",
       "ingredients": "Pasteurized Milk, Active Lactic Cultures",
@@ -345,7 +345,7 @@
       "id": "prod-butter",
       "sku": "REDDY-BUTTER-500",
       "name": "REDDY PREMIUM Butter – Pasteurised (500g)",
-      "category": "Butter",
+      "category": "Butter & Cream",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Rich, creamy, pasteurised butter made from fresh milk fat. Adds a delicious taste and aroma to toast, paranthas, biscuits, and sautéed vegetables. 100% free of artificial colors.",
       "ingredients": "Pasteurised Milk Fat, Salt, Annatto Color",
@@ -404,7 +404,7 @@
       "id": "prod-paneer",
       "sku": "REDDY-PANEER-200",
       "name": "REDDY PREMIUM Paneer – Fresh & Soft (200g)",
-      "category": "Paneer",
+      "category": "Cheese Range",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Incredibly soft, fresh, melt-in-the-mouth malai paneer. Made from pure cow milk under hygienic conditions. Vacuum sealed to retain freshness. Free from starch or binders.",
       "ingredients": "Pasteurized Cow Milk, Citric Acid",
@@ -464,7 +464,7 @@
       "id": "prod-cheese",
       "sku": "REDDY-CHEESE-200",
       "name": "REDDY PREMIUM Cheese – Processed Cheese (200g)",
-      "category": "Cheese",
+      "category": "Cheese Range",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Creamy, delicious processed cheese. Easy to slice, grate, or melt. Rich in dairy protein and calcium. Perfect for sandwiches, pizza, burgers, and pasta dishes.",
       "ingredients": "Cheese, Milk Solids, Emulsifiers, Common Salt",
@@ -583,7 +583,7 @@
       "id": "prod-cream",
       "sku": "REDDY-CREAM-200",
       "name": "REDDY PREMIUM Cream – Rich & Fresh (200ml)",
-      "category": "Fresh Cream",
+      "category": "Butter & Cream",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Velvety smooth fresh dairy cream. Enhances the richness of curries, gravies, soups, and desserts. Perfect for whipping and garnishing. 100% pure with no artificial thickeners.",
       "ingredients": "Milk Fat, Milk Solids",
@@ -642,7 +642,7 @@
       "id": "prod-buttermilk",
       "sku": "REDDY-BMLK-500",
       "name": "REDDY PREMIUM Buttermilk – Refreshing & Healthy (500ml)",
-      "category": "Buttermilk",
+      "category": "Traditional Products",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Refreshing spiced buttermilk churned from fresh curd. Spiced with ginger, curry leaves, green chilli, and black salt. Aids digestion and keeps you hydrated in hot weather.",
       "ingredients": "Water, Curd, Ginger, Green Chilli, Salt, Spices, Curry Leaves",
@@ -702,7 +702,7 @@
       "id": "prod-lassi",
       "sku": "REDDY-LASSI-500",
       "name": "REDDY PREMIUM Lassi – Sweet & Delicious (500ml)",
-      "category": "Lassi",
+      "category": "Traditional Products",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Traditional sweet Punjabi-style lassi made from thick high-fat curd. Flavoured with cardamom and saffron. Creamy, rich, and delicious – the perfect meal companion.",
       "ingredients": "Pasteurized Milk Solids, Sugar, Active Culture, Cardamom, Saffron Extract",
@@ -761,7 +761,7 @@
       "id": "prod-ice-cream",
       "sku": "REDDY-ICE-500",
       "name": "REDDY PREMIUM Ice Cream – Rich & Creamy (500ml)",
-      "category": "Ice Cream",
+      "category": "Desserts",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Luxurious, multi-flavour ice cream tub made from rich dairy cream. Smooth, indulgent, and meltingly delicious. Perfect family dessert for any occasion.",
       "ingredients": "Milk Solids, Cream, Sugar, Cocoa Powder, Vanilla Extract, Stabilizers",
@@ -820,7 +820,7 @@
       "id": "prod-milkshake",
       "sku": "REDDY-MSHK-200",
       "name": "REDDY PREMIUM Milkshake – Thick & Tasty (200ml)",
-      "category": "Milkshake",
+      "category": "Beverage Range",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Rich chocolate milkshake made from whole milk and premium Belgian cocoa. Thick, creamy, and satisfying energy booster in a convenient bottle.",
       "ingredients": "Whole Milk, Sugar, Belgian Cocoa Powder, Stabilizers",
@@ -878,7 +878,7 @@
       "id": "prod-flavoured-milk",
       "sku": "REDDY-FLMK-200",
       "name": "REDDY PREMIUM Flavoured Milk – Strawberry (200ml)",
-      "category": "Milkshake",
+      "category": "Beverage Range",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Refreshing strawberry flavoured milk combining pure dairy goodness with the juicy taste of ripe strawberries. Light, sweet, and delicious – loved by kids and adults alike.",
       "ingredients": "Double Toned Milk, Sugar, Strawberry Fruit Concentrate, Permitted Flavors",
@@ -935,7 +935,7 @@
       "id": "prod-milk-powder",
       "sku": "REDDY-MLKPOW-500",
       "name": "REDDY PREMIUM Milk Powder – Spray Dried (500g)",
-      "category": "Milk Powder",
+      "category": "Milk Powder & Ingredients",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "High-quality spray-dried whole milk powder. Retains natural dairy flavor and full nutrition. Dissolves easily to prepare milk, tea, coffee, and traditional sweets.",
       "ingredients": "Pasteurized Cow and Buffalo Milk Solids",
@@ -994,7 +994,7 @@
       "id": "prod-khova",
       "sku": "REDDY-KHOVA-200",
       "name": "REDDY PREMIUM Khova – Pure & Traditional (200g)",
-      "category": "Khova",
+      "category": "Traditional Products",
       "brand": "REDDY PREMIUM DAIRY",
       "description": "Pure solid milk concentrate (Mawa), slow-cooked in traditional open pans from high-quality buffalo milk. Rich texture and sweet milk aroma. Essential for Gulab Jamun, Halwa, and Pedas.",
       "ingredients": "100% Pure Buffalo Milk Solids",
@@ -1048,6 +1048,2584 @@
       "relatedProducts": [
         "prod-paneer",
         "prod-ghee"
+      ]
+    },
+    {
+      "id": "prod-full-cream-milk",
+      "sku": "REDDY-FCM-500",
+      "name": "REDDY PREMIUM Full Cream Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich and creamy farm-fresh full cream milk. High in fat and nutrients, perfect for growing kids, making thick curd, paneer, and rich milk tea or coffee.",
+      "ingredients": "100% Pasteurised Homogenised Full Cream Milk",
+      "storage": "Refrigerate under 4°C. Consume within 3 days.",
+      "nutrition": {
+        "calories": "74 kcal",
+        "fat": "6.0g",
+        "saturatedFat": "3.8g",
+        "protein": "3.4g",
+        "carbohydrates": "4.8g",
+        "calcium": "120mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 40,
+      "price": 37,
+      "discount": 7.5,
+      "gst": 0,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.8,
+      "images": [
+        "/images/products/1_fresh_milk.png"
+      ],
+      "tags": [
+        "Full Cream",
+        "Rich",
+        "Fresh Milk"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd",
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-toned-milk",
+        "prod-cow-milk"
+      ]
+    },
+    {
+      "id": "prod-toned-milk",
+      "sku": "REDDY-TONED-500",
+      "name": "REDDY PREMIUM Toned Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Balanced milk with moderate fat content, pasteurised and homogenised. Perfect for daily family drinking, breakfast cereals, and tea.",
+      "ingredients": "100% Pasteurised Homogenised Toned Milk",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "58 kcal",
+        "fat": "3.0g",
+        "saturatedFat": "1.8g",
+        "protein": "3.2g",
+        "carbohydrates": "4.7g",
+        "calcium": "115mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 35,
+      "price": 32,
+      "discount": 8,
+      "gst": 0,
+      "stock": 200,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.7,
+      "images": [
+        "/images/products/2_cow_milk.png"
+      ],
+      "tags": [
+        "Toned Milk",
+        "Daily Fresh",
+        "Balanced"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd",
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-full-cream-milk",
+        "prod-double-toned-milk"
+      ]
+    },
+    {
+      "id": "prod-double-toned-milk",
+      "sku": "REDDY-DTM-500",
+      "name": "REDDY PREMIUM Double Toned Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Low-fat fresh milk, pasteurised and homogenised. Ideal for fitness enthusiasts and individuals seeking a low-calorie milk alternative for daily nutrition.",
+      "ingredients": "100% Pasteurised Homogenised Double Toned Milk",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "47 kcal",
+        "fat": "1.5g",
+        "saturatedFat": "0.9g",
+        "protein": "3.3g",
+        "carbohydrates": "4.8g",
+        "calcium": "110mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 32,
+      "price": 30,
+      "discount": 6,
+      "gst": 0,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.6,
+      "images": [
+        "/images/products/3_buffalo_milk.png"
+      ],
+      "tags": [
+        "Double Toned",
+        "Low Fat",
+        "Healthy"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-toned-milk",
+        "prod-skim-milk"
+      ]
+    },
+    {
+      "id": "prod-skim-milk",
+      "sku": "REDDY-SKIM-500",
+      "name": "REDDY PREMIUM Skim Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Fat-free premium pasteurised milk. Contains less than 0.5% fat while maintaining all natural calcium and protein content. Best choice for weight management.",
+      "ingredients": "100% Pasteurised Homogenised Skimmed Milk",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "35 kcal",
+        "fat": "0.1g",
+        "protein": "3.3g",
+        "carbohydrates": "4.9g",
+        "calcium": "115mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 30,
+      "price": 28,
+      "discount": 6,
+      "gst": 0,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.5,
+      "images": [
+        "/images/products/4_a2_milk.png"
+      ],
+      "tags": [
+        "Skim Milk",
+        "Fat Free",
+        "Diet"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-greek-yogurt"
+      ],
+      "relatedProducts": [
+        "prod-double-toned-milk",
+        "prod-lactose-free-milk"
+      ]
+    },
+    {
+      "id": "prod-lactose-free-milk",
+      "sku": "REDDY-LACT-500",
+      "name": "REDDY PREMIUM Lactose-Free Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Fresh dairy milk pre-treated with lactase enzyme to break down lactose. Tastes naturally sweet and is easy to digest for individuals with lactose sensitivity.",
+      "ingredients": "Pasteurised Homogenised Lactose-Free Whole Milk",
+      "storage": "Keep refrigerated at 1°C–4°C.",
+      "nutrition": {
+        "calories": "61 kcal",
+        "fat": "3.2g",
+        "protein": "3.2g",
+        "carbohydrates": "4.6g",
+        "calcium": "115mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 50,
+      "price": 46,
+      "discount": 8,
+      "gst": 0,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.9,
+      "images": [
+        "/images/products/2_cow_milk.png"
+      ],
+      "tags": [
+        "Lactose Free",
+        "Easy Digest",
+        "Sensitive"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cow-ghee"
+      ],
+      "relatedProducts": [
+        "prod-organic-milk",
+        "prod-cow-milk"
+      ]
+    },
+    {
+      "id": "prod-organic-milk",
+      "sku": "REDDY-ORGN-500",
+      "name": "REDDY PREMIUM Organic Milk (500ml)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Certified organic milk sourced from cows fed on pesticide-free pastures. Absolutely free of antibiotics, chemicals, or hormones. Delivered fresh for pure taste.",
+      "ingredients": "100% Certified Organic Farm Whole Milk",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "62 kcal",
+        "fat": "3.5g",
+        "protein": "3.3g",
+        "carbohydrates": "4.7g",
+        "calcium": "118mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 60,
+      "price": 54,
+      "discount": 10,
+      "gst": 0,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 3,
+      "deliveryTime": "6:00 AM – 9:00 AM Tomorrow",
+      "rating": 4.9,
+      "images": [
+        "/images/products/4_a2_milk.png"
+      ],
+      "tags": [
+        "Organic",
+        "Pasture Fed",
+        "Purest"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-a2-desi-ghee"
+      ],
+      "relatedProducts": [
+        "prod-a2-milk",
+        "prod-lactose-free-milk"
+      ]
+    },
+    {
+      "id": "prod-uht-milk",
+      "sku": "REDDY-UHT-1L",
+      "name": "REDDY PREMIUM UHT Milk (Tetra Pack) (1L)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Ultra-High Temperature processed milk packaged in a sterile 6-layer Tetra Pack. Long shelf life with no refrigeration required until opened.",
+      "ingredients": "100% Homogenised UHT Milk",
+      "storage": "Store in a cool dry place. Once opened, refrigerate and consume within 2 days.",
+      "nutrition": {
+        "calories": "64 kcal",
+        "fat": "3.5g",
+        "protein": "3.1g",
+        "carbohydrates": "4.8g",
+        "calcium": "112mg"
+      },
+      "weight": "1 kg",
+      "volume": "1 L",
+      "mrp": 75,
+      "price": 68,
+      "discount": 9,
+      "gst": 0,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/1_fresh_milk.png"
+      ],
+      "tags": [
+        "UHT Milk",
+        "Long Shelf Life",
+        "Tetra Pack"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-milk-powder"
+      ],
+      "relatedProducts": [
+        "prod-high-protein-milk",
+        "prod-uht-milk"
+      ]
+    },
+    {
+      "id": "prod-high-protein-milk",
+      "sku": "REDDY-PRO-1L",
+      "name": "REDDY PREMIUM High Protein Milk (Tetra Pack) (1L)",
+      "category": "Fresh Dairy",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Premium dairy milk fortified with extra natural milk protein. Ideal for gym-goers, athletes, and individuals seeking a high-protein diet.",
+      "ingredients": "Homogenised High Protein Concentrated Milk",
+      "storage": "Store in dry place. Refrigerate once opened.",
+      "nutrition": {
+        "calories": "78 kcal",
+        "fat": "2.5g",
+        "protein": "7.0g",
+        "carbohydrates": "5.2g",
+        "calcium": "180mg"
+      },
+      "weight": "1 kg",
+      "volume": "1 L",
+      "mrp": 90,
+      "price": 82,
+      "discount": 8,
+      "gst": 0,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/2_cow_milk.png"
+      ],
+      "tags": [
+        "High Protein",
+        "Fitness",
+        "Tetra Pack"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-protein-shake"
+      ],
+      "relatedProducts": [
+        "prod-uht-milk"
+      ]
+    },
+    {
+      "id": "prod-greek-yogurt",
+      "sku": "REDDY-GREEK-200",
+      "name": "REDDY PREMIUM Greek Yogurt (200g)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Thick, creamy strained Greek yogurt. Packed with double the protein of regular curd. Excellent for breakfast bowls, smoothies, and cooking dips.",
+      "ingredients": "Pasteurised Double Strained Yogurt Culture",
+      "storage": "Keep refrigerated at 1°C–4°C.",
+      "nutrition": {
+        "calories": "95 kcal",
+        "fat": "4.0g",
+        "protein": "8.5g",
+        "carbohydrates": "3.8g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 50,
+      "price": 45,
+      "discount": 10,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Greek Yogurt",
+        "High Protein",
+        "Thick"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-organic-milk"
+      ],
+      "relatedProducts": [
+        "prod-set-curd",
+        "prod-probiotic-curd"
+      ]
+    },
+    {
+      "id": "prod-set-curd",
+      "sku": "REDDY-SET-CURD-500",
+      "name": "REDDY PREMIUM Set Curd (500g)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional set curd made under controlled temperature, yielding a thick block consistency. Rich in natural active cultures for digestion.",
+      "ingredients": "Pasteurised Toned Milk, Active Curd Cultures",
+      "storage": "Store in refrigerator.",
+      "nutrition": {
+        "calories": "62 kcal",
+        "fat": "3.1g",
+        "protein": "3.3g",
+        "carbohydrates": "4.5g"
+      },
+      "weight": "500g",
+      "volume": "500 ml",
+      "mrp": 45,
+      "price": 40,
+      "discount": 11,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Set Curd",
+        "Thick Curd",
+        "Probiotic"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-greek-yogurt",
+        "prod-curd"
+      ]
+    },
+    {
+      "id": "prod-probiotic-curd",
+      "sku": "REDDY-PRO-CURD-400",
+      "name": "REDDY PREMIUM Probiotic Curd (400g)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Healthy curd packed with billions of beneficial Bifidobacterium and Lactobacillus bacteria. Promotes strong gut health and supports immunity.",
+      "ingredients": "Pasteurised Standardised Milk, Probiotic Cultures",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "64 kcal",
+        "fat": "3.2g",
+        "protein": "3.4g",
+        "carbohydrates": "4.6g"
+      },
+      "weight": "400g",
+      "volume": "400 ml",
+      "mrp": 55,
+      "price": 50,
+      "discount": 9,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 12,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Probiotic",
+        "Gut Health",
+        "Immunity"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-a2-desi-ghee"
+      ],
+      "relatedProducts": [
+        "prod-set-curd",
+        "prod-greek-yogurt"
+      ]
+    },
+    {
+      "id": "prod-drinking-yogurt",
+      "sku": "REDDY-DRINK-YOG-200",
+      "name": "REDDY PREMIUM Drinking Yogurt (200ml)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Smooth, liquid-strained drinking yogurt. Light, refreshing, and filled with active digestive cultures. Great on-the-go snack.",
+      "ingredients": "Liquid Yogurt, Water, Milk Solids, Stabilizer",
+      "storage": "Refrigerate and consume cold.",
+      "nutrition": {
+        "calories": "55 kcal",
+        "fat": "1.5g",
+        "protein": "2.8g",
+        "carbohydrates": "6.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 35,
+      "price": 31,
+      "discount": 11,
+      "gst": 5,
+      "stock": 140,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/12_lassi.png"
+      ],
+      "tags": [
+        "Drinking Yogurt",
+        "Liquid",
+        "Refreshing"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-lassi"
+      ],
+      "relatedProducts": [
+        "prod-fruit-yogurt",
+        "prod-mishti-doi"
+      ]
+    },
+    {
+      "id": "prod-fruit-yogurt",
+      "sku": "REDDY-FRUIT-YOG-100",
+      "name": "REDDY PREMIUM Mango Yogurt (100g)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Delectable creamy yogurt blended with real Alphonso mango pulp. A sweet, fruity, and healthy dairy treat.",
+      "ingredients": "Milk, Real Mango Pulp, Sucrose, Yogurt Culture",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "110 kcal",
+        "fat": "3.0g",
+        "protein": "3.5g",
+        "carbohydrates": "15.0g"
+      },
+      "weight": "100g",
+      "volume": "100 ml",
+      "mrp": 30,
+      "price": 27,
+      "discount": 10,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Mango Yogurt",
+        "Fruit",
+        "Dessert"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-chocolate-cone"
+      ],
+      "relatedProducts": [
+        "prod-mishti-doi",
+        "prod-drinking-yogurt"
+      ]
+    },
+    {
+      "id": "prod-mishti-doi",
+      "sku": "REDDY-MISHTI-100",
+      "name": "REDDY PREMIUM Mishti Doi (100g)",
+      "category": "Curd & Fermented",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Authentic Bengali sweet fermented curd, prepared with caramelized sugar and condensed milk. Smooth, rich, and delicious.",
+      "ingredients": "Milk, Condensed Milk, Caramelized Sugar, Active Culture",
+      "storage": "Refrigerate between 1°C–4°C.",
+      "nutrition": {
+        "calories": "125 kcal",
+        "fat": "4.2g",
+        "protein": "3.6g",
+        "carbohydrates": "18.0g"
+      },
+      "weight": "100g",
+      "volume": "100 ml",
+      "mrp": 25,
+      "price": 22,
+      "discount": 12,
+      "gst": 5,
+      "stock": 160,
+      "status": "Available",
+      "expiryDays": 8,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Mishti Doi",
+        "Sweet Curd",
+        "Traditional"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-milk-cake"
+      ],
+      "relatedProducts": [
+        "prod-fruit-yogurt",
+        "prod-rabri"
+      ]
+    },
+    {
+      "id": "prod-mozzarella",
+      "sku": "REDDY-MOZZ-200",
+      "name": "REDDY PREMIUM Mozzarella Cheese (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Premium fresh mozzarella cheese with high stretchability. Melt-in-the-mouth texture, perfect for home pizzas, garlic breads, and lasagnas.",
+      "ingredients": "Pasteurised Buffalo Milk, Microbial Rennet, Salt, Cheese Cultures",
+      "storage": "Store in freezer under -18°C. Thaw before use.",
+      "nutrition": {
+        "calories": "280 kcal",
+        "fat": "22.0g",
+        "protein": "20.0g",
+        "carbohydrates": "2.2g",
+        "calcium": "500mg"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 125,
+      "price": 112,
+      "discount": 10,
+      "gst": 5,
+      "stock": 90,
+      "status": "Available",
+      "expiryDays": 60,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Mozzarella",
+        "Pizza Cheese",
+        "Stretch"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-pizza-cheese"
+      ],
+      "relatedProducts": [
+        "prod-cheddar",
+        "prod-cheese-slices"
+      ]
+    },
+    {
+      "id": "prod-cheddar",
+      "sku": "REDDY-CHED-200",
+      "name": "REDDY PREMIUM Cheddar Cheese (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Aged cheddar cheese block with a rich, sharp, and savory profile. Ideal for grating over pastas, melting into cheese sauces, or serving on boards.",
+      "ingredients": "Pasteurised Cow Milk, Enzymes, Salt, Annatto (Color)",
+      "storage": "Keep refrigerated under 4°C.",
+      "nutrition": {
+        "calories": "400 kcal",
+        "fat": "33.0g",
+        "protein": "25.0g",
+        "carbohydrates": "1.3g",
+        "calcium": "720mg"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 140,
+      "price": 126,
+      "discount": 10,
+      "gst": 5,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Cheddar",
+        "Sharp Cheese",
+        "Grated"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-mozzarella"
+      ],
+      "relatedProducts": [
+        "prod-pizza-cheese",
+        "prod-cheese-spread"
+      ]
+    },
+    {
+      "id": "prod-pizza-cheese",
+      "sku": "REDDY-PIZZA-200",
+      "name": "REDDY PREMIUM Pizza Cheese Blend (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Perfect blend of shredded Mozzarella and Cheddar. Gives the ultimate cheesy stretch with the delicious cheddar taste.",
+      "ingredients": "Mozzarella, Cheddar, Anti-caking agent",
+      "storage": "Keep frozen. Thaw in fridge before baking.",
+      "nutrition": {
+        "calories": "320 kcal",
+        "fat": "24.0g",
+        "protein": "22.0g",
+        "carbohydrates": "2.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 130,
+      "price": 117,
+      "discount": 10,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 60,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Pizza Cheese",
+        "Cheese Blend",
+        "Shredded"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-mozzarella"
+      ],
+      "relatedProducts": [
+        "prod-cheese-cubes"
+      ]
+    },
+    {
+      "id": "prod-cheese-slices",
+      "sku": "REDDY-SLICES-100",
+      "name": "REDDY PREMIUM Cheese Slices (10 Slices) (100g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Individually wrapped processed cheese slices. Melts perfectly on hamburgers, sandwiches, and toast.",
+      "ingredients": "Processed Cheese, Emulsifying Salts, Preservatives, Salt",
+      "storage": "Keep refrigerated at 4°C.",
+      "nutrition": {
+        "calories": "310 kcal",
+        "fat": "24.0g",
+        "protein": "16.0g",
+        "carbohydrates": "4.0g"
+      },
+      "weight": "100g",
+      "volume": "100 ml",
+      "mrp": 90,
+      "price": 81,
+      "discount": 10,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Cheese Slices",
+        "Processed",
+        "Sandwich"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-butter"
+      ],
+      "relatedProducts": [
+        "prod-cheese-spread",
+        "prod-cheese-cubes"
+      ]
+    },
+    {
+      "id": "prod-cheese-cubes",
+      "sku": "REDDY-CUBES-200",
+      "name": "REDDY PREMIUM Cheese Cubes (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Semi-hard processed cheese cubes. An excellent daily snack, salad ingredient, or party appetizer.",
+      "ingredients": "Cheese, Milk Solids, Salt, Acidifying Agents",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "320 kcal",
+        "fat": "25.0g",
+        "protein": "20.0g",
+        "carbohydrates": "2.5g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 120,
+      "price": 108,
+      "discount": 10,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Cheese Cubes",
+        "Snacks",
+        "Salad"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cow-milk"
+      ],
+      "relatedProducts": [
+        "prod-cheese-slices",
+        "prod-mozzarella"
+      ]
+    },
+    {
+      "id": "prod-cheese-spread",
+      "sku": "REDDY-SPREAD-200",
+      "name": "REDDY PREMIUM Creamy Cheese Spread (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Smooth, rich, spreadable cheese. Perfect topping for biscuits, crackers, bread rolls, and burgers.",
+      "ingredients": "Milk, Cream, Cheese, Water, Emulsifiers",
+      "storage": "Refrigerate after opening.",
+      "nutrition": {
+        "calories": "270 kcal",
+        "fat": "22.0g",
+        "protein": "10.0g",
+        "carbohydrates": "6.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 95,
+      "price": 85,
+      "discount": 10,
+      "gst": 5,
+      "stock": 130,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/8_cheese.png"
+      ],
+      "tags": [
+        "Cheese Spread",
+        "Spreadable",
+        "Cream Cheese"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-cheese-slices",
+        "prod-cheddar"
+      ]
+    },
+    {
+      "id": "prod-cottage-cheese",
+      "sku": "REDDY-COTTAGE-200",
+      "name": "REDDY PREMIUM Organic Cottage Cheese (Paneer) (200g)",
+      "category": "Cheese Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Super soft, organic cottage cheese (paneer). Handcrafted by curdling milk with lemon juice, retaining maximum protein and moisture.",
+      "ingredients": "Organic Milk, Acidifiers (Lemon Juice)",
+      "storage": "Store in refrigerator. Submerge in water to keep soft.",
+      "nutrition": {
+        "calories": "265 kcal",
+        "fat": "20.0g",
+        "protein": "18.3g",
+        "carbohydrates": "1.2g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 100,
+      "price": 90,
+      "discount": 10,
+      "gst": 5,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/7_paneer.png"
+      ],
+      "tags": [
+        "Cottage Cheese",
+        "Organic Paneer",
+        "Fresh Paneer"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-paneer",
+        "prod-mozzarella"
+      ]
+    },
+    {
+      "id": "prod-salted-butter",
+      "sku": "REDDY-BUTTER-SALT-500",
+      "name": "REDDY PREMIUM Classic Salted Butter (500g)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich, delicious, pasteurised salted butter made from fresh dairy cream. Enhance the taste of toasts, vegetables, and baking recipe.",
+      "ingredients": "Butter fat, Salt, Moisture",
+      "storage": "Refrigerate under 4°C. Keep frozen for longer shelf life.",
+      "nutrition": {
+        "calories": "717 kcal",
+        "fat": "81.0g",
+        "protein": "0.8g",
+        "carbohydrates": "0.1g",
+        "sodium": "640mg"
+      },
+      "weight": "500g",
+      "volume": "500 ml",
+      "mrp": 275,
+      "price": 247,
+      "discount": 10,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 30,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/6_butter.png"
+      ],
+      "tags": [
+        "Salted Butter",
+        "Butter Block",
+        "Baking"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cow-milk"
+      ],
+      "relatedProducts": [
+        "prod-unsalted-butter",
+        "prod-garlic-butter"
+      ]
+    },
+    {
+      "id": "prod-unsalted-butter",
+      "sku": "REDDY-BUTTER-UNSALT-500",
+      "name": "REDDY PREMIUM Pure Unsalted Butter (White) (500g)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure cream unsalted butter, sometimes referred to as sweet white butter. Ideal for baking cookies, pastry crusts, and traditional cooking.",
+      "ingredients": "Milk Fat (Butter Fat), moisture",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "717 kcal",
+        "fat": "82.0g",
+        "protein": "0.8g",
+        "carbohydrates": "0.1g"
+      },
+      "weight": "500g",
+      "volume": "500 ml",
+      "mrp": 280,
+      "price": 252,
+      "discount": 10,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 30,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/6_butter.png"
+      ],
+      "tags": [
+        "Unsalted Butter",
+        "White Butter",
+        "Pastry"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-milk-powder"
+      ],
+      "relatedProducts": [
+        "prod-salted-butter",
+        "prod-garlic-butter"
+      ]
+    },
+    {
+      "id": "prod-garlic-butter",
+      "sku": "REDDY-BUTTER-GARLIC-100",
+      "name": "REDDY PREMIUM Garlic Herbs Butter (100g)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pasteurised butter infused with real garlic extract, parsley, and select Mediterranean herbs. Perfect spread for delicious garlic bread.",
+      "ingredients": "Butter, Garlic paste, Dried Herbs, Salt",
+      "storage": "Store in refrigerator.",
+      "nutrition": {
+        "calories": "680 kcal",
+        "fat": "76.0g",
+        "protein": "1.0g",
+        "carbohydrates": "2.0g"
+      },
+      "weight": "100g",
+      "volume": "100 ml",
+      "mrp": 65,
+      "price": 58,
+      "discount": 10,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 30,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/6_butter.png"
+      ],
+      "tags": [
+        "Garlic Butter",
+        "Herbs Butter",
+        "Gourmet"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-mozzarella"
+      ],
+      "relatedProducts": [
+        "prod-salted-butter",
+        "prod-unsalted-butter"
+      ]
+    },
+    {
+      "id": "prod-whipping-cream",
+      "sku": "REDDY-WHIP-CREAM-250",
+      "name": "REDDY PREMIUM Whipping Cream (250ml)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "High-fat whipping cream. Beats into soft, billowy peaks easily. Essential for cake decoration, topping desserts, fruit bowls, and milkshakes.",
+      "ingredients": "Fresh Cow Milk Fat, Stabilizers",
+      "storage": "Keep chilled, do not freeze until whipped.",
+      "nutrition": {
+        "calories": "340 kcal",
+        "fat": "35.0g",
+        "protein": "2.0g",
+        "carbohydrates": "3.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 120,
+      "price": 108,
+      "discount": 10,
+      "gst": 5,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 21,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Whipping Cream",
+        "Dessert Topping",
+        "Bakery"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-chocolate-cone"
+      ],
+      "relatedProducts": [
+        "prod-fresh-cream",
+        "prod-cooking-cream"
+      ]
+    },
+    {
+      "id": "prod-cooking-cream",
+      "sku": "REDDY-COOK-CREAM-250",
+      "name": "REDDY PREMIUM Cooking Cream (250ml)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich cooking cream with 20% fat content. Smooth texture, ideal for cooking curry bases, tomato soups, and white sauces without curdling.",
+      "ingredients": "Pasteurised Dairy Cream, Thickener",
+      "storage": "Refrigerate, do not freeze.",
+      "nutrition": {
+        "calories": "210 kcal",
+        "fat": "20.0g",
+        "protein": "2.5g",
+        "carbohydrates": "4.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 80,
+      "price": 72,
+      "discount": 10,
+      "gst": 5,
+      "stock": 110,
+      "status": "Available",
+      "expiryDays": 21,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Cooking Cream",
+        "Sauces",
+        "Curry"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-whipping-cream",
+        "prod-cream"
+      ]
+    },
+    {
+      "id": "prod-fresh-cream",
+      "sku": "REDDY-FRESH-CREAM-200",
+      "name": "REDDY PREMIUM Rich Fresh Cream (200ml)",
+      "category": "Butter & Cream",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pasteurised fresh dairy cream with a velvety texture. Ideal for mixing into fruit cups, pouring over puddings, or enriching daily curries.",
+      "ingredients": "Pasteurised Dairy Cream (25% fat)",
+      "storage": "Keep refrigerated at 4°C.",
+      "nutrition": {
+        "calories": "258 kcal",
+        "fat": "25.0g",
+        "protein": "2.2g",
+        "carbohydrates": "3.5g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 65,
+      "price": 58,
+      "discount": 10,
+      "gst": 5,
+      "stock": 140,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Fresh Cream",
+        "Creamy Soup",
+        "Rich Dressing"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-fresh-milk"
+      ],
+      "relatedProducts": [
+        "prod-cream",
+        "prod-cooking-cream"
+      ]
+    },
+    {
+      "id": "prod-cow-ghee",
+      "sku": "REDDY-COW-GHEE-500",
+      "name": "REDDY PREMIUM Pure Cow Ghee (500ml)",
+      "category": "Ghee",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure cow ghee made from clarified butter fat. Adds a beautiful aroma and delicious taste to rice, roti, biryani, and traditional sweets.",
+      "ingredients": "100% Clarified Cow Butter Fat",
+      "storage": "Store in cool, dry place. No refrigeration needed.",
+      "nutrition": {
+        "calories": "897 kcal",
+        "fat": "99.8g",
+        "saturatedFat": "60.0g",
+        "protein": "0g",
+        "carbohydrates": "0g"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 350,
+      "price": 315,
+      "discount": 10,
+      "gst": 12,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/9_ghee.png"
+      ],
+      "tags": [
+        "Cow Ghee",
+        "Desi Ghee",
+        "Aromatic"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cow-milk"
+      ],
+      "relatedProducts": [
+        "prod-ghee",
+        "prod-buffalo-ghee"
+      ]
+    },
+    {
+      "id": "prod-buffalo-ghee",
+      "sku": "REDDY-BUFF-GHEE-500",
+      "name": "REDDY PREMIUM Buffalo Ghee (500ml)",
+      "category": "Ghee",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Granular, aromatic buffalo ghee prepared from pasteurised white butter. Delivers rich calories and strong flavor, best for local cooking.",
+      "ingredients": "100% Clarified Buffalo Butter Fat",
+      "storage": "Store at room temperature.",
+      "nutrition": {
+        "calories": "897 kcal",
+        "fat": "99.8g",
+        "saturatedFat": "62.0g",
+        "protein": "0g"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 320,
+      "price": 288,
+      "discount": 10,
+      "gst": 12,
+      "stock": 110,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/9_ghee.png"
+      ],
+      "tags": [
+        "Buffalo Ghee",
+        "Granular",
+        "Traditional Ghee"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-buffalo-milk"
+      ],
+      "relatedProducts": [
+        "prod-ghee",
+        "prod-cow-ghee"
+      ]
+    },
+    {
+      "id": "prod-a2-desi-ghee",
+      "sku": "REDDY-A2-GHEE-500",
+      "name": "REDDY PREMIUM Vedic A2 Cow Ghee (500ml)",
+      "category": "Ghee",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Vedic A2 cow ghee prepared from pure A2 milk using traditional bilona method. Highly therapeutic, rich in gut-healthy butyric acid.",
+      "ingredients": "100% Clarified A2 Cow Butter Fat",
+      "storage": "Store in a cool, dark cupboard.",
+      "nutrition": {
+        "calories": "897 kcal",
+        "fat": "99.8g",
+        "protein": "0g",
+        "calcium": "15mg"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 650,
+      "price": 585,
+      "discount": 10,
+      "gst": 12,
+      "stock": 70,
+      "status": "Available",
+      "expiryDays": 270,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/9_ghee.png"
+      ],
+      "tags": [
+        "A2 Ghee",
+        "Vedic Ghee",
+        "Bilona Ghee"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-a2-milk"
+      ],
+      "relatedProducts": [
+        "prod-bilona-ghee",
+        "prod-cow-ghee"
+      ]
+    },
+    {
+      "id": "prod-bilona-ghee",
+      "sku": "REDDY-BILONA-500",
+      "name": "REDDY PREMIUM Hand-Churned Bilona Ghee (500ml)",
+      "category": "Ghee",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Pure ghee hand-churned from curd using the wooden Bilona method. Slow-cooked over firewood for the finest texture and natural digestive properties.",
+      "ingredients": "100% Pure Hand-Churned Butter Ghee",
+      "storage": "Keep in airtight jar.",
+      "nutrition": {
+        "calories": "897 kcal",
+        "fat": "99.8g",
+        "protein": "0g"
+      },
+      "weight": "500 ml",
+      "volume": "500 ml",
+      "mrp": 750,
+      "price": 675,
+      "discount": 10,
+      "gst": 12,
+      "stock": 60,
+      "status": "Available",
+      "expiryDays": 360,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/9_ghee.png"
+      ],
+      "tags": [
+        "Bilona Ghee",
+        "Hand Churned",
+        "Firewood Cooked"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-organic-milk"
+      ],
+      "relatedProducts": [
+        "prod-a2-desi-ghee",
+        "prod-cow-ghee"
+      ]
+    },
+    {
+      "id": "prod-chocolate-milk",
+      "sku": "REDDY-CHOC-MILK-200",
+      "name": "REDDY PREMIUM Chocolate Milk (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Deliciously thick and chocolatey milk shake. Re-energizes and delivers a quick protein boost for kids and active teens alike.",
+      "ingredients": "Double Toned Milk, Premium Cocoa Powder, Cane Sugar",
+      "storage": "Serve chilled. Shake well before opening.",
+      "nutrition": {
+        "calories": "140 kcal",
+        "fat": "3.0g",
+        "protein": "6.4g",
+        "carbohydrates": "20.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 35,
+      "price": 31,
+      "discount": 11,
+      "gst": 5,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Chocolate Milk",
+        "Shakes",
+        "Kids Drink"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cheese-slices"
+      ],
+      "relatedProducts": [
+        "prod-badam-milk",
+        "prod-milkshake"
+      ]
+    },
+    {
+      "id": "prod-badam-milk",
+      "sku": "REDDY-BADAM-MILK-200",
+      "name": "REDDY PREMIUM Badam Milk (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich badam milk drink loaded with real almond flakes, cardamom, and saffron hints. Serve chilled for a refreshing experience.",
+      "ingredients": "Cow Milk, Sugar, Almond Flakes, Cardamom Extract, Saffron",
+      "storage": "Refrigerate and serve cold.",
+      "nutrition": {
+        "calories": "160 kcal",
+        "fat": "4.5g",
+        "protein": "6.0g",
+        "carbohydrates": "18.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 40,
+      "price": 36,
+      "discount": 10,
+      "gst": 5,
+      "stock": 160,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/15_flavoured_milk.png"
+      ],
+      "tags": [
+        "Badam Milk",
+        "Almond Drink",
+        "Nuts"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-kesar-milk",
+        "prod-elaichi-milk"
+      ]
+    },
+    {
+      "id": "prod-kesar-milk",
+      "sku": "REDDY-KESAR-MILK-200",
+      "name": "REDDY PREMIUM Saffron Kesar Milk (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Premium double-toned milk flavored with pure Kashmiri saffron (Kesar). Nutritious, cooling, and delicious.",
+      "ingredients": "Milk, Cane Sugar, Kashmiri Kesar Stigmas, Almond bits",
+      "storage": "Store chilled.",
+      "nutrition": {
+        "calories": "155 kcal",
+        "fat": "4.0g",
+        "protein": "5.8g",
+        "carbohydrates": "17.5g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 40,
+      "price": 36,
+      "discount": 10,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/15_flavoured_milk.png"
+      ],
+      "tags": [
+        "Kesar Milk",
+        "Saffron Milk",
+        "Energy Drink"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-rabri"
+      ],
+      "relatedProducts": [
+        "prod-badam-milk",
+        "prod-elaichi-milk"
+      ]
+    },
+    {
+      "id": "prod-elaichi-milk",
+      "sku": "REDDY-ELAICHI-MILK-200",
+      "name": "REDDY PREMIUM Cardamom Elaichi Milk (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Aromatic milk flavored with crushed cardamom (elaichi). An excellent traditional drink that aids in digestion.",
+      "ingredients": "Pasteurised Milk, Sugar, Natural Cardamom Extract",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "135 kcal",
+        "fat": "3.0g",
+        "protein": "5.6g",
+        "carbohydrates": "16.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 35,
+      "price": 31,
+      "discount": 11,
+      "gst": 5,
+      "stock": 170,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/15_flavoured_milk.png"
+      ],
+      "tags": [
+        "Elaichi Milk",
+        "Cardamom Milk",
+        "Digestive"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-badam-milk",
+        "prod-kesar-milk"
+      ]
+    },
+    {
+      "id": "prod-coffee-milk",
+      "sku": "REDDY-COFFEE-MILK-200",
+      "name": "REDDY PREMIUM Coffee Milk (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Mild, smooth coffee flavored milk drink. Combines premium roasted chicory coffee extracts with fresh milk solids.",
+      "ingredients": "Toned Milk, Roasted Coffee Extracts, Cane Sugar",
+      "storage": "Serve cold.",
+      "nutrition": {
+        "calories": "145 kcal",
+        "fat": "3.0g",
+        "protein": "5.8g",
+        "carbohydrates": "19.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 35,
+      "price": 31,
+      "discount": 11,
+      "gst": 5,
+      "stock": 160,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Coffee Milk",
+        "Favour Drink",
+        "Morning Start"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cheese-cubes"
+      ],
+      "relatedProducts": [
+        "prod-cold-coffee",
+        "prod-chocolate-milk"
+      ]
+    },
+    {
+      "id": "prod-cold-coffee",
+      "sku": "REDDY-COLD-COFFEE-200",
+      "name": "REDDY PREMIUM Creamy Cold Coffee (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Thick, creamy, and frothy cold brew coffee blended with full cream milk. Gives a solid kick of caffeine energy.",
+      "ingredients": "Full Cream Milk, Robusta Coffee Decoction, Sugar",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "180 kcal",
+        "fat": "5.0g",
+        "protein": "6.0g",
+        "carbohydrates": "22.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 45,
+      "price": 40,
+      "discount": 11,
+      "gst": 5,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Cold Coffee",
+        "Caffeine",
+        "Creamy Coffee"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-salted-butter"
+      ],
+      "relatedProducts": [
+        "prod-coffee-milk",
+        "prod-chocolate-milk"
+      ]
+    },
+    {
+      "id": "prod-protein-shake",
+      "sku": "REDDY-PRO-SHAKE-250",
+      "name": "REDDY PREMIUM Gym Protein Shake (250ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Fortified high-protein beverage providing 25g of high-quality whey and casein proteins. Perfect post-workout recovery shake.",
+      "ingredients": "Milk Protein Concentrate, Whey Concentrate, Natural Flavouring",
+      "storage": "Chilled storage. Drink within 4 hours of opening.",
+      "nutrition": {
+        "calories": "220 kcal",
+        "fat": "2.0g",
+        "protein": "25.0g",
+        "carbohydrates": "12.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 65,
+      "price": 58,
+      "discount": 10,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 20,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Protein Shake",
+        "Post Workout",
+        "Gym Drink"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-high-protein-milk"
+      ],
+      "relatedProducts": [
+        "prod-whey-protein",
+        "prod-banana-shake"
+      ]
+    },
+    {
+      "id": "prod-banana-shake",
+      "sku": "REDDY-BANANA-SHAKE-200",
+      "name": "REDDY PREMIUM Fresh Banana Shake (200ml)",
+      "category": "Beverage Range",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Nutritious shake flavored with real banana purees and enriched with milk nutrients. An absolute favorite morning energy builder.",
+      "ingredients": "Milk, Real Banana Pulp, Sugar, Honey",
+      "storage": "Store chilled. Consume cold.",
+      "nutrition": {
+        "calories": "170 kcal",
+        "fat": "3.5g",
+        "protein": "5.4g",
+        "carbohydrates": "26.0g"
+      },
+      "weight": "200 ml",
+      "volume": "200 ml",
+      "mrp": 40,
+      "price": 36,
+      "discount": 10,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/14_milkshake.png"
+      ],
+      "tags": [
+        "Banana Shake",
+        "Real Fruit",
+        "Energy"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-greek-yogurt"
+      ],
+      "relatedProducts": [
+        "prod-protein-shake",
+        "prod-milkshake"
+      ]
+    },
+    {
+      "id": "prod-malai",
+      "sku": "REDDY-MALAI-200",
+      "name": "REDDY PREMIUM Fresh Malai (200g)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Thick layer of fat skimmed off boiled whole cream milk. Rich, creamy, and traditional. Perfect for paranthas and traditional Indian recipes.",
+      "ingredients": "100% Milk Cream Fat Layer",
+      "storage": "Refrigerate and consume within 5 days.",
+      "nutrition": {
+        "calories": "410 kcal",
+        "fat": "40.0g",
+        "protein": "3.0g",
+        "carbohydrates": "4.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 70,
+      "price": 63,
+      "discount": 10,
+      "gst": 5,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 5,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Malai",
+        "Thick Layer",
+        "Traditional Fat"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-khova"
+      ],
+      "relatedProducts": [
+        "prod-rabri",
+        "prod-basundi"
+      ]
+    },
+    {
+      "id": "prod-rabri",
+      "sku": "REDDY-RABRI-200",
+      "name": "REDDY PREMIUM Rich Rabri (200g)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional sweet, condensed milk dish containing thick layers of malai. Cooked slowly on fire and garnished with dry fruits.",
+      "ingredients": "Milk, Sugar, Saffron, Pistachio, Almond bits",
+      "storage": "Keep refrigerated. Tastes best cold.",
+      "nutrition": {
+        "calories": "320 kcal",
+        "fat": "15.0g",
+        "protein": "8.0g",
+        "carbohydrates": "38.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 85,
+      "price": 76,
+      "discount": 10,
+      "gst": 5,
+      "stock": 90,
+      "status": "Available",
+      "expiryDays": 7,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Rabri",
+        "Sweets",
+        "Garnished"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-malai"
+      ],
+      "relatedProducts": [
+        "prod-basundi",
+        "prod-shrikhand"
+      ]
+    },
+    {
+      "id": "prod-basundi",
+      "sku": "REDDY-BASUNDI-200",
+      "name": "REDDY PREMIUM Cardamom Basundi (200g)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Sweet, condensed milk flavored with cardamom, saffron, and loaded with roasted dry almonds and cashew nuts.",
+      "ingredients": "Milk, Sugar, Cardamom, Nutmeg, Almonds, Cashews",
+      "storage": "Refrigerate under 4°C.",
+      "nutrition": {
+        "calories": "290 kcal",
+        "fat": "12.0g",
+        "protein": "7.5g",
+        "carbohydrates": "35.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 80,
+      "price": 72,
+      "discount": 10,
+      "gst": 5,
+      "stock": 95,
+      "status": "Available",
+      "expiryDays": 7,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Basundi",
+        "Condensed Sweet",
+        "Cashew Nuts"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-rabri"
+      ],
+      "relatedProducts": [
+        "prod-shrikhand",
+        "prod-mishti-doi"
+      ]
+    },
+    {
+      "id": "prod-shrikhand",
+      "sku": "REDDY-SHRIKHAND-200",
+      "name": "REDDY PREMIUM Elaichi Shrikhand (200g)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Creamy, traditional strained yogurt dessert, blended with green cardamom powders and sugar. Perfect meal accompaniment.",
+      "ingredients": "Strained Yogurt (Chakka), Sugar, Cardamom Powder",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "260 kcal",
+        "fat": "8.0g",
+        "protein": "6.0g",
+        "carbohydrates": "40.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 60,
+      "price": 54,
+      "discount": 10,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Shrikhand",
+        "Chakka Sweet",
+        "Traditional Sweet"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-set-curd"
+      ],
+      "relatedProducts": [
+        "prod-basundi",
+        "prod-mishti-doi"
+      ]
+    },
+    {
+      "id": "prod-sweet-lassi",
+      "sku": "REDDY-SWEET-LASSI-250",
+      "name": "REDDY PREMIUM Sweet Lassi (250ml)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich and frothy traditional Punjabi sweet lassi. Blended with fresh yogurt, sugars, and topped with malai aroma.",
+      "ingredients": "Curd (Yogurt), Water, Sugar, Rose Water",
+      "storage": "Refrigerate and serve chilled.",
+      "nutrition": {
+        "calories": "165 kcal",
+        "fat": "3.5g",
+        "protein": "4.2g",
+        "carbohydrates": "28.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 25,
+      "price": 22,
+      "discount": 12,
+      "gst": 5,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/12_lassi.png"
+      ],
+      "tags": [
+        "Sweet Lassi",
+        "Frothy Drink",
+        "Yogurt Drink"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-salt-lassi",
+        "prod-chaas"
+      ]
+    },
+    {
+      "id": "prod-salt-lassi",
+      "sku": "REDDY-SALT-LASSI-250",
+      "name": "REDDY PREMIUM Salted Mint Lassi (250ml)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Cooling salted lassi whipped with roasted cumin powders, black salt, and a dash of fresh mint extracts. Best summer cooler.",
+      "ingredients": "Yogurt, Water, Salt, Mint Leaves, Roasted Cumin",
+      "storage": "Keep refrigerated.",
+      "nutrition": {
+        "calories": "70 kcal",
+        "fat": "3.2g",
+        "protein": "4.0g",
+        "carbohydrates": "6.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 25,
+      "price": 22,
+      "discount": 12,
+      "gst": 5,
+      "stock": 160,
+      "status": "Available",
+      "expiryDays": 10,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/12_lassi.png"
+      ],
+      "tags": [
+        "Salt Lassi",
+        "Cumin Cooler",
+        "Refreshing"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-curd"
+      ],
+      "relatedProducts": [
+        "prod-sweet-lassi",
+        "prod-chaas"
+      ]
+    },
+    {
+      "id": "prod-chaas",
+      "sku": "REDDY-CHAAS-250",
+      "name": "REDDY PREMIUM Spicy Masala Chaas (250ml)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional thin buttermilk spiced up with green chillies, ginger, cumin, coriander, and curry leaves. Supports healthy digestion.",
+      "ingredients": "Buttermilk, Salt, Spices (Ginger, Cumin, Coriander)",
+      "storage": "Refrigerate and serve cold.",
+      "nutrition": {
+        "calories": "45 kcal",
+        "fat": "1.5g",
+        "protein": "2.2g",
+        "carbohydrates": "4.0g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 15,
+      "price": 13,
+      "discount": 13,
+      "gst": 5,
+      "stock": 200,
+      "status": "Available",
+      "expiryDays": 8,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/11_buttermilk.png"
+      ],
+      "tags": [
+        "Masala Chaas",
+        "Buttermilk",
+        "Spicy Cooler"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-paneer"
+      ],
+      "relatedProducts": [
+        "prod-flavoured-buttermilk",
+        "prod-salt-lassi"
+      ]
+    },
+    {
+      "id": "prod-flavoured-buttermilk",
+      "sku": "REDDY-FLAV-BUTTER-250",
+      "name": "REDDY PREMIUM Flavoured Buttermilk (250ml)",
+      "category": "Traditional Products",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Refreshing buttermilk subtly flavored with ginger extracts and coriander leaves. The perfect natural digestif after meals.",
+      "ingredients": "Buttermilk, Salt, Ginger Extract, Coriander, Spices",
+      "storage": "Store chilled.",
+      "nutrition": {
+        "calories": "50 kcal",
+        "fat": "1.6g",
+        "protein": "2.3g",
+        "carbohydrates": "4.5g"
+      },
+      "weight": "250 ml",
+      "volume": "250 ml",
+      "mrp": 18,
+      "price": 16,
+      "discount": 11,
+      "gst": 5,
+      "stock": 190,
+      "status": "Available",
+      "expiryDays": 8,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/11_buttermilk.png"
+      ],
+      "tags": [
+        "Flavoured Buttermilk",
+        "Ginger Buttermilk",
+        "Digestif"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-khova"
+      ],
+      "relatedProducts": [
+        "prod-chaas",
+        "prod-salt-lassi"
+      ]
+    },
+    {
+      "id": "prod-infant-powder",
+      "sku": "REDDY-INFANT-400",
+      "name": "REDDY PREMIUM Infant Milk Powder (Stage 1) (400g)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Spray-dried infant milk formula enriched with essential vitamins, minerals, iron, and prebiotic fibers. Best nutritional substitute.",
+      "ingredients": "Spray-Dried Milk Solids, Lactose, Vegetable Oils, Minerals, Vitamins",
+      "storage": "Store in dry airtight container. Use scoop provided.",
+      "nutrition": {
+        "calories": "480 kcal",
+        "fat": "22.0g",
+        "protein": "11.5g",
+        "carbohydrates": "58.0g",
+        "calcium": "450mg"
+      },
+      "weight": "400g",
+      "volume": "400 ml",
+      "mrp": 380,
+      "price": 342,
+      "discount": 10,
+      "gst": 18,
+      "stock": 90,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Infant Formula",
+        "Baby Powder",
+        "Enriched Milk"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-uht-milk"
+      ],
+      "relatedProducts": [
+        "prod-dairy-whitener",
+        "prod-milk-powder"
+      ]
+    },
+    {
+      "id": "prod-dairy-whitener",
+      "sku": "REDDY-WHITENER-500",
+      "name": "REDDY PREMIUM Rich Dairy Whitener (500g)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Premium dairy whitener with added sugar. Easily dissolves to make rich, creamy cups of tea and coffee.",
+      "ingredients": "Milk Solids, Sucrose, Emulsifiers",
+      "storage": "Store in cool, dry place.",
+      "nutrition": {
+        "calories": "440 kcal",
+        "fat": "18.0g",
+        "protein": "15.0g",
+        "carbohydrates": "54.0g"
+      },
+      "weight": "500g",
+      "volume": "500 ml",
+      "mrp": 220,
+      "price": 198,
+      "discount": 10,
+      "gst": 18,
+      "stock": 110,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Dairy Whitener",
+        "Tea Coffee",
+        "Soluble Powder"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-condensed-milk"
+      ],
+      "relatedProducts": [
+        "prod-infant-powder",
+        "prod-milk-powder"
+      ]
+    },
+    {
+      "id": "prod-whey-protein",
+      "sku": "REDDY-WHEY-1KG",
+      "name": "REDDY PREMIUM Pure Whey Protein (80%) (1kg)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Ultra-filtered pure whey protein concentrate. Delivers 25g of fast-absorbing protein per serving with no artificial sweeteners or fillers.",
+      "ingredients": "100% Pure Whey Protein Concentrate, Sunflower Lecithin",
+      "storage": "Store in cool dry cupboard. Tighten lid.",
+      "nutrition": {
+        "calories": "390 kcal",
+        "fat": "6.0g",
+        "protein": "80.0g",
+        "carbohydrates": "8.0g",
+        "calcium": "480mg"
+      },
+      "weight": "1 kg",
+      "volume": "1 L",
+      "mrp": 1999,
+      "price": 1799,
+      "discount": 10,
+      "gst": 18,
+      "stock": 50,
+      "status": "Available",
+      "expiryDays": 360,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Whey Protein",
+        "Muscle Building",
+        "Unflavoured"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-protein-shake"
+      ],
+      "relatedProducts": [
+        "prod-whey-powder",
+        "prod-milk-powder"
+      ]
+    },
+    {
+      "id": "prod-whey-powder",
+      "sku": "REDDY-WHEY-POWDER-500",
+      "name": "REDDY PREMIUM Sweet Whey Powder (500g)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Demineralized sweet whey powder, ideal for baking, food industry formulations, or custom energy supplement mixtures.",
+      "ingredients": "100% Sweet Dairy Whey Solids",
+      "storage": "Store in dry place in container.",
+      "nutrition": {
+        "calories": "350 kcal",
+        "fat": "1.2g",
+        "protein": "12.0g",
+        "carbohydrates": "73.0g"
+      },
+      "weight": "500g",
+      "volume": "500 ml",
+      "mrp": 350,
+      "price": 315,
+      "discount": 10,
+      "gst": 18,
+      "stock": 80,
+      "status": "Available",
+      "expiryDays": 270,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Whey Powder",
+        "Baking Ingredient",
+        "Soluble"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-unsalted-butter"
+      ],
+      "relatedProducts": [
+        "prod-whey-protein",
+        "prod-milk-powder"
+      ]
+    },
+    {
+      "id": "prod-condensed-milk",
+      "sku": "REDDY-COND-MILK-400",
+      "name": "REDDY PREMIUM Sweetened Condensed Milk (400g)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Sweet, thick condensed milk made by evaporating water content and adding sugar. The ultimate dessert maker for Kheer and sweets.",
+      "ingredients": "Evaporated Cow Milk, Cane Sugar",
+      "storage": "Store in dry cupboard. Refrigerate after opening.",
+      "nutrition": {
+        "calories": "320 kcal",
+        "fat": "8.0g",
+        "protein": "7.9g",
+        "carbohydrates": "54.0g"
+      },
+      "weight": "400g",
+      "volume": "400 ml",
+      "mrp": 140,
+      "price": 126,
+      "discount": 10,
+      "gst": 5,
+      "stock": 130,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Condensed Milk",
+        "Dessert Base",
+        "Sweet Cream"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-dairy-whitener"
+      ],
+      "relatedProducts": [
+        "prod-evaporated-milk",
+        "prod-cream"
+      ]
+    },
+    {
+      "id": "prod-evaporated-milk",
+      "sku": "REDDY-EVAP-MILK-400",
+      "name": "REDDY PREMIUM Unsweetened Evaporated Milk (400g)",
+      "category": "Milk Powder & Ingredients",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Unsweetened evaporated milk (dehydrated milk solids). Offers a rich texture for cooking soups, sauces, and low-calorie desserts.",
+      "ingredients": "Evaporated Pasteurised Milk",
+      "storage": "Store in dry cool place.",
+      "nutrition": {
+        "calories": "134 kcal",
+        "fat": "7.6g",
+        "protein": "6.8g",
+        "carbohydrates": "9.7g"
+      },
+      "weight": "400g",
+      "volume": "400 ml",
+      "mrp": 120,
+      "price": 108,
+      "discount": 10,
+      "gst": 5,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 120,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/10_cream.png"
+      ],
+      "tags": [
+        "Evaporated Milk",
+        "Unsweetened",
+        "Soup Base"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-unsalted-butter"
+      ],
+      "relatedProducts": [
+        "prod-condensed-milk",
+        "prod-cream"
+      ]
+    },
+    {
+      "id": "prod-kulfi",
+      "sku": "REDDY-KULFI-80",
+      "name": "REDDY PREMIUM Traditional Pista Kulfi (80g)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Authentic Indian frozen kulfi enriched with rich cardamoms, saffron strands, and loaded with premium pistachio chunks.",
+      "ingredients": "Evaporated Milk, Sugar, Pistachio Nuts, Cardamom, Saffron",
+      "storage": "Store frozen under -18°C.",
+      "nutrition": {
+        "calories": "190 kcal",
+        "fat": "10.0g",
+        "protein": "4.5g",
+        "carbohydrates": "22.0g"
+      },
+      "weight": "80g",
+      "volume": "80 ml",
+      "mrp": 30,
+      "price": 27,
+      "discount": 10,
+      "gst": 18,
+      "stock": 150,
+      "status": "Available",
+      "expiryDays": 45,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/13_ice_cream.png"
+      ],
+      "tags": [
+        "Kulfi",
+        "Pista Kulfi",
+        "Indian Ice Cream"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-chocolate-cone"
+      ],
+      "relatedProducts": [
+        "prod-ice-cream-cup",
+        "prod-vanilla-family-pack"
+      ]
+    },
+    {
+      "id": "prod-frozen-yogurt",
+      "sku": "REDDY-FRZ-YOG-200",
+      "name": "REDDY PREMIUM Frozen Yogurt (Strawberry) (200g)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Deliciously tart and sweet frozen yogurt blended with fresh strawberry pulps. Low fat, probiotic, and extremely healthy.",
+      "ingredients": "Yogurt, Sugar, Strawberry Pulp, Milk Solids, Stabilizer",
+      "storage": "Store in freezer.",
+      "nutrition": {
+        "calories": "140 kcal",
+        "fat": "2.5g",
+        "protein": "5.0g",
+        "carbohydrates": "24.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 60,
+      "price": 54,
+      "discount": 10,
+      "gst": 18,
+      "stock": 120,
+      "status": "Available",
+      "expiryDays": 45,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/5_curd.png"
+      ],
+      "tags": [
+        "Frozen Yogurt",
+        "Strawberry",
+        "Low Fat Sweet"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-fruit-yogurt"
+      ],
+      "relatedProducts": [
+        "prod-kulfi",
+        "prod-ice-cream-cup"
+      ]
+    },
+    {
+      "id": "prod-ice-cream-cup",
+      "sku": "REDDY-IC-CUP-100",
+      "name": "REDDY PREMIUM Vanilla Ice Cream Cups (100ml)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Creamy classic vanilla ice cream served in a handy individual cup. Perfect sweet treats for kids and parties.",
+      "ingredients": "Milk Solids, Cream, Cane Sugar, Natural Vanilla Extract",
+      "storage": "Store frozen under -18°C.",
+      "nutrition": {
+        "calories": "130 kcal",
+        "fat": "7.0g",
+        "protein": "3.0g",
+        "carbohydrates": "14.0g"
+      },
+      "weight": "100 ml",
+      "volume": "100 ml",
+      "mrp": 20,
+      "price": 18,
+      "discount": 10,
+      "gst": 18,
+      "stock": 200,
+      "status": "Available",
+      "expiryDays": 60,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.7,
+      "images": [
+        "/images/products/13_ice_cream.png"
+      ],
+      "tags": [
+        "Vanilla Cup",
+        "Ice Cream Cup",
+        "Single Portion"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-chocolate-cone"
+      ],
+      "relatedProducts": [
+        "prod-kulfi",
+        "prod-vanilla-family-pack"
+      ]
+    },
+    {
+      "id": "prod-chocolate-cone",
+      "sku": "REDDY-CHOC-CONE-120",
+      "name": "REDDY PREMIUM Chocolate Ice Cream Cone (120ml)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Crunchy waffle cone loaded with rich premium chocolate ice cream, topped with chocolate sauces and nuts.",
+      "ingredients": "Milk Solids, Cocoa Powder, Sugar, Waffle Cone (Wheat flour), Cashew nuts",
+      "storage": "Store frozen.",
+      "nutrition": {
+        "calories": "240 kcal",
+        "fat": "11.0g",
+        "protein": "4.2g",
+        "carbohydrates": "32.0g"
+      },
+      "weight": "120 ml",
+      "volume": "120 ml",
+      "mrp": 40,
+      "price": 36,
+      "discount": 10,
+      "gst": 18,
+      "stock": 180,
+      "status": "Available",
+      "expiryDays": 60,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/13_ice_cream.png"
+      ],
+      "tags": [
+        "Chocolate Cone",
+        "Cone",
+        "Waffle Cone"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-ice-cream-cup"
+      ],
+      "relatedProducts": [
+        "prod-kulfi",
+        "prod-vanilla-family-pack"
+      ]
+    },
+    {
+      "id": "prod-vanilla-family-pack",
+      "sku": "REDDY-IC-FAM-700",
+      "name": "REDDY PREMIUM Family Pack Vanilla Ice Cream (700ml)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Rich and creamy classic vanilla ice cream tub. The perfect size for family dessert gatherings and sundae creations.",
+      "ingredients": "Milk, Cream, Sugar, Stabilizers, Natural Vanilla Flavour",
+      "storage": "Store frozen under -18°C.",
+      "nutrition": {
+        "calories": "140 kcal",
+        "fat": "7.5g",
+        "protein": "3.1g",
+        "carbohydrates": "15.0g"
+      },
+      "weight": "700 ml",
+      "volume": "700 ml",
+      "mrp": 150,
+      "price": 135,
+      "discount": 10,
+      "gst": 18,
+      "stock": 100,
+      "status": "Available",
+      "expiryDays": 90,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/13_ice_cream.png"
+      ],
+      "tags": [
+        "Family Pack",
+        "Vanilla Tub",
+        "Dessert Gathering"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-rasmalai"
+      ],
+      "relatedProducts": [
+        "prod-ice-cream-cup",
+        "prod-chocolate-cone"
+      ]
+    },
+    {
+      "id": "prod-milk-cake",
+      "sku": "REDDY-MILK-CAKE-250",
+      "name": "REDDY PREMIUM Traditional Milk Cake (250g)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Traditional Indian sweet milk cake prepared by condensing milk solids. It has a rich, grainy texture and caramelized center.",
+      "ingredients": "Milk Solids, Sugar, Ghee, Citric Acid",
+      "storage": "Keep refrigerated. Bring to room temp before serving.",
+      "nutrition": {
+        "calories": "390 kcal",
+        "fat": "18.0g",
+        "protein": "8.5g",
+        "carbohydrates": "48.0g"
+      },
+      "weight": "250g",
+      "volume": "250 ml",
+      "mrp": 180,
+      "price": 162,
+      "discount": 10,
+      "gst": 5,
+      "stock": 90,
+      "status": "Available",
+      "expiryDays": 15,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Milk Cake",
+        "Traditional Sweet",
+        "Mawa Sweet"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-mishti-doi"
+      ],
+      "relatedProducts": [
+        "prod-rasmalai",
+        "prod-khova"
+      ]
+    },
+    {
+      "id": "prod-rasmalai",
+      "sku": "REDDY-RASMALAI-250",
+      "name": "REDDY PREMIUM Saffron Rasmalai (250g)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Flattened soft cottage cheese balls (chenna) soaked in sweet, thickened saffron-flavoured milk. Served chilled and garnished.",
+      "ingredients": "Paneer (Chenna), Milk, Sugar, Saffron, Pistachios",
+      "storage": "Store chilled and consume cold.",
+      "nutrition": {
+        "calories": "220 kcal",
+        "fat": "8.0g",
+        "protein": "6.0g",
+        "carbohydrates": "30.0g"
+      },
+      "weight": "250g",
+      "volume": "250 ml",
+      "mrp": 120,
+      "price": 108,
+      "discount": 10,
+      "gst": 5,
+      "stock": 85,
+      "status": "Available",
+      "expiryDays": 5,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.9,
+      "images": [
+        "/images/products/17_khova.png"
+      ],
+      "tags": [
+        "Rasmalai",
+        "Chenna Sweet",
+        "Chilled Dessert"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-vanilla-family-pack"
+      ],
+      "relatedProducts": [
+        "prod-milk-cake",
+        "prod-rabri"
+      ]
+    },
+    {
+      "id": "prod-gulab-jamun-mix",
+      "sku": "REDDY-GJ-MIX-200",
+      "name": "REDDY PREMIUM Gulab Jamun Instant Mix (200g)",
+      "category": "Desserts",
+      "brand": "REDDY PREMIUM DAIRY",
+      "description": "Easy-to-prepare instant Gulab Jamun flour mix. Just add water or milk, fry, and soak in sugar syrups for soft jamuns.",
+      "ingredients": "Wheat Flour, Skim Milk Powder, Hydrogenated Vegetable Oil, Citric Acid",
+      "storage": "Store in dry place in container.",
+      "nutrition": {
+        "calories": "380 kcal",
+        "fat": "12.0g",
+        "protein": "11.0g",
+        "carbohydrates": "56.0g"
+      },
+      "weight": "200g",
+      "volume": "200 ml",
+      "mrp": 90,
+      "price": 81,
+      "discount": 10,
+      "gst": 18,
+      "stock": 140,
+      "status": "Available",
+      "expiryDays": 180,
+      "deliveryTime": "Same Day (Within 3 Hours)",
+      "rating": 4.8,
+      "images": [
+        "/images/products/16_milk_powder.png"
+      ],
+      "tags": [
+        "Gulab Jamun Mix",
+        "Instant Mix",
+        "Dessert Preparation"
+      ],
+      "frequentlyBoughtTogether": [
+        "prod-cow-ghee"
+      ],
+      "relatedProducts": [
+        "prod-milk-powder",
+        "prod-khova"
       ]
     }
   ],

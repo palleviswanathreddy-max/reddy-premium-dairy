@@ -19,7 +19,9 @@ export async function GET(_request: Request) {
       );
     }
 
-    logger.info('🚀 Initialization endpoint called');
+    if (process.env.NODE_ENV === 'development') {
+      logger.info('🚀 Initialization endpoint called');
+    }
     const result = await initializeApplication();
     isInitialized = true;
 
@@ -50,7 +52,9 @@ export async function GET(_request: Request) {
 export async function POST(_request: Request) {
   try {
     // In production, verify admin token here
-    logger.info('🔄 Re-initialization requested');
+    if (process.env.NODE_ENV === 'development') {
+      logger.info('🔄 Re-initialization requested');
+    }
     
     isInitialized = false;
     const result = await initializeApplication();

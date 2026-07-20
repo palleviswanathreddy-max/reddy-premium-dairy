@@ -4,6 +4,29 @@ import { getAuthenticatedUser } from '@/utils/auth-check';
 
 export const dynamic = 'force-dynamic';
 
+// In-memory request queue per user to serialize database writes and prevent race conditions
+const userLocks = new Map<string, Promise<unknown>>();
+
+async function runLocked<T>(userId: string, task: () => Promise<T>): Promise<T> {
+  const previous = userLocks.get(userId) || Promise.resolve();
+  const next = (async () => {
+    try {
+      await previous;
+    } catch {
+      // Ignore failures of preceding operations
+    }
+    return task();
+  })();
+  userLocks.set(userId, next);
+  try {
+    return await next;
+  } finally {
+    if (userLocks.get(userId) === next) {
+      userLocks.delete(userId);
+    }
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const authUser = await getAuthenticatedUser(request);
@@ -71,61 +94,66 @@ export async function POST(request: Request) {
       }))
       .filter((item) => !!item.productId);
 
-    if (normalised.length === 0) {
-      await prisma.$transaction(async (tx) => {
-        await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${userId} FOR UPDATE`;
-        await tx.cartItem.deleteMany({ where: { userId } });
+    return await runLocked(userId, async () => {
+      if (normalised.length === 0) {
+        await prisma.cartItem.deleteMany({ where: { userId } });
+        return NextResponse.json({ success: true });
+      }
+
+      // Validate productId exists in database before inserting
+      const uniqueProductIds = Array.from(new Set(normalised.map(item => item.productId)));
+      const existingProducts = await prisma.product.findMany({
+        where: {
+          id: { in: uniqueProductIds }
+        },
+        select: {
+          id: true
+        }
       });
-      return NextResponse.json({ success: true });
-    }
+      const validProductIds = new Set(existingProducts.map(p => p.id));
 
-    // Validate productId exists in database before inserting
-    const uniqueProductIds = Array.from(new Set(normalised.map(item => item.productId)));
-    const existingProducts = await prisma.product.findMany({
-      where: {
-        id: { in: uniqueProductIds }
-      },
-      select: {
-        id: true
+      // Map-based grouping for matching productIds
+      const grouped = new Map<string, number>();
+      for (const item of normalised) {
+        if (validProductIds.has(item.productId)) {
+          const currentQty = grouped.get(item.productId) || 0;
+          grouped.set(item.productId, currentQty + item.quantity);
+        }
       }
-    });
-    const validProductIds = new Set(existingProducts.map(p => p.id));
 
-    // Map-based grouping for matching productIds
-    const grouped = new Map<string, number>();
-    for (const item of normalised) {
-      if (validProductIds.has(item.productId)) {
-        const currentQty = grouped.get(item.productId) || 0;
-        grouped.set(item.productId, currentQty + item.quantity);
-      }
-    }
-
-    const groupedList = Array.from(grouped.entries()).map(([productId, quantity]) => ({
-      userId,
-      productId,
-      quantity
-    }));
-
-    // Prevent race condition during cart sync via transaction with row lock
-    await prisma.$transaction(async (tx) => {
-      // Row lock for the current user to prevent concurrent race conditions
-      await tx.$executeRaw`SELECT 1 FROM "User" WHERE id = ${userId} FOR UPDATE`;
+      const groupedList = Array.from(grouped.entries()).map(([productId, quantity]) => ({
+        userId,
+        productId,
+        quantity
+      }));
 
       // Clean old cart items
-      await tx.cartItem.deleteMany({ where: { userId } });
+      await prisma.cartItem.deleteMany({ where: { userId } });
 
       // Save new cart items
       if (groupedList.length > 0) {
-        await tx.cartItem.createMany({
+        await prisma.cartItem.createMany({
           data: groupedList,
           skipDuplicates: true
         });
       }
-    });
 
-    return NextResponse.json({ success: true });
+      return NextResponse.json({ success: true });
+    });
   } catch (err: unknown) {
+    console.error("========== CART API ERROR ==========");
+    console.error(err);
+    console.error("====================================");
+
     const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ success: false, message }, { status: 500 });
+
+    return NextResponse.json(
+      {
+        success: false,
+        message
+      },
+      { status: 500 }
+    );
   }
 }
+

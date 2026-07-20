@@ -112,7 +112,12 @@ export async function GET(request: Request) {
     }));
 
     return NextResponse.json(
-      { success: true, orders: mapped, total, page, limit },
+      {
+        success: true,
+        message: 'Orders retrieved successfully',
+        orders: mapped,
+        data: { orders: mapped, total, page, limit }
+      },
       { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
     );
   } catch (err: unknown) {
@@ -183,73 +188,87 @@ export async function POST(request: Request) {
     const deliveryOtp = Math.floor(1000 + Math.random() * 9000).toString();
     const invoiceNumber = `INV-${new Date().getFullYear()}-${orderId.split('-').pop()}`;
 
-    // Resolve product details for order items
-    const productIds = body.items.map((i: any) => i.productId);
-    const products = await prisma.product.findMany({
-      where: { id: { in: productIds } }
-    });
-    type DbOrderProduct = typeof products[number];
-    const productMap = new Map<string, any>(products.map((p: DbOrderProduct) => [p.id, p]));
+    // Create order and update stock atomically inside a transaction
+    const newOrder = await prisma.$transaction(async (tx) => {
+      // 1. Lock and check stock of all products
+      const productIds = body.items.map((i: any) => i.productId);
+      const dbProducts = await tx.product.findMany({
+        where: { id: { in: productIds } }
+      });
+      const dbProductMap = new Map<string, any>(dbProducts.map((p) => [p.id, p]));
 
-    // Create order with items in a transaction
-    const newOrder = await prisma.order.create({
-      data: {
-        id: orderId,
-        userId: finalUserId,
-        subtotal: Number(body.subtotal) || 0,
-        gstTotal: Number(body.gstTotal) || 0,
-        deliveryCharges: Number(body.deliveryCharges) || 0,
-        discount: Number(body.discount) || 0,
-        grandTotal: Number(body.grandTotal),
-        status: 'Pending',
-        paymentMethod: body.paymentMethod,
-        paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Paid',
-        deliverySlot: body.deliverySlot || null,
-        deliveryAddress: body.deliveryAddress,
-        giftMessage: body.giftMessage || null,
-        deliveryInstructions: body.deliveryInstructions || null,
-        deliveryOtp,
-        subscriptionType: body.subscriptionType || 'One Time Order',
-        invoiceNumber,
-        timeline,
-        couponCode: body.couponCode || null,
-        items: {
-          create: body.items.map((item: any) => {
-            const prod = productMap.get(item.productId);
-            return {
-              productId: item.productId,
-              sku: prod?.sku || item.sku || 'UNKNOWN',
-              name: prod?.name || item.name || 'Unknown Product',
-              price: Number(item.price) || Number(prod?.price) || 0,
-              quantity: Number(item.quantity) || 1,
-              gst: Number(item.gst) || Number(prod?.gst) || 0
-            };
-          })
+      for (const item of body.items) {
+        const prod = dbProductMap.get(item.productId);
+        if (!prod) {
+          throw new Error(`Product not found: ${item.name || item.productId}`);
         }
-      },
-      include: {
-        items: true,
-        user: true
+        if (prod.stock < (Number(item.quantity) || 1)) {
+          throw new Error(`Sufficient stock not available for ${prod.name}. Available: ${prod.stock}`);
+        }
       }
-    });
 
-    // Update Product Stock Levels in database in a single transaction
-    const stockUpdates = body.items.map((item: any) => {
-      const prod = productMap.get(item.productId);
-      if (prod) {
-        const nextStock = Math.max(0, prod.stock - (Number(item.quantity) || 1));
+      // 2. Create the order
+      const createdOrder = await tx.order.create({
+        data: {
+          id: orderId,
+          userId: finalUserId,
+          subtotal: Number(body.subtotal) || 0,
+          gstTotal: Number(body.gstTotal) || 0,
+          deliveryCharges: Number(body.deliveryCharges) || 0,
+          discount: Number(body.discount) || 0,
+          grandTotal: Number(body.grandTotal),
+          status: 'Pending',
+          paymentMethod: body.paymentMethod,
+          paymentStatus: body.paymentMethod === 'COD' ? 'Pending' : 'Paid',
+          deliverySlot: body.deliverySlot || null,
+          deliveryAddress: body.deliveryAddress,
+          giftMessage: body.giftMessage || null,
+          deliveryInstructions: body.deliveryInstructions || null,
+          deliveryOtp,
+          subscriptionType: body.subscriptionType || 'One Time Order',
+          invoiceNumber,
+          timeline,
+          couponCode: body.couponCode || null,
+          items: {
+            create: body.items.map((item: any) => {
+              const prod = dbProductMap.get(item.productId);
+              return {
+                productId: item.productId,
+                sku: prod?.sku || item.sku || 'UNKNOWN',
+                name: prod?.name || item.name || 'Unknown Product',
+                price: Number(item.price) || Number(prod?.price) || 0,
+                quantity: Number(item.quantity) || 1,
+                gst: Number(item.gst) || Number(prod?.gst) || 0
+              };
+            })
+          }
+        },
+        include: {
+          items: true,
+          user: true
+        }
+      });
+
+      // 3. Update stock levels
+      for (const item of body.items) {
+        const prod = dbProductMap.get(item.productId)!;
+        const nextStock = prod.stock - (Number(item.quantity) || 1);
         const nextStatus = nextStock === 0 ? 'Out of Stock' : nextStock <= 10 ? 'Low Stock' : 'Available';
-        return prisma.product.update({
+        await tx.product.update({
           where: { id: item.productId },
           data: { stock: nextStock, status: nextStatus }
         });
       }
-      return null;
-    }).filter(Boolean);
 
-    if (stockUpdates.length > 0) {
-      await prisma.$transaction(stockUpdates as any);
-    }
+      // 4. Clear user's cart items from database on success
+      if (finalUserId) {
+        await tx.cartItem.deleteMany({
+          where: { userId: finalUserId }
+        });
+      }
+
+      return createdOrder;
+    });
 
     // Log activity
     if (finalUserId) {
@@ -319,7 +338,13 @@ export async function POST(request: Request) {
     // Broadcast SSE event
     sseManager.broadcast('order_created', orderResponse);
 
-    return NextResponse.json({ success: true, order: orderResponse });
+    return NextResponse.json({
+      success: true,
+      message: 'Order created successfully',
+      order: orderResponse,
+      orderId: orderResponse.id,
+      data: { order: orderResponse }
+    });
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : 'Server error';
     return NextResponse.json({ success: false, message: msg }, { status: 400 });

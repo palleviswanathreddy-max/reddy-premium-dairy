@@ -1,23 +1,59 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getCachedOrFetch, CacheKeys, cache } from '@/utils/cache';
 
 export async function GET() {
   try {
-    const dbProducts = await prisma.product.findMany({
-      include: {
-        category: true,
-        _count: { select: { reviews: true } }
-      }
-    });
+    const products = await getCachedOrFetch(CacheKeys.PRODUCTS(), async () => {
+      const dbProducts = await prisma.product.findMany({
+        select: {
+          id: true,
+          sku: true,
+          name: true,
+          brand: true,
+          description: true,
+          ingredients: true,
+          storage: true,
+          nutrition: true,
+          weight: true,
+          volume: true,
+          mrp: true,
+          price: true,
+          discount: true,
+          gst: true,
+          stock: true,
+          status: true,
+          expiryDays: true,
+          deliveryTime: true,
+          rating: true,
+          images: true,
+          tags: true,
+          frequentlyBoughtTogether: true,
+          relatedProducts: true,
+          variants: true,
+          faq: true,
+          createdAt: true,
+          category: {
+            select: {
+              name: true
+            }
+          },
+          _count: {
+            select: {
+              reviews: true
+            }
+          }
+        }
+      });
 
-    type DbProduct = typeof dbProducts[number];
-    const products = dbProducts.map((p: DbProduct) => {
-      const { category, categoryId: _categoryId, _count, ...rest } = p;
-      return {
-        ...rest,
-        category: category?.name || 'Other',
-        reviewCount: _count?.reviews ?? 0
-      };
+      return dbProducts.map((p) => {
+        const { category, _count, ...rest } = p;
+        return {
+          ...rest,
+          category: category?.name || 'Other',
+          reviewCount: _count?.reviews ?? 0
+        };
+      });
     });
 
     return NextResponse.json({ success: true, products });
@@ -39,15 +75,15 @@ export async function POST(request: Request) {
     };
 
     const catName = body.category || 'Other';
-    let cat = await prisma.category.findUnique({ where: { name: catName } });
-    if (!cat) {
-      cat = await prisma.category.create({
-        data: {
-          name: catName,
-          slug: catName.toLowerCase().replace(/\s+/g, '-')
-        }
-      });
-    }
+    // Use upsert to avoid distinct findUnique and create queries
+    const cat = await prisma.category.upsert({
+      where: { name: catName },
+      update: {},
+      create: {
+        name: catName,
+        slug: catName.toLowerCase().replace(/\s+/g, '-')
+      }
+    });
 
     const newProduct = await prisma.product.create({
       data: {
@@ -78,12 +114,44 @@ export async function POST(request: Request) {
         variants: productData.variants || [],
         faq: productData.faq || []
       },
-      include: {
-        category: true
+      select: {
+        id: true,
+        sku: true,
+        name: true,
+        brand: true,
+        description: true,
+        ingredients: true,
+        storage: true,
+        nutrition: true,
+        weight: true,
+        volume: true,
+        mrp: true,
+        price: true,
+        discount: true,
+        gst: true,
+        stock: true,
+        status: true,
+        expiryDays: true,
+        deliveryTime: true,
+        rating: true,
+        images: true,
+        tags: true,
+        frequentlyBoughtTogether: true,
+        relatedProducts: true,
+        variants: true,
+        faq: true,
+        createdAt: true,
+        category: {
+          select: {
+            name: true
+          }
+        }
       }
     });
 
-    const { category, categoryId: _categoryId, ...safeProduct } = newProduct;
+    const { category, ...safeProduct } = newProduct;
+    // Invalidate products cache
+    cache.invalidatePattern('products:');
     return NextResponse.json({
       success: true,
       product: {

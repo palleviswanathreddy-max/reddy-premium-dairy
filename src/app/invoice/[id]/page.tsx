@@ -41,9 +41,14 @@ export default function InvoicePage() {
     );
   }
 
+  const invoiceParts = order.id.split('-');
+  const safeInvoiceNo = order.invoiceNumber || (invoiceParts.length >= 3 
+    ? `INV-${invoiceParts[1]}-${invoiceParts[2]}`
+    : `INV-${new Date(order.createdAt).getFullYear()}-${order.id.slice(-6)}`);
+
   const handlePrint = () => {
     const originalTitle = document.title;
-    const invoiceSuffix = order.invoiceNumber || `INV-${new Date(order.createdAt).getFullYear()}-${order.id.split('-').pop()}`;
+    const invoiceSuffix = safeInvoiceNo;
     document.title = `Invoice-${invoiceSuffix}`;
     window.print();
     document.title = originalTitle;
@@ -94,7 +99,7 @@ export default function InvoicePage() {
           <div className="text-right">
             <h2 className="text-4xl font-black text-slate-200 uppercase tracking-widest">INVOICE</h2>
             <div className="mt-4 text-sm font-semibold text-slate-600 space-y-1">
-              <p>Invoice No: <span className="text-slate-800">INV-{order.id.split('-')[1]}-{order.id.split('-')[2]}</span></p>
+              <p>Invoice No: <span className="text-slate-800">{safeInvoiceNo}</span></p>
               <p>Date: <span className="text-slate-800">{new Date(order.createdAt).toLocaleDateString()}</span></p>
               <p>Order ID: <span className="text-slate-800">#{order.id.slice(4)}</span></p>
             </div>

@@ -2,50 +2,54 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 
-// Global singleton to survive Next.js hot reloads in dev
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-  pgPool: Pool | undefined;
+  prisma?: PrismaClient;
+  pgPool?: Pool;
 };
 
-function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error(
-      '[Prisma] DATABASE_URL is not set. ' +
-      'Make sure .env or .env.local contains DATABASE_URL and that `npx prisma dev` is running.'
-    );
-  }
+const connectionString = process.env.DATABASE_URL;
 
-  // Reuse the pool if it already exists (singleton)
-  if (!globalForPrisma.pgPool) {
-    globalForPrisma.pgPool = new Pool({
-      connectionString,
-      // Optimized connection pool settings for serverless environment & Neon
-      max: 3,
-      connectionTimeoutMillis: 35000,
-      idleTimeoutMillis: 30000,
-      ssl: {
-        rejectUnauthorized: false,
-      },
-    });
+if (!connectionString) {
+  throw new Error(
+    '[Prisma] DATABASE_URL is not set. ' +
+    'Make sure .env or .env.local contains DATABASE_URL.'
+  );
+}
 
-    // Handle pool errors gracefully to prevent unhandled rejections
-    globalForPrisma.pgPool.on('error', (err) => {
-      console.error('[PG Pool Error]', err.message);
-    });
-  }
+// ────────────────────────────────────────────────────────────
+// Connection Pool Singleton
+// Neon Cloud PostgreSQL uses its own cloud PgBouncer pooler (-pooler hostname).
+// Setting idleTimeoutMillis: 0 prevents client-side socket teardown that caused
+// intermittent P1001 DatabaseNotReachable errors in development.
+// ────────────────────────────────────────────────────────────
+if (!globalForPrisma.pgPool) {
+  globalForPrisma.pgPool = new Pool({
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 0, // Keep pool connections alive; prevent idle drop P1001 errors
+    connectionTimeoutMillis: 15000,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
 
+  globalForPrisma.pgPool.on('error', (err) => {
+    console.warn('[Prisma PG Pool Warning]', err.message);
+  });
+}
+
+if (!globalForPrisma.prisma) {
   const adapter = new PrismaPg(globalForPrisma.pgPool);
-
-  return new PrismaClient({
+  globalForPrisma.prisma = new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['error', 'warn'] : ['error'],
   });
 }
 
-export const prisma: PrismaClient =
-  globalForPrisma.prisma ?? createPrismaClient();
+export const prisma: PrismaClient = globalForPrisma.prisma;
 
-// Keep database client persistent globally in both dev and production to prevent connection leaks
-globalForPrisma.prisma = prisma;
+// Persist singleton on globalThis in non-production environments (Next.js HMR / Turbopack)
+if (process.env.NODE_ENV !== 'production') {
+  globalForPrisma.prisma = prisma;
+  globalForPrisma.pgPool = globalForPrisma.pgPool;
+}

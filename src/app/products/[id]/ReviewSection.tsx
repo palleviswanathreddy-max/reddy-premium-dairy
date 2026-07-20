@@ -268,12 +268,13 @@ export default function ReviewSection({ productId }: { productId: string }) {
           
           <form onSubmit={handleSubmit} className="space-y-5 text-xs font-semibold">
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</label>
+              <h4 className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Rating</h4>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
+                    aria-label={`Rate ${star} out of 5 stars`}
                     onClick={() => setRating(star)}
                     className="focus:outline-none p-1 hover:scale-110 transition-transform"
                   >
@@ -312,23 +313,23 @@ export default function ReviewSection({ productId }: { productId: string }) {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
                 <span>Add Photos</span>
                 <span className="text-slate-300">{images.length}/10</span>
-              </label>
+              </div>
               <div className="flex flex-wrap gap-2">
                 {images.map((img, idx) => (
                   <div key={idx} className="relative h-14 w-14 border border-slate-200 rounded-xl overflow-hidden">
                     <Image src={img} alt="" fill className="object-cover" />
-                    <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5">
+                    <button type="button" aria-label="Remove image" onClick={() => handleRemoveImage(idx)} className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5">
                       <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
                 {images.length < 10 && (
-                  <label className="h-14 w-14 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary cursor-pointer transition-colors">
+                  <label htmlFor="review-images" className="h-14 w-14 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary cursor-pointer transition-colors">
                     <Camera className="h-5 w-5" />
-                    <input id="review-images" name="reviewImages" type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                    <input id="review-images" name="reviewImages" aria-label="Upload photos" type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                   </label>
                 )}
               </div>

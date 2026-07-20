@@ -187,9 +187,11 @@ export default function Footer() {
               Subscribe to get latest updates, fresh arrivals, and festival discounts.
             </p>
             <form onSubmit={handleSubscribe} className="flex gap-2">
+              <label htmlFor="footer-subscribe-email" className="sr-only">Email Address for Newsletter</label>
               <input
                 id="footer-subscribe-email"
                 name="subscribeEmail"
+                aria-label={t('newsletterPlaceholder') || "Email address"}
                 autoComplete="email"
                 type="email"
                 placeholder={t('newsletterPlaceholder')}

@@ -227,7 +227,7 @@ function ProfileContent() {
         setPincodeError('');
         setPincodeSuccess(false);
         try {
-          const res = await fetch(`https://api.postalpincode.in/pincode/${addressPincode}`);
+          const res = await fetch(`/api/pincode?code=${addressPincode}`);
           const data = await res.json();
           if (data && data[0] && data[0].Status === 'Success') {
             const postOffices = data[0].PostOffice;
@@ -425,7 +425,7 @@ function ProfileContent() {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`);
+          const res = await fetch(`/api/reverse-geocode?lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
           if (data && data.address) {
             const { postcode, village, town, city, state, state_district } = data.address;
@@ -484,9 +484,9 @@ function ProfileContent() {
                     {profileData.name?.charAt(0) || 'U'}
                   </div>
                 )}
-                <label className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                <label htmlFor="profile-avatar-upload" className="absolute inset-0 bg-slate-900/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                   <Camera className="h-5 w-5" />
-                  <input type="file" accept="image/jpeg, image/png, image/webp" className="hidden" onChange={handleAvatarChange} />
+                  <input id="profile-avatar-upload" name="profileAvatar" aria-label="Upload profile picture" type="file" accept="image/jpeg, image/png, image/webp" className="hidden" onChange={handleAvatarChange} />
                 </label>
               </div>
 

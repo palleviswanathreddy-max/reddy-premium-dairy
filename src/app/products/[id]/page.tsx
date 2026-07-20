@@ -10,10 +10,12 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ReviewSection from './ReviewSection';
+import { useRouter } from 'next/navigation';
 
 
 export default function ProductDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const { 
     products, 
     addToCart, 
@@ -113,8 +115,10 @@ export default function ProductDetail({ params }: { params: Promise<{ id: string
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
-    window.location.href = '/checkout';
+    if (product) {
+      addToCart(product, quantity);
+      router.push('/checkout');
+    }
   };
 
 

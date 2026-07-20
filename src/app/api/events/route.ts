@@ -6,6 +6,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
 
+  let cleanupFn: (() => void) | null = null;
+
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start(controller) {
@@ -27,20 +29,26 @@ export async function GET(request: Request) {
           controller.enqueue(encoder.encode(': keep-alive\n\n'));
         } catch {
           // Stream might be closed
-          clearInterval(interval);
-          sseManager.off('message', listener);
+          if (cleanupFn) cleanupFn();
         }
       }, 20000);
 
-      request.signal.addEventListener('abort', () => {
+      cleanupFn = () => {
         clearInterval(interval);
         sseManager.off('message', listener);
+      };
+
+      request.signal.addEventListener('abort', () => {
+        if (cleanupFn) cleanupFn();
         try {
           controller.close();
         } catch {
           // Silently handle double-close
         }
       });
+    },
+    cancel() {
+      if (cleanupFn) cleanupFn();
     }
   });
 
